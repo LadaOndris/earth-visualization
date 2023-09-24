@@ -10,86 +10,20 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "include/camera.h"
+#include "src/ellipsoid.h"
+#include "src/tesselation/SubdivisionSurfaces.h"
 
 class OpenGLState {
 public:
     unsigned int VAO;
 };
 
-//float vertices[] = {
-//        // positions, colors, texture coords
-//        0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,   // top right
-//        0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,   // bottom right
-//        -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,   // bottom left
-//        -0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,   // top left
-//};
-
 float lastX = 400, lastY = 300;
 bool firstMouseMove = true;
 Camera camera(2.5f);
 
-// Cube
-float vertices[] = {
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-
-        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-        -0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-        0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
-        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f
-};
-
-glm::vec3 cubePositions[] = {
-        glm::vec3(0.0f, 2.0f, -5.0f),
-        glm::vec3(2.0f, 5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3(2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f, 3.0f, -7.5f),
-        glm::vec3(1.3f, -2.0f, -2.5f),
-        glm::vec3(1.5f, 2.0f, -2.5f),
-        glm::vec3(1.5f, 0.2f, -1.5f),
-        glm::vec3(-1.3f, 1.0f, -1.5f)
-};
-
-unsigned int indices[] = {  // note that we start from 0!
-        0, 1, 3,   // first triangle
-        1, 2, 3    // second triangle
-};
+Ellipsoid ellipsoid = Ellipsoid::unitSphere();
+SubdivisionSurfaces subdivisionSurfaces(ellipsoid);
 
 float texCoords[] = {
         0.0f, 0.0f,  // lower-left corner
@@ -139,7 +73,24 @@ void processInput(GLFWwindow *window, Camera &camera, float deltaTime) {
         camera.moveRight(deltaTime);
 }
 
-void setup_gl(OpenGLState &state) {
+typedef struct {
+    float x, y, z;
+} t_vertex;
+
+std::vector<t_vertex> convertToVertices(std::vector<glm::vec3> vertexVecs) {
+    std::vector<t_vertex> vertices;
+    for (const auto &vec3: vertexVecs) {
+        t_vertex vertex;
+        vertex.x = vec3.x;
+        vertex.y = vec3.y;
+        vertex.z = vec3.z;
+        vertices.push_back(vertex);
+    }
+
+    return vertices;
+}
+
+void setup_gl(OpenGLState &state, std::vector<t_vertex> vertices) {
     unsigned int VBO;
     glGenBuffers(1, &VBO);
 
@@ -147,7 +98,7 @@ void setup_gl(OpenGLState &state) {
     glBindVertexArray(state.VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(t_vertex) , &vertices.front(), GL_STATIC_DRAW);
 
 //    unsigned int EBO;
 //    glGenBuffers(1, &EBO);
@@ -155,19 +106,26 @@ void setup_gl(OpenGLState &state) {
 //    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // Position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
     glEnableVertexAttribArray(0);
     // Color
 //    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) (3 * sizeof(float)));
 //    glEnableVertexAttribArray(1);
     // Texture
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
-    glEnableVertexAttribArray(2);
+//    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
+//    glEnableVertexAttribArray(2);
 }
 
 
 int main() {
     std::cout << "Starting the application..." << std::endl;
+
+    std::cout << "Generating triangles..." << std::endl;
+
+    auto verticesVecs = subdivisionSurfaces.tessellate(4);
+    std::vector<t_vertex> vertices = convertToVertices(verticesVecs);
+
+    std::cout << "Generated " + std::to_string(vertices.size() / 3) + " triangles." << std::endl;
 
     glfwSetErrorCallback(error_callback);
 
@@ -200,7 +158,7 @@ int main() {
 
     Shader shader("shaders/shader.vs", "shaders/shader.fs");
     auto gl_state = OpenGLState();
-    setup_gl(gl_state);
+    setup_gl(gl_state, vertices);
 
     // Create texture
     unsigned int texture;
@@ -223,12 +181,11 @@ int main() {
     stbi_image_free(data);
 
     glEnable(GL_DEPTH_TEST);
-    float deltaTime = 0.0f;    // Time between current frame and last frame
     float lastFrame = 0.0f; // Time of last frame
 
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
+        float deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
         processInput(window, camera, deltaTime);
@@ -243,22 +200,21 @@ int main() {
 
         shader.use();
 
-        shader.setMat4("projection",
-                       projectionMatrix); // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
+        // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes
+        // it's often best practice to set it outside the main loop only once.
+        shader.setMat4("projection", projectionMatrix);
         shader.setMat4("view", camera.getViewMatrix());
 
         glBindVertexArray(gl_state.VAO);
-        // Draw each cube
-        for (unsigned int i = 0; i < 10; i++) {
-            glm::mat4 modelMatrix = glm::mat4(1.0f);
-            modelMatrix = glm::translate(modelMatrix, cubePositions[i]);
-            float angle = 20.0f * i;
-            modelMatrix = glm::rotate(modelMatrix, (float) glfwGetTime() * glm::radians(angle),
-                                      glm::vec3(1.0f, 0.3f, 0.5f));
-            shader.setMat4("model", modelMatrix);
+        glm::mat4 modelMatrix = glm::mat4(1.0f);
+        glm::vec3 ellipsoidPosition = glm::vec3(0.f, 0.f, 0.f);
+        modelMatrix = glm::translate(modelMatrix, ellipsoidPosition);
+        float angle = 20.0f * 0;
+        modelMatrix = glm::rotate(modelMatrix, (float) glfwGetTime() * glm::radians(angle),
+                                  glm::vec3(1.0f, 0.3f, 0.5f));
+        shader.setMat4("model", modelMatrix);
 
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
+        glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 
         // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
