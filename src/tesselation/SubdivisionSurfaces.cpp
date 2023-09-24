@@ -41,5 +41,6 @@ std::vector<glm::vec3> SubdivisionSurfaces::tessellate(int repetitions) {
         }
         vertices = newVertices;
     }
-    return vertices;
+    auto projected_vertices = ellipsoid.projectPointsOntoSurface(vertices);
+    return projected_vertices;
 }

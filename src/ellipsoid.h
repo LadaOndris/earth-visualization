@@ -3,6 +3,7 @@
 #define EARTH_VISUALIZATION_ELLIPSOID_H
 
 #include <glm/vec3.hpp>
+#include <vector>
 
 class Ellipsoid {
 public:
@@ -24,6 +25,8 @@ public:
     glm::vec3 convertGeographicToWGS84(glm::vec3 geodetic);
 
     glm::vec3 convertWGS84ToGeographic(glm::vec3 point);
+
+    std::vector<glm::vec3> projectPointsOntoSurface(std::vector<glm::vec3> points);
 
     static Ellipsoid &wgs84() {
         static Ellipsoid ellipsoid(6378137.0, 6378137.0, 6356752.314245);

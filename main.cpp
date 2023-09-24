@@ -24,7 +24,7 @@ float lastX = 400, lastY = 300;
 bool firstMouseMove = true;
 Camera camera(2.5f);
 
-Ellipsoid ellipsoid = Ellipsoid::unitSphere();
+Ellipsoid ellipsoid(1, 1, 1);
 SubdivisionSurfaces subdivisionSurfaces(ellipsoid);
 
 float texCoords[] = {
@@ -127,7 +127,7 @@ int main() {
 
     std::cout << "Generating triangles..." << std::endl;
 
-    auto verticesVecs = subdivisionSurfaces.tessellate(4);
+    auto verticesVecs = subdivisionSurfaces.tessellate(6);
     std::vector<t_vertex> vertices = convertToVertices(verticesVecs);
 
     std::cout << "Generated " + std::to_string(vertices.size() / 3) + " triangles." << std::endl;
@@ -204,6 +204,10 @@ int main() {
         projectionMatrix = glm::perspective(glm::radians(camera.getFov()), WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 100.0f);
 
         shader.use();
+
+        shader.setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
+        shader.setVec3("lightColor",  glm::vec3(1.0f, 1.0f, 1.0f));
+        shader.setVec3("lightPos", glm::vec3(1.0f, 2.0f, 3.0f));
 
         // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes
         // it's often best practice to set it outside the main loop only once.
