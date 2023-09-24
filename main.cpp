@@ -18,6 +18,8 @@ public:
     unsigned int VAO;
 };
 
+int WINDOW_WIDTH = 640;
+int WINDOW_HEIGHT = 480;
 float lastX = 400, lastY = 300;
 bool firstMouseMove = true;
 Camera camera(2.5f);
@@ -36,7 +38,10 @@ void error_callback(int error, const char *description) {
 }
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
+    std::cout << "Window resized to " + std::to_string(width) + "/" + std::to_string(height) << std::endl;
     glViewport(0, 0, width, height);
+    WINDOW_WIDTH = width;
+    WINDOW_HEIGHT = height;
 }
 
 void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
@@ -136,7 +141,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow *window = glfwCreateWindow(640, 480, "Earth Viewer", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Earth Viewer", NULL, NULL);
     if (!window) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -151,7 +156,7 @@ int main() {
 
     // The cursor should be captured and invisible
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glViewport(0, 0, 640, 480);
+    glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
@@ -196,7 +201,7 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, texture);
 
         glm::mat4 projectionMatrix;
-        projectionMatrix = glm::perspective(glm::radians(camera.getFov()), 800.0f / 600.0f, 0.1f, 100.0f);
+        projectionMatrix = glm::perspective(glm::radians(camera.getFov()), WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 100.0f);
 
         shader.use();
 
