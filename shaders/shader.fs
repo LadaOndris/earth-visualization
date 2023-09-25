@@ -9,18 +9,37 @@ uniform vec3 objectColor;
 uniform vec3 lightColor;
 uniform vec3 lightPos;
 
-void main()
+uniform sampler2D basicTexture;
+
+float computeLightIntensity(vec3 normal)
 {
     // Ambient light
     float ambientStrength = 0.1;
-    vec3 ambient = ambientStrength * lightColor;
 
     // Diffuse light
-    vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(lightPos - FragPos);
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * lightColor;
+    float diffuseStrength = max(dot(normal, lightDir), 0.0);
 
-    vec3 result = (ambient + diffuse) * objectColor;
-    FragColor = vec4(result, 1.0);
+    float intensity = ambientStrength + diffuseStrength;
+    return intensity;
+}
+
+vec2 computeTextureCoordinates(vec3 normal)
+{
+    float PI = 3.14159265358979323846;
+    float og_oneOverTwoPi = 1.0 / (2.0 * PI);
+    float og_oneOverPi = 1.0 / PI;
+
+    return vec2(
+        atan(normal.x, normal.z) * og_oneOverTwoPi + 0.5,
+        asin(normal.y) * og_oneOverPi + 0.5
+    );
+}
+
+void main()
+{
+    vec3 norm = normalize(Normal);
+    float lightIntensity = computeLightIntensity(norm);
+    vec2 textureCoordinate = computeTextureCoordinates(norm);
+    FragColor = lightIntensity * texture(basicTexture, textureCoordinate);
 }

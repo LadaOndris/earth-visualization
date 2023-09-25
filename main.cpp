@@ -23,7 +23,7 @@ int WINDOW_WIDTH = 640;
 int WINDOW_HEIGHT = 480;
 float lastX = 400, lastY = 300;
 bool firstMouseMove = true;
-Camera camera(2.5f);
+Camera camera(5.0f);
 
 Ellipsoid ellipsoid(1, 1, 1);
 SubdivisionSphereTesselator subdivisionSurfaces;
@@ -98,6 +98,7 @@ std::vector<t_vertex> convertToVertices(std::vector<glm::vec3> vertexVecs, Ellip
         vertex.nx = normal.x;
         vertex.ny = normal.y;
         vertex.nz = normal.z;
+
         vertices.push_back(vertex);
     }
 
@@ -188,7 +189,8 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     int width, height, nrChannels;
-    unsigned char *data = stbi_load("textures/container.jpg", &width, &height, &nrChannels, 0);
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char *data = stbi_load("textures/earthmap1k.jpg", &width, &height, &nrChannels, 0);
     if (data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -217,6 +219,7 @@ int main() {
 
         shader.use();
 
+        shader.setInt("basicTexture", 0);
         shader.setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
         shader.setVec3("lightColor",  glm::vec3(1.0f, 1.0f, 1.0f));
         shader.setVec3("lightPos", glm::vec3(1.0f, 2.0f, 3.0f));
