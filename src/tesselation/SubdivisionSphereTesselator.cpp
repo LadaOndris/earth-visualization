@@ -3,9 +3,9 @@
 //
 
 #include <glm/geometric.hpp>
-#include "SubdivisionSurfaces.h"
+#include "SubdivisionSphereTesselator.h"
 
-SubdivisionSurfaces::SubdivisionSurfaces(Ellipsoid &ellipsoid) : ellipsoid(ellipsoid) {
+SubdivisionSphereTesselator::SubdivisionSphereTesselator() {
     auto p0 = glm::vec3(0.f, 0.f, 1.f);
     auto p1 = glm::vec3(0.f, 2.f * std::sqrt(2.f), -1.f) / 3.f;
     auto p2 = glm::vec3(-std::sqrt(6.f), -std::sqrt(2.f), -1.f) / 3.f;
@@ -13,7 +13,7 @@ SubdivisionSurfaces::SubdivisionSurfaces(Ellipsoid &ellipsoid) : ellipsoid(ellip
     vertices.assign({p0, p1, p2, p0, p3, p2, p3, p2, p1, p0, p1, p3});
 }
 
-std::vector<glm::vec3> SubdivisionSurfaces::tessellate(int repetitions) {
+std::vector<glm::vec3> SubdivisionSphereTesselator::tessellate(int repetitions) {
     std::vector<glm::vec3> newVertices;
 
     for (int i = 0; i < repetitions; i++) {
@@ -41,6 +41,5 @@ std::vector<glm::vec3> SubdivisionSurfaces::tessellate(int repetitions) {
         }
         vertices = newVertices;
     }
-    auto projected_vertices = ellipsoid.projectPointsOntoSurface(vertices);
-    return projected_vertices;
+    return vertices;
 }

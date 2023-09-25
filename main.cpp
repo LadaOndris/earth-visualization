@@ -9,9 +9,10 @@
 #include <glm/mat4x4.hpp> // glm::mat4
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <utility>
 #include "include/camera.h"
 #include "src/ellipsoid.h"
-#include "src/tesselation/SubdivisionSurfaces.h"
+#include "src/tesselation/SubdivisionSphereTesselator.h"
 
 class OpenGLState {
 public:
@@ -25,7 +26,7 @@ bool firstMouseMove = true;
 Camera camera(2.5f);
 
 Ellipsoid ellipsoid(1, 1, 1);
-SubdivisionSurfaces subdivisionSurfaces(ellipsoid);
+SubdivisionSphereTesselator subdivisionSurfaces;
 
 float texCoords[] = {
         0.0f, 0.0f,  // lower-left corner
@@ -80,15 +81,23 @@ void processInput(GLFWwindow *window, Camera &camera, float deltaTime) {
 
 typedef struct {
     float x, y, z;
+    float nx, ny, nz;
 } t_vertex;
 
-std::vector<t_vertex> convertToVertices(std::vector<glm::vec3> vertexVecs) {
+std::vector<t_vertex> convertToVertices(std::vector<glm::vec3> vertexVecs, Ellipsoid &ellipsoid) {
+    auto projected_vertices = ellipsoid.projectPointsOntoSurface(std::move(vertexVecs));
+
     std::vector<t_vertex> vertices;
-    for (const auto &vec3: vertexVecs) {
+    for (const auto &vec3: projected_vertices) {
         t_vertex vertex;
         vertex.x = vec3.x;
         vertex.y = vec3.y;
         vertex.z = vec3.z;
+
+        auto normal = ellipsoid.geodeticSurfaceNormalFromWGS84(vec3);
+        vertex.nx = normal.x;
+        vertex.ny = normal.y;
+        vertex.nz = normal.z;
         vertices.push_back(vertex);
     }
 
@@ -111,8 +120,11 @@ void setup_gl(OpenGLState &state, std::vector<t_vertex> vertices) {
 //    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // Position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) 0);
     glEnableVertexAttribArray(0);
+    // Normal
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) (3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
     // Color
 //    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) (3 * sizeof(float)));
 //    glEnableVertexAttribArray(1);
@@ -128,7 +140,7 @@ int main() {
     std::cout << "Generating triangles..." << std::endl;
 
     auto verticesVecs = subdivisionSurfaces.tessellate(6);
-    std::vector<t_vertex> vertices = convertToVertices(verticesVecs);
+    std::vector<t_vertex> vertices = convertToVertices(verticesVecs, ellipsoid);
 
     std::cout << "Generated " + std::to_string(vertices.size() / 3) + " triangles." << std::endl;
 
