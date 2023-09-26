@@ -76,7 +76,7 @@ void processInput(GLFWwindow *window, Camera &camera, float deltaTime) {
 
 typedef struct {
     float x, y, z;
-    float nx, ny, nz;
+    //float nx, ny, nz;
 } t_vertex;
 
 std::vector<t_vertex> convertToVertices(std::vector<glm::vec3> vertexVecs, Ellipsoid &ellipsoid) {
@@ -89,10 +89,11 @@ std::vector<t_vertex> convertToVertices(std::vector<glm::vec3> vertexVecs, Ellip
         vertex.y = vec3.y;
         vertex.z = vec3.z;
 
-        auto normal = ellipsoid.geodeticSurfaceNormalFromWGS84(vec3);
-        vertex.nx = normal.x;
-        vertex.ny = normal.y;
-        vertex.nz = normal.z;
+        // Moves to fragment shader
+//        auto normal = ellipsoid.geodeticSurfaceNormalFromWGS84(vec3);
+//        vertex.nx = normal.x;
+//        vertex.ny = normal.y;
+//        vertex.nz = normal.z;
 
         vertices.push_back(vertex);
     }
@@ -108,7 +109,7 @@ void setup_gl(OpenGLState &state, std::vector<t_vertex> vertices) {
     glBindVertexArray(state.VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(t_vertex) , &vertices.front(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(t_vertex), &vertices.front(), GL_STATIC_DRAW);
 
 //    unsigned int EBO;
 //    glGenBuffers(1, &EBO);
@@ -116,11 +117,11 @@ void setup_gl(OpenGLState &state, std::vector<t_vertex> vertices) {
 //    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // Position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
     glEnableVertexAttribArray(0);
     // Normal
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) (3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+//    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) (3 * sizeof(float)));
+//    glEnableVertexAttribArray(1);
     // Color
 //    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) (3 * sizeof(float)));
 //    glEnableVertexAttribArray(1);
@@ -210,14 +211,16 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, texture);
 
         glm::mat4 projectionMatrix;
-        projectionMatrix = glm::perspective(glm::radians(camera.getFov()), WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 100.0f);
+        projectionMatrix = glm::perspective(glm::radians(camera.getFov()), WINDOW_WIDTH / (float) WINDOW_HEIGHT, 0.1f,
+                                            100.0f);
 
         shader.use();
 
         shader.setInt("basicTexture", 0);
         shader.setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
-        shader.setVec3("lightColor",  glm::vec3(1.0f, 1.0f, 1.0f));
+        shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
         shader.setVec3("lightPos", glm::vec3(1.0f, 2.0f, 3.0f));
+        shader.setVec3("oneOverRadiiSquared", ellipsoid.getOneOverRadiiSquared());
 
         // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes
         // it's often best practice to set it outside the main loop only once.

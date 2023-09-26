@@ -20,6 +20,10 @@ glm::vec3 Ellipsoid::getRadii() const {
     return radii;
 }
 
+glm::vec3 Ellipsoid::getOneOverRadiiSquared() const {
+    return oneOverRadiiSquared;
+}
+
 /**
  * Computes the geodetic surface normal given a point on the surface of the ellipsoid.
  * @param vec Point on the surface of the ellipsoid.

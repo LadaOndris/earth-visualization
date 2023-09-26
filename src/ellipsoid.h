@@ -13,6 +13,8 @@ public:
 
     glm::vec3 getRadii() const;
 
+    glm::vec3 getOneOverRadiiSquared() const;
+
     glm::vec3 geodeticSurfaceNormalFromWGS84(glm::vec3 point);
 
     /**
