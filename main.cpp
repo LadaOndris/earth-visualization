@@ -17,6 +17,8 @@
 class OpenGLState {
 public:
     unsigned int VAO;
+    unsigned int dayTexture;
+    unsigned int nightTexture;
 };
 
 int WINDOW_WIDTH = 640;
@@ -26,7 +28,10 @@ bool firstMouseMove = true;
 
 Ellipsoid ellipsoid = Ellipsoid::unitSphere();
 auto radii = ellipsoid.getRadii();
-Camera camera(5.0f, glm::vec3(-radii.x * 5, 0, 0));
+// From the side of the Earth
+// Camera camera(5.0f, glm::vec3(-radii.x * 5, 0, 0));
+// From above the Earth
+Camera camera(5.0f, glm::vec3(0, radii.y * 5, 0), -90.f);
 SubdivisionSphereTesselator subdivisionSurfaces;
 
 void error_callback(int error, const char *description) {
@@ -130,6 +135,26 @@ void setup_gl(OpenGLState &state, std::vector<t_vertex> vertices) {
 //    glEnableVertexAttribArray(2);
 }
 
+void loadTexture(unsigned int &textureID, const std::string& texturePath) {
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char *data = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 0);
+    if (data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
+}
 
 int main() {
     std::cout << "Starting the application..." << std::endl;
@@ -173,27 +198,8 @@ int main() {
     Shader shader("shaders/shader.vs", "shaders/shader.fs");
     auto gl_state = OpenGLState();
     setup_gl(gl_state, vertices);
-
-    // Create texture
-    unsigned int texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true);
-    unsigned char *data = stbi_load("textures/earthmap1k.jpg", &width, &height, &nrChannels, 0);
-    if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    } else {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-    stbi_image_free(data);
+    loadTexture(gl_state.dayTexture, "textures/2_no_clouds_16k.jpg");
+    loadTexture(gl_state.nightTexture, "texture/5_night_16k.jpg");
 
     glEnable(GL_DEPTH_TEST);
     float lastFrame = 0.0f; // Time of last frame
@@ -208,7 +214,10 @@ int main() {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glBindTexture(GL_TEXTURE_2D, texture);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, gl_state.dayTexture);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, gl_state.nightTexture);
 
         glm::mat4 projectionMatrix;
         projectionMatrix = glm::perspective(glm::radians(camera.getFov()), WINDOW_WIDTH / (float) WINDOW_HEIGHT, 0.1f,
@@ -216,7 +225,8 @@ int main() {
 
         shader.use();
 
-        shader.setInt("basicTexture", 0);
+        shader.setInt("dayTexture", 0);
+        shader.setInt("nightTexture", 1);
         shader.setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
         shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
         shader.setVec3("lightPos", glm::vec3(1.0f, 2.0f, 3.0f));

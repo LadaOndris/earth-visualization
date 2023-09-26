@@ -29,7 +29,9 @@ private:
     }
 
 public:
-    explicit Camera(float cameraSpeed, glm::vec3 cameraPos) : cameraSpeed(cameraSpeed), cameraPos(cameraPos) {
+    explicit Camera(float cameraSpeed, glm::vec3 cameraPos, float pitch = 0.f) :
+        cameraSpeed(cameraSpeed), cameraPos(cameraPos), pitch(pitch) {
+        assert(pitch <= 90 && pitch >= -90);
         updateDirection();
     }
 

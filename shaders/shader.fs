@@ -8,7 +8,8 @@ uniform vec3 objectColor;
 uniform vec3 lightColor;
 uniform vec3 lightPos;
 
-uniform sampler2D basicTexture;
+uniform sampler2D dayTexture;
+uniform sampler2D nightTexture;
 // Definition of the ellipsoid
 uniform vec3 oneOverRadiiSquared;
 
@@ -51,5 +52,5 @@ void main()
 
     float lightIntensity = computeLightIntensity(normal, FragPos);
     vec2 textureCoordinate = computeTextureCoordinates(normal);
-    FragColor = lightIntensity * texture(basicTexture, textureCoordinate);
+    FragColor = lightIntensity * texture(dayTexture, textureCoordinate);
 }
