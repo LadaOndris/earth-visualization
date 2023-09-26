@@ -6,12 +6,14 @@ class Camera {
 private:
     float cameraSpeed;
     glm::vec3 cameraPos = glm::vec3(-5.0f, 0.0f, 0.0f);
-    glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
     glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-    glm::vec3 cameraRight = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::vec3 cameraUp = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::vec3 direction = glm::vec3(0.0f, 0.0f, 0.0f);
-    float yaw = -90.0f;
+
+    glm::vec3 direction = glm::vec3(0.0f, 0.0f, 0.0f); // Is updated automatically
+    glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, 0.0f); // Is updated automatically
+    glm::vec3 cameraRight = glm::vec3(0.0f, 0.0f, 0.0f); // Is updated automatically
+    glm::vec3 cameraUp = glm::vec3(0.0f, 0.0f, 0.0f); // Is updated automatically
+
+    float yaw = 0.0f;
     float pitch = 0.0f;
     float fov = 45.0f;
 
@@ -27,7 +29,7 @@ private:
     }
 
 public:
-    explicit Camera(float cameraSpeed) : cameraSpeed(cameraSpeed) {
+    explicit Camera(float cameraSpeed, glm::vec3 cameraPos) : cameraSpeed(cameraSpeed), cameraPos(cameraPos) {
         updateDirection();
     }
 

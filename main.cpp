@@ -23,16 +23,11 @@ int WINDOW_WIDTH = 640;
 int WINDOW_HEIGHT = 480;
 float lastX = 400, lastY = 300;
 bool firstMouseMove = true;
-Camera camera(5.0f);
 
-Ellipsoid ellipsoid(1, 1, 1);
+Ellipsoid ellipsoid = Ellipsoid::unitSphere();
+auto radii = ellipsoid.getRadii();
+Camera camera(5.0f, glm::vec3(-radii.x * 5, 0, 0));
 SubdivisionSphereTesselator subdivisionSurfaces;
-
-float texCoords[] = {
-        0.0f, 0.0f,  // lower-left corner
-        1.0f, 0.0f,  // lower-right corner
-        0.5f, 1.0f   // top-center corner
-};
 
 void error_callback(int error, const char *description) {
     fprintf(stderr, "Error: %s\n", description);
@@ -209,7 +204,7 @@ int main() {
 
         processInput(window, camera, deltaTime);
 
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glBindTexture(GL_TEXTURE_2D, texture);

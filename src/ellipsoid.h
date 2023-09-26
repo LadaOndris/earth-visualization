@@ -29,6 +29,7 @@ public:
     std::vector<glm::vec3> projectPointsOntoSurface(std::vector<glm::vec3> points);
 
     static Ellipsoid &wgs84() {
+        // Equatorial radius (m), Equatorial radius (m), Polar radius (m)
         static Ellipsoid ellipsoid(6378137.0, 6378137.0, 6356752.314245);
         return ellipsoid;
     }
