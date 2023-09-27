@@ -2,6 +2,8 @@
 #ifndef EARTH_VISUALIZATION_CAMERA_H
 #define EARTH_VISUALIZATION_CAMERA_H
 
+#include "../include/printing.h"
+
 class Camera {
 private:
     float cameraSpeed;
@@ -30,7 +32,7 @@ private:
 
 public:
     explicit Camera(float cameraSpeed, glm::vec3 cameraPos, float pitch = 0.f) :
-        cameraSpeed(cameraSpeed), cameraPos(cameraPos), pitch(pitch) {
+            cameraSpeed(cameraSpeed), cameraPos(cameraPos), pitch(pitch) {
         assert(pitch <= 90 && pitch >= -90);
         updateDirection();
     }
@@ -58,6 +60,7 @@ public:
     }
 
     void moveRight(float deltaTime) {
+        std::cout << cameraPos[0] << cameraPos[1] << cameraPos[2] << std::endl;
         cameraPos += cameraRight * deltaTime * cameraSpeed;
     }
 
