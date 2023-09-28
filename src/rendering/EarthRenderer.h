@@ -11,7 +11,7 @@
 #include "../include/glad/glad.h"
 #include "../vertex.h"
 #include "shader.h"
-#include "camera.h"
+#include "../cameras/FreeCamera.h"
 #include "../ellipsoid.h"
 #include "../tesselation/SubdivisionSphereTesselator.h"
 #include "Renderer.h"

@@ -9,7 +9,7 @@
 #include <vector>
 #include "Renderer.h"
 #include "shader.h"
-#include "camera.h"
+#include "../cameras/FreeCamera.h"
 #include "../vertex.h"
 
 class SunRenderer : public Renderer {

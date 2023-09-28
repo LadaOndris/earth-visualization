@@ -7,13 +7,15 @@
 #include <GLFW/glfw3.h>
 
 #include "include/shader.h"
-#include "include/camera.h"
+#include "src/cameras/FreeCamera.h"
 #include "src/ellipsoid.h"
 #include "src/tesselation/SubdivisionSphereTesselator.h"
 #include "src/vertex.h"
 #include "src/rendering/EarthRenderer.h"
 #include "src/window_definition.h"
 #include "src/rendering/SunRenderer.h"
+#include "src/rendering/GuiFrameRenderer.h"
+#include "src/cameras/EarthCenteredCamera.h"
 
 #include <glm/vec3.hpp> // glm::vec3
 #include <glm/vec4.hpp> // glm::vec4
@@ -30,6 +32,7 @@
 t_window_definition windowDefinition;
 float lastX = 400, lastY = 300;
 bool firstMouseMove = true;
+bool lbutton_down = false;
 GLFWwindow *window = nullptr;
 
 
@@ -37,11 +40,13 @@ Ellipsoid ellipsoid = Ellipsoid::unitSphere();
 auto radii = ellipsoid.getRadii();
 // From the side of the Earth
 //Camera camera(5.0f, glm::vec3(-radii.x * 5, 0, 0),
-//              0.f, 80.f);
-Camera camera(5.0f, glm::vec3(-radii.x * 5, 0, 0),
-              0, 55);
+//              0, 55);
 // From above the Earth
 //Camera camera(5.0f, glm::vec3(0, radii.y * 5, 0), -90.f);
+
+EarthCenteredCamera camera(glm::vec3(-radii.x * 5, 0, 0),
+                           glm::vec3(0, 0, 0),
+                           glm::vec3(0, 1, 0));
 
 void error_callback(int error, const char *description) {
     fprintf(stderr, "Error: %s\n", description);
@@ -54,7 +59,20 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     windowDefinition.height = height;
 }
 
-void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
+static void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        if (GLFW_PRESS == action)
+            lbutton_down = true;
+        else if (GLFW_RELEASE == action)
+            lbutton_down = false;
+    }
+
+    if (lbutton_down) {
+
+    }
+}
+
+void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos) {
     if (firstMouseMove) // initially set to true
     {
         lastX = xpos;
@@ -67,6 +85,10 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
     lastX = xpos;
     lastY = ypos;
 
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        camera.onMouseDrag(xoffset, yoffset);
+    }
+
     camera.onMouseMove(xoffset, yoffset);
 }
 
@@ -77,15 +99,6 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
 void processInput(GLFWwindow *window, Camera &camera, float deltaTime) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.moveUp(deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.moveDown(deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.moveLeft(deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.moveRight(deltaTime);
 }
 
 /**
@@ -112,10 +125,9 @@ bool initializeGlfw() {
         exit(EXIT_FAILURE);
     }
 
-    // The cursor should be captured and invisible
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetCursorPosCallback(window, cursor_pos_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetScrollCallback(window, scroll_callback);
     return true;
 }
@@ -162,7 +174,7 @@ bool initializeImgui() {
     return true;
 }
 
-std::string formatTime(const std::chrono::system_clock::time_point& timePoint) {
+std::string formatTime(const std::chrono::system_clock::time_point &timePoint) {
     // Convert time point to a time_t
     std::time_t time = std::chrono::system_clock::to_time_t(timePoint);
 
@@ -176,41 +188,6 @@ std::string formatTime(const std::chrono::system_clock::time_point& timePoint) {
     return buffer;
 }
 
-void renderImGuiFrame() {
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-
-    ImGui::NewFrame();
-
-    // Window position
-    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
-    // Window size
-    ImGui::SetNextWindowSize(
-            ImVec2(static_cast<float>(100), static_cast<float>(100)),
-            ImGuiCond_Always
-    );
-    // Set window opacity
-    ImGui::SetNextWindowBgAlpha(0.7f);
-
-    ImGui::Begin("Controls", NULL, ImGuiWindowFlags_NoResize);
-
-    ImGui::Dummy(ImVec2(0.0f, 1.0f));
-    ImGui::TextColored(ImVec4(1.0f, 0.0f, 1.0f, 1.0f), "Time");
-    ImGui::Text("%s", formatTime(std::chrono::system_clock::now()).c_str());
-
-    ImGui::End();
-
-    // Another window
-    ImGui::Begin("Another Window");   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-    ImGui::Text("Hello from another window!");
-    if (ImGui::Button("Close Me")) {
-        std::cout << "Button clicked!" << std::endl;
-    }
-    ImGui::End();
-
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
 
 void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers) {
     glViewport(0, 0, windowDefinition.width, windowDefinition.height);
@@ -230,7 +207,6 @@ void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers) {
         for (const auto &renderer: renderers) {
             renderer->render(currentFrame, windowDefinition);
         }
-        renderImGuiFrame();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -272,9 +248,15 @@ int main() {
     sunRenderer->constructVertices();
     sunRenderer->setupVertexArrays();
 
+    bool simulationIsRunning = false;
+    auto guiRenderer =
+            std::make_shared<GuiFrameRenderer>(simulationIsRunning);
+
+
     std::vector<std::shared_ptr<Renderer>> renderers;
     renderers.push_back(earthRenderer);
     renderers.push_back(sunRenderer);
+    renderers.push_back(guiRenderer);
 
     startRendering(renderers);
     cleanup();

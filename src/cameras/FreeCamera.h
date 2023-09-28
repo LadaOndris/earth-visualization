@@ -1,10 +1,11 @@
 
-#ifndef EARTH_VISUALIZATION_CAMERA_H
-#define EARTH_VISUALIZATION_CAMERA_H
+#ifndef EARTH_VISUALIZATION_FREECAMERA_H
+#define EARTH_VISUALIZATION_FREECAMERA_H
 
-#include "../include/printing.h"
+#include "printing.h"
+#include "Camera.h"
 
-class Camera {
+class FreeCamera : public Camera {
 private:
     float cameraSpeed;
     glm::vec3 cameraPos = glm::vec3(-5.0f, 0.0f, 0.0f);
@@ -17,7 +18,6 @@ private:
 
     float yaw = 0.0f;
     float pitch = 0.0f;
-    float fov = 45.0f;
 
     void updateDirection() {
         direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
@@ -31,10 +31,10 @@ private:
     }
 
 public:
-    explicit Camera(float cameraSpeed, glm::vec3 cameraPos, float pitch = 0.f,
-                    float fov = 45.0f) :
+    explicit FreeCamera(float cameraSpeed, glm::vec3 cameraPos, float pitch = 0.f,
+                        float fov = 45.0f) :
             cameraSpeed(cameraSpeed), cameraPos(cameraPos), pitch(pitch),
-            fov(fov) {
+            Camera(fov) {
         assert(pitch <= 90 && pitch >= -90);
         updateDirection();
     }
@@ -43,10 +43,6 @@ public:
     glm::mat4 getViewMatrix() const {
         glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         return view;
-    }
-
-    float getFov() const {
-        return fov;
     }
 
     void moveUp(float deltaTime) {
@@ -87,6 +83,10 @@ public:
             fov = 1.0f;
         if (fov > 45.0f)
             fov = 45.0f;
+    }
+
+    void onMouseDrag(double xoffset, double yoffset) {
+        // No behaviour
     }
 };
 
