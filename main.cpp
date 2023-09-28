@@ -16,6 +16,7 @@
 #include "src/vertex.h"
 #include "src/rendering/EarthRenderer.h"
 #include "src/window_definition.h"
+#include "src/rendering/SunRenderer.h"
 
 t_window_definition windowDefinition;
 float lastX = 400, lastY = 300;
@@ -26,9 +27,12 @@ GLFWwindow *window = nullptr;
 Ellipsoid ellipsoid = Ellipsoid::unitSphere();
 auto radii = ellipsoid.getRadii();
 // From the side of the Earth
-// Camera camera(5.0f, glm::vec3(-radii.x * 5, 0, 0));
+//Camera camera(5.0f, glm::vec3(-radii.x * 5, 0, 0),
+//              0.f, 80.f);
+Camera camera(5.0f, glm::vec3(-radii.x * 5, 0, 0),
+              0, 55);
 // From above the Earth
-Camera camera(5.0f, glm::vec3(0, radii.y * 5, 0), -90.f);
+//Camera camera(5.0f, glm::vec3(0, radii.y * 5, 0), -90.f);
 
 void error_callback(int error, const char *description) {
     fprintf(stderr, "Error: %s\n", description);
@@ -78,13 +82,18 @@ void processInput(GLFWwindow *window, Camera &camera, float deltaTime) {
 /**
  * Creates the window, callbacks, etc.
  */
-void initialize() {
-    std::cout << "Starting the application..." << std::endl;
-
+bool initializeGlfw() {
     glfwSetErrorCallback(error_callback);
 
     if (!glfwInit())
-        exit(EXIT_FAILURE);
+    {
+        std::cerr << "[ERROR] Couldn't initialize GLFW" << std::endl;
+        return false;
+    }
+    else
+    {
+        std::cout << "[INFO] GLFW initialized" << std::endl;
+    }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -97,21 +106,29 @@ void initialize() {
         exit(EXIT_FAILURE);
     }
 
-    glfwMakeContextCurrent(window);
-    if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        throw;
-    }
-
     // The cursor should be captured and invisible
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glViewport(0, 0, windowDefinition.width, windowDefinition.height);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    return true;
+}
+
+bool initializeGlad() {
+    glfwMakeContextCurrent(window);
+    if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
+        std::cout << "[ERROR] Failed to initialize GLAD" << std::endl;
+        return false;
+    }
+    else
+    {
+        std::cout << "[INFO] GLAD initialized" << std::endl;
+    }
+    return true;
 }
 
 void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers) {
+    glViewport(0, 0, windowDefinition.width, windowDefinition.height);
     glEnable(GL_DEPTH_TEST);
     float lastFrame = 0.0f; // Time of last frame
 
@@ -140,16 +157,35 @@ void cleanup() {
 }
 
 int main() {
-    initialize();
+    std::cout << "Starting the application..." << std::endl;
+    if (!initializeGlfw() || !initializeGlad())
+    {
+        return EXIT_FAILURE;
+    }
+
+    auto sunVsEarthRadiusFactor = 109.168105; // Sun_radius / Earth_radius
+    auto sunRadius = sunVsEarthRadiusFactor * radii.x;
+    auto sunDistanceMeters = 149597870700.f;
+    auto earthRadiusMeters = 6378000.f;
+    auto sunDistance = sunDistanceMeters / earthRadiusMeters * radii.x;
+    auto lightPosition = glm::vec3(0.0f, 0.0f, sunDistance);
 
     SubdivisionSphereTesselator subdivisionSurfaces;
-    auto earthRenderer = std::make_shared<EarthRenderer>(ellipsoid, camera);
+    auto earthRenderer =
+            std::make_shared<EarthRenderer>(ellipsoid, camera, lightPosition);
     earthRenderer->constructVertices(subdivisionSurfaces);
     earthRenderer->setupVertexArrays();
     earthRenderer->loadTextures();
 
+
+    auto sunRenderer =
+            std::make_shared<SunRenderer>(camera, lightPosition, sunRadius);
+    sunRenderer->constructVertices();
+    sunRenderer->setupVertexArrays();
+
     std::vector<std::shared_ptr<Renderer>> renderers;
     renderers.push_back(earthRenderer);
+    renderers.push_back(sunRenderer);
 
     startRendering(renderers);
     cleanup();

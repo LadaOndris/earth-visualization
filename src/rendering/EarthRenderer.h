@@ -28,6 +28,7 @@ private:
     Ellipsoid &ellipsoid;
     Shader shader;
     std::vector<t_vertex> vertices;
+    glm::vec3 lightPosition;
     unsigned int VAO;
     unsigned int VBO;
     unsigned int dayTexture;
@@ -38,9 +39,9 @@ private:
     std::vector<t_vertex> convertToVertices(const std::vector<glm::vec3>& projectedVertices);
 
 public:
-    EarthRenderer(Ellipsoid &ellipsoid, Camera &camera)
+    EarthRenderer(Ellipsoid &ellipsoid, Camera &camera, glm::vec3 lightPosition)
             : shader("shaders/shader.vs", "shaders/shader.fs"),
-              camera(camera), ellipsoid(ellipsoid) {
+              camera(camera), ellipsoid(ellipsoid), lightPosition(lightPosition) {
     }
 
     void constructVertices(SphereTesselator &tesselator);

@@ -27,7 +27,7 @@ void EarthRenderer::constructVertices(SphereTesselator &tesselator) {
 
 }
 
-std::vector<t_vertex> EarthRenderer::convertToVertices(const std::vector<glm::vec3>& projectedVertices) {
+std::vector<t_vertex> EarthRenderer::convertToVertices(const std::vector<glm::vec3> &projectedVertices) {
     std::vector<t_vertex> convertedVertices;
     for (const auto &vec3: projectedVertices) {
         t_vertex vertex;
@@ -89,8 +89,8 @@ void EarthRenderer::render(float currentTime, t_window_definition window) {
 
     glm::mat4 projectionMatrix;
     projectionMatrix = glm::perspective(glm::radians(camera.getFov()),
-                                        window.width / (float) window.height,
-                                        0.1f,100.0f);
+                                        (float) window.width / (float) window.height,
+                                        0.1f, 100.0f);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, dayTexture);
@@ -107,7 +107,7 @@ void EarthRenderer::render(float currentTime, t_window_definition window) {
     // Lighting settings
     shader.setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
     shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-    shader.setVec3("lightPos", glm::vec3(1.0f, 2.0f, 3.0f));
+    shader.setVec3("lightPos", lightPosition);
     shader.setVec3("oneOverRadiiSquared", ellipsoid.getOneOverRadiiSquared());
 
     // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes

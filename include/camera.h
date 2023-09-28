@@ -31,8 +31,10 @@ private:
     }
 
 public:
-    explicit Camera(float cameraSpeed, glm::vec3 cameraPos, float pitch = 0.f) :
-            cameraSpeed(cameraSpeed), cameraPos(cameraPos), pitch(pitch) {
+    explicit Camera(float cameraSpeed, glm::vec3 cameraPos, float pitch = 0.f,
+                    float fov = 45.0f) :
+            cameraSpeed(cameraSpeed), cameraPos(cameraPos), pitch(pitch),
+            fov(fov) {
         assert(pitch <= 90 && pitch >= -90);
         updateDirection();
     }
@@ -60,7 +62,6 @@ public:
     }
 
     void moveRight(float deltaTime) {
-        std::cout << cameraPos[0] << cameraPos[1] << cameraPos[2] << std::endl;
         cameraPos += cameraRight * deltaTime * cameraSpeed;
     }
 
