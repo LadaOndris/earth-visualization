@@ -7,18 +7,35 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 #include "Camera.h"
+#include "../ellipsoid.h"
 
 class EarthCenteredCamera : public Camera {
 
 private:
+    Ellipsoid &ellipsoid;
     glm::vec3 position;
     glm::vec3 target;
     glm::vec3 up;
+    float zoomSpeedFactor;
+    float maxSpeed = 20;
+    float minSpeed = 0.01;
+
+    float calcZoomSpeedFromDistance() {
+        auto distance = glm::length(target - position);
+        auto speed = distance * distance / (distance + 50);
+        speed = std::min(speed, maxSpeed);
+        speed = std::max(speed, minSpeed);
+        std::cout << "Distance: " << distance << " Speed: " << speed << std::endl;
+        return speed;
+    }
+
 
 public:
-    EarthCenteredCamera(glm::vec3 position, glm::vec3 target, glm::vec3 up,
-                        float fov = 45.0f) : Camera(fov) {
+    EarthCenteredCamera(Ellipsoid &ellipsoid, glm::vec3 position, glm::vec3 target, glm::vec3 up,
+                        float fov = 45.0f, float zoomSpeedFactor = 1.0f) :
+            ellipsoid(ellipsoid), Camera(fov), zoomSpeedFactor(zoomSpeedFactor) {
         this->position = position;
         this->target = target;
         this->up = up;
@@ -31,8 +48,13 @@ public:
 
     void onMouseScroll(double xoffset, double yoffset) {
         // Adjust the camera's position to zoom in or out
-        float zoomSpeed = 0.1f;
-        position += static_cast<float>(yoffset) * zoomSpeed * glm::normalize(target - position);
+        float zoomSpeed = calcZoomSpeedFromDistance();
+        auto positionShift = static_cast<float>(yoffset) * zoomSpeed * glm::normalize(target - position);
+        auto positionCandidate = position + positionShift;
+
+        if (ellipsoid.isPointOnTheOutside(positionCandidate)) {
+            position = positionCandidate;
+        }
     }
 
     void onMouseDrag(double xoffset, double yoffset) {

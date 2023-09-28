@@ -44,7 +44,8 @@ auto radii = ellipsoid.getRadii();
 // From above the Earth
 //Camera camera(5.0f, glm::vec3(0, radii.y * 5, 0), -90.f);
 
-EarthCenteredCamera camera(glm::vec3(-radii.x * 5, 0, 0),
+EarthCenteredCamera camera(ellipsoid,
+                           glm::vec3(-radii.x * 5, 0, 0),
                            glm::vec3(0, 0, 0),
                            glm::vec3(0, 1, 0));
 
