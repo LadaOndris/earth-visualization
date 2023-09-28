@@ -1,15 +1,12 @@
 #include <iostream>
-#include "include/glad/glad.h"
-#include <GLFW/glfw3.h>
-#include "include/shader.h"
 #include <cmath>
-#include <glm/vec3.hpp> // glm::vec3
-#include <glm/vec4.hpp> // glm::vec4
-#include <glm/mat4x4.hpp> // glm::mat4
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <utility>
 #include <memory>
+
+#include "include/glad/glad.h"
+#include <GLFW/glfw3.h>
+
+#include "include/shader.h"
 #include "include/camera.h"
 #include "src/ellipsoid.h"
 #include "src/tesselation/SubdivisionSphereTesselator.h"
@@ -17,6 +14,18 @@
 #include "src/rendering/EarthRenderer.h"
 #include "src/window_definition.h"
 #include "src/rendering/SunRenderer.h"
+
+#include <glm/vec3.hpp> // glm::vec3
+#include <glm/vec4.hpp> // glm::vec4
+#include <glm/mat4x4.hpp> // glm::mat4
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include <imgui.h>
+#include <imgui_stdlib.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+#include <chrono>
 
 t_window_definition windowDefinition;
 float lastX = 400, lastY = 300;
@@ -85,13 +94,10 @@ void processInput(GLFWwindow *window, Camera &camera, float deltaTime) {
 bool initializeGlfw() {
     glfwSetErrorCallback(error_callback);
 
-    if (!glfwInit())
-    {
+    if (!glfwInit()) {
         std::cerr << "[ERROR] Couldn't initialize GLFW" << std::endl;
         return false;
-    }
-    else
-    {
+    } else {
         std::cout << "[INFO] GLFW initialized" << std::endl;
     }
 
@@ -119,12 +125,91 @@ bool initializeGlad() {
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         std::cout << "[ERROR] Failed to initialize GLAD" << std::endl;
         return false;
-    }
-    else
-    {
+    } else {
         std::cout << "[INFO] GLAD initialized" << std::endl;
     }
     return true;
+}
+
+bool initializeImgui() {
+    std::string fontName = "JetBrainsMono-ExtraLight.ttf";
+    float highDPIscaleFactor = 1.0;
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+
+    ImGuiIO &io = ImGui::GetIO();
+    (void) io;
+
+//    io.Fonts->AddFontFromFileTTF(
+//            fontName.c_str(),
+//            24.0f * highDPIscaleFactor,
+//            NULL,
+//            NULL
+//    );
+    // setImGuiStyle(highDPIscaleFactor);
+
+    if (!ImGui_ImplGlfw_InitForOpenGL(window, true)) {
+        std::cout << "[ERROR] Failed to initialize ImGui (ImGui_ImplGlfw_InitForOpenGL)" << std::endl;
+        return false;
+    }
+    if (!ImGui_ImplOpenGL3_Init()) {
+        std::cout << "[ERROR] Failed to initialize ImGui (ImGui_ImplOpenGL3_Init)" << std::endl;
+        return false;
+    }
+
+    std::cout << "[INFO] IMGUI initialized" << std::endl;
+    return true;
+}
+
+std::string formatTime(const std::chrono::system_clock::time_point& timePoint) {
+    // Convert time point to a time_t
+    std::time_t time = std::chrono::system_clock::to_time_t(timePoint);
+
+    // Convert time_t to a struct tm
+    std::tm tmStruct = *std::localtime(&time);
+
+    // Format the struct tm into a string
+    char buffer[80];
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &tmStruct);
+
+    return buffer;
+}
+
+void renderImGuiFrame() {
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+
+    ImGui::NewFrame();
+
+    // Window position
+    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
+    // Window size
+    ImGui::SetNextWindowSize(
+            ImVec2(static_cast<float>(100), static_cast<float>(100)),
+            ImGuiCond_Always
+    );
+    // Set window opacity
+    ImGui::SetNextWindowBgAlpha(0.7f);
+
+    ImGui::Begin("Controls", NULL, ImGuiWindowFlags_NoResize);
+
+    ImGui::Dummy(ImVec2(0.0f, 1.0f));
+    ImGui::TextColored(ImVec4(1.0f, 0.0f, 1.0f, 1.0f), "Time");
+    ImGui::Text("%s", formatTime(std::chrono::system_clock::now()).c_str());
+
+    ImGui::End();
+
+    // Another window
+    ImGui::Begin("Another Window");   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+    ImGui::Text("Hello from another window!");
+    if (ImGui::Button("Close Me")) {
+        std::cout << "Button clicked!" << std::endl;
+    }
+    ImGui::End();
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers) {
@@ -145,6 +230,7 @@ void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers) {
         for (const auto &renderer: renderers) {
             renderer->render(currentFrame, windowDefinition);
         }
+        renderImGuiFrame();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -152,14 +238,17 @@ void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers) {
 }
 
 void cleanup() {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
     glfwDestroyWindow(window);
     glfwTerminate();
 }
 
 int main() {
     std::cout << "Starting the application..." << std::endl;
-    if (!initializeGlfw() || !initializeGlad())
-    {
+    if (!initializeGlfw() || !initializeGlad() || !initializeImgui()) {
         return EXIT_FAILURE;
     }
 
