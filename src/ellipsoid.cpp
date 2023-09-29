@@ -71,17 +71,21 @@ std::vector<glm::vec3> Ellipsoid::projectPointsOntoSurface(std::vector<glm::vec3
     // Project points from unit sphere to the custom ellipsoid
     std::vector<glm::vec3> projectedPoints;
     for (const auto &point: points) {
-        // Step 2: Convert from unit sphere to geodetic coordinates on the unit sphere
-        glm::vec3 geodeticOnUnitSphere = convertWGS84ToGeographic(point);
-
-        // Step 3: Convert from geodetic coordinates on unit sphere to WGS84 coordinates on the custom ellipsoid
-        glm::vec3 projectedPoint = convertGeographicToWGS84(geodeticOnUnitSphere);
-
+        auto projectedPoint = projectPointOntoSurface(point);
         // Add the projected point to the result
         projectedPoints.push_back(projectedPoint);
     }
     return projectedPoints;
 }
+
+glm::vec3 Ellipsoid::projectPointOntoSurface(glm::vec3 point) {
+    // Convert from unit sphere to geodetic coordinates on the unit sphere
+    glm::vec3 geodeticOnUnitSphere = convertWGS84ToGeographic(point);
+    // Convert from geodetic coordinates on unit sphere to WGS84 coordinates on the custom ellipsoid
+    glm::vec3 projectedPoint = convertGeographicToWGS84(geodeticOnUnitSphere);
+    return projectedPoint;
+}
+
 
 bool Ellipsoid::isPointOnTheOutside(glm::vec3 point) {
     auto pointSquared = point * point;

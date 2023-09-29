@@ -30,6 +30,8 @@ public:
 
     std::vector<glm::vec3> projectPointsOntoSurface(std::vector<glm::vec3> points);
 
+    glm::vec3 projectPointOntoSurface(glm::vec3 point);
+
     bool isPointOnTheOutside(glm::vec3);
 
     static Ellipsoid &wgs84() {

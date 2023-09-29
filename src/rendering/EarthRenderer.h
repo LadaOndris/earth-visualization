@@ -36,7 +36,7 @@ private:
 
     static void loadTexture(unsigned int &textureID, const std::string &texturePath);
 
-    std::vector<t_vertex> convertToVertices(const std::vector<glm::vec3>& projectedVertices);
+    std::vector<t_vertex> convertToVertices(const std::vector<glm::vec3> &projectedVertices);
 
 public:
     EarthRenderer(Ellipsoid &ellipsoid, Camera &camera, glm::vec3 lightPosition)
@@ -48,7 +48,7 @@ public:
 
     void setupVertexArrays();
 
-    void loadTextures();
+    void loadTextures(std::string dayTextureName, std::string nightTextureName);
 
     void render(float currentTime, t_window_definition window) override;
 };

@@ -20,13 +20,16 @@ private:
     glm::vec3 up;
     float zoomSpeedFactor;
     float maxSpeed = 20;
-    float minSpeed = 0.01;
 
     float calcZoomSpeedFromDistance() {
-        auto distance = glm::length(target - position);
-        auto speed = distance * distance / (distance + 50);
-        speed = std::min(speed, maxSpeed);
-        speed = std::max(speed, minSpeed);
+        // Project camera onto surface to find out how far the camera from the surface is.
+        auto pointOnSurface = ellipsoid.projectPointOntoSurface(position);
+        auto distance = glm::length(pointOnSurface - position);
+        auto speed = distance / 10.f;
+        //if (distance > 0.2f) {
+        //auto speed = distance * distance / (distance + 30);
+        //speed = std::min(speed, maxSpeed);
+        //}
         std::cout << "Distance: " << distance << " Speed: " << speed << std::endl;
         return speed;
     }

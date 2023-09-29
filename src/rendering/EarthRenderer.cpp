@@ -54,22 +54,22 @@ void EarthRenderer::setupVertexArrays() {
     glEnableVertexAttribArray(0);
 }
 
-void EarthRenderer::loadTextures() {
+void EarthRenderer::loadTextures(std::string dayTextureName, std::string nightTextureName) {
     glGenTextures(1, &dayTexture);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, dayTexture);
-    loadTexture(dayTexture, "textures/2_no_clouds_16k.jpg");
+    loadTexture(dayTexture, "textures/" + dayTextureName);
 
     glGenTextures(1, &nightTexture);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, nightTexture);
-    loadTexture(nightTexture, "textures/5_night_16k.jpg");
+    loadTexture(nightTexture, "textures/" + nightTextureName);
 }
 
 void EarthRenderer::loadTexture(unsigned int &textureID, const std::string &texturePath) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     int width, height, nrChannels;
@@ -90,7 +90,7 @@ void EarthRenderer::render(float currentTime, t_window_definition window) {
     glm::mat4 projectionMatrix;
     projectionMatrix = glm::perspective(glm::radians(camera.getFov()),
                                         (float) window.width / (float) window.height,
-                                        0.1f, 100.0f);
+                                        0.001f, 500.0f);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, dayTexture);
