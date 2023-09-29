@@ -241,7 +241,8 @@ int main() {
             std::make_shared<EarthRenderer>(ellipsoid, camera, lightPosition);
     earthRenderer->constructVertices(subdivisionSurfaces);
     earthRenderer->setupVertexArrays();
-    earthRenderer->loadTextures();
+    //earthRenderer->loadTextures("2_no_clouds_16k.jpg", "5_night_16k.jpg");
+    earthRenderer->loadTextures("2_no_clouds_8k.jpg", "5_night_8k.jpg");
 
 
     auto sunRenderer =
