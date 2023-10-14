@@ -28,6 +28,8 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <chrono>
+#include <array>
+#include <algorithm>
 
 t_window_definition windowDefinition;
 float lastX = 400, lastY = 300;
@@ -61,6 +63,11 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 }
 
 static void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
+    auto &io = ImGui::GetIO();
+    if (io.WantCaptureMouse) {
+        return;
+    }
+
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         if (GLFW_PRESS == action)
             lbutton_down = true;
@@ -74,6 +81,11 @@ static void mouse_button_callback(GLFWwindow *window, int button, int action, in
 }
 
 void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos) {
+    auto &io = ImGui::GetIO();
+    if (io.WantCaptureMouse) {
+        return;
+    }
+
     if (firstMouseMove) // initially set to true
     {
         lastX = xpos;
@@ -94,12 +106,54 @@ void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos) {
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+    auto &io = ImGui::GetIO();
+    if (io.WantCaptureMouse) {
+        return;
+    }
+
     camera.onMouseScroll(xoffset, yoffset);
 }
 
-void processInput(GLFWwindow *window, Camera &camera, float deltaTime) {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+template<typename T, std::size_t N>
+bool contains(const std::array<T, N> &arr, const T &value) {
+    return std::find(std::begin(arr), std::end(arr), value) != std::end(arr);
+}
+
+static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+    if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE) {
         glfwSetWindowShouldClose(window, true);
+    }
+
+    std::array<int, 2> zoomInKeys{GLFW_KEY_KP_ADD, GLFW_KEY_UP};
+    std::array<int, 2> zoomOutKeys = {GLFW_KEY_KP_SUBTRACT, GLFW_KEY_DOWN};
+    int rotateLeftKey = GLFW_KEY_A;
+    int rotateRightKey = GLFW_KEY_D;
+    int rotateUpKey = GLFW_KEY_W;
+    int rotateDownKey = GLFW_KEY_S;
+
+    int zoomSpped = 1;
+    int rotateSpeed = 20;
+
+    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+        if (contains(zoomInKeys, key)) {
+            camera.onMouseScroll(0, zoomSpped);
+        }
+        if (contains(zoomOutKeys, key)) {
+            camera.onMouseScroll(0, -zoomSpped);
+        }
+        if (key == rotateLeftKey) {
+            camera.onMouseDrag(rotateSpeed, 0);
+        }
+        if (key == rotateRightKey) {
+            camera.onMouseDrag(-rotateSpeed, 0);
+        }
+        if (key == rotateUpKey) {
+            camera.onMouseDrag(0, -rotateSpeed);
+        }
+        if (key == rotateDownKey) {
+            camera.onMouseDrag(0, rotateSpeed);
+        }
+    }
 }
 
 /**
@@ -130,6 +184,7 @@ bool initializeGlfw() {
     glfwSetCursorPosCallback(window, cursor_pos_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    glfwSetKeyCallback(window, key_callback);
     return true;
 }
 
@@ -199,8 +254,6 @@ void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers) {
         auto currentFrame = static_cast<float>(glfwGetTime());
         float deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
-
-        processInput(window, camera, deltaTime);
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
