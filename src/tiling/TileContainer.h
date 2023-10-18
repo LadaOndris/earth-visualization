@@ -39,7 +39,6 @@ private:
             Texture colorMap = colorMapAtlas.getTexture(level, tile);
 
             Resolution meshResolution = determineMeshResolution(heightMap, tile);
-            // The heightMap determines the resolution of the mesh (TODO: BUT THE HEIGHT MAP IS LARGER THAN THE TILE).
             // The ellipsoid is used to project the mesh onto it.
             // The tile determines the position of the mesh on the ellipsoid.
             Mesh_t mesh = tileMeshTesselator.generate(meshResolution, ellipsoid, tile);

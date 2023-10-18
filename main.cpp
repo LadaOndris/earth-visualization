@@ -16,6 +16,7 @@
 #include "src/rendering/SunRenderer.h"
 #include "src/rendering/GuiFrameRenderer.h"
 #include "src/cameras/EarthCenteredCamera.h"
+#include "src/tiling/TileContainer.h"
 
 #include <glm/vec3.hpp> // glm::vec3
 #include <glm/vec4.hpp> // glm::vec4
@@ -281,6 +282,16 @@ int main() {
     if (!initializeGlfw() || !initializeGlad() || !initializeImgui()) {
         return EXIT_FAILURE;
     }
+
+    TileMeshTesselator tileMeshTesselator;
+    TextureAtlas colorMapAtlas;
+    TextureAtlas heightMapAtlas;
+    TileContainer tileContainer(tileMeshTesselator, colorMapAtlas, heightMapAtlas, ellipsoid);
+
+    colorMapAtlas.registerAvailableTextures("textures/colorMaps");
+    heightMapAtlas.registerAvailableTextures("textures/heightMaps");
+    tileContainer.setupTiles();
+
 
     auto sunVsEarthRadiusFactor = 109.168105; // Sun_radius / Earth_radius
     auto sunRadius = sunVsEarthRadiusFactor * radii.x;
