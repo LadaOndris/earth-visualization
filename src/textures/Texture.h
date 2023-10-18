@@ -12,19 +12,18 @@
 #include "../tiling/Resolution.h"
 
 class Texture {
-public:
+private:
     std::string path;
-
-    bool isLoaded = false;
+    bool _isLoaded = false;
     unsigned char *data = nullptr;
     Resolution resolution = Resolution(0, 0);
-
+public:
     explicit Texture(std::string path) : path(std::move(path)) {
 
     }
 
     void load() {
-        if (isLoaded) {
+        if (_isLoaded) {
             return; // Texture is already loaded.
         }
         int width, height;
@@ -33,7 +32,7 @@ public:
 
         if (data) {
             resolution = Resolution(width, height);
-            isLoaded = true;
+            _isLoaded = true;
         }
         else {
             std::cout << "Failed to load texture: " << path << std::endl;
@@ -41,15 +40,24 @@ public:
     }
 
     void unload() {
-        if (!isLoaded) {
+        if (!_isLoaded) {
             return; // Texture is not loaded.
         }
 
         stbi_image_free(data);
         data = nullptr;
-        isLoaded = false;
+        _isLoaded = false;
         resolution = Resolution(0, 0);
     }
+
+    bool isLoaded() const {
+        return _isLoaded;
+    }
+
+    std::string getPath() const {
+        return path;
+    }
+
 };
 
 #endif //EARTH_VISUALIZATION_TEXTURE_H

@@ -15,5 +15,13 @@ include_directories(include)
 file(GLOB_RECURSE SOURCES_C "src/*.c")
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 file(GLOB_RECURSE HEADERS "src/*.h")
-add_executable(earth_visualization main.cpp ${SOURCES} ${SOURCES_C} ${HEADERS} src/rendering/GuiFrameRenderer.h src/cameras/EarthCenteredCamera.h src/cameras/EarthCenteredCamera.h src/cameras/Camera.h)
+
+# Executable
+add_executable(earth_visualization main.cpp ${SOURCES} ${SOURCES_C} ${HEADERS})
 target_link_libraries(earth_visualization ${OPENGL_gl_LIBRARY} glfw glm imgui)
+
+# Library for tests
+add_library(earth_visualization_lib ${SOURCES} ${SOURCES_C} ${HEADERS})
+target_link_libraries(earth_visualization_lib ${OPENGL_gl_LIBRARY} glfw glm imgui)
+
+add_subdirectory(tests)
