@@ -58,6 +58,10 @@ public:
         return path;
     }
 
+    Resolution getResolution() const {
+        return resolution;
+    }
+
 };
 
 #endif //EARTH_VISUALIZATION_TEXTURE_H

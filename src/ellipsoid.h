@@ -15,22 +15,22 @@ public:
 
     glm::vec3 getOneOverRadiiSquared() const;
 
-    glm::vec3 geodeticSurfaceNormalFromWGS84(glm::vec3 point);
+    glm::vec3 geodeticSurfaceNormalFromWGS84(glm::vec3 point) const;
 
     /**
      *
      * @param geodetic Tuple (longitude, latitude, height)
      * @return
      */
-    glm::vec3 geodeticSurfaceNormalFromGeodetic(glm::vec3 geodetic);
+    glm::vec3 geodeticSurfaceNormalFromGeodetic(glm::vec3 geodetic) const;
 
-    glm::vec3 convertGeographicToWGS84(glm::vec3 geodetic);
+    glm::vec3 convertGeographicToWGS84(glm::vec3 geodetic) const;
 
-    glm::vec3 convertWGS84ToGeographic(glm::vec3 point);
+    glm::vec3 convertWGS84ToGeographic(glm::vec3 point) const;
 
-    std::vector<glm::vec3> projectPointsOntoSurface(std::vector<glm::vec3> points);
+    std::vector<glm::vec3> projectPointsOntoSurface(std::vector<glm::vec3> points) const;
 
-    glm::vec3 projectPointOntoSurface(glm::vec3 point);
+    glm::vec3 projectPointOntoSurface(glm::vec3 point) const;
 
     bool isPointOnTheOutside(glm::vec3);
 

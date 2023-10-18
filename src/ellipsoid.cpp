@@ -29,12 +29,12 @@ glm::vec3 Ellipsoid::getOneOverRadiiSquared() const {
  * @param vec Point on the surface of the ellipsoid.
  * @return
  */
-glm::vec3 Ellipsoid::geodeticSurfaceNormalFromWGS84(glm::vec3 point) {
+glm::vec3 Ellipsoid::geodeticSurfaceNormalFromWGS84(glm::vec3 point) const {
     auto normal = point * oneOverRadiiSquared;
     return glm::normalize(normal);
 }
 
-glm::vec3 Ellipsoid::geodeticSurfaceNormalFromGeodetic(glm::vec3 geodetic) {
+glm::vec3 Ellipsoid::geodeticSurfaceNormalFromGeodetic(glm::vec3 geodetic) const {
     double longitude = geodetic.x;
     double latitude = geodetic.y;
 
@@ -45,7 +45,7 @@ glm::vec3 Ellipsoid::geodeticSurfaceNormalFromGeodetic(glm::vec3 geodetic) {
     return normal;
 }
 
-glm::vec3 Ellipsoid::convertGeographicToWGS84(glm::vec3 geodetic) {
+glm::vec3 Ellipsoid::convertGeographicToWGS84(glm::vec3 geodetic) const {
     double longitude = geodetic.x;
     double latitude = geodetic.y;
     float height = geodetic.z;
@@ -59,7 +59,7 @@ glm::vec3 Ellipsoid::convertGeographicToWGS84(glm::vec3 geodetic) {
     return rSurface + (n * height);
 }
 
-glm::vec3 Ellipsoid::convertWGS84ToGeographic(glm::vec3 point) {
+glm::vec3 Ellipsoid::convertWGS84ToGeographic(glm::vec3 point) const {
     auto normal = geodeticSurfaceNormalFromWGS84(point);
     auto geodetic = glm::vec3(std::atan2(normal.y, normal.x),
                               std::asin(normal.z / glm::length(normal)),
@@ -67,7 +67,7 @@ glm::vec3 Ellipsoid::convertWGS84ToGeographic(glm::vec3 point) {
     return geodetic;
 }
 
-std::vector<glm::vec3> Ellipsoid::projectPointsOntoSurface(std::vector<glm::vec3> points) {
+std::vector<glm::vec3> Ellipsoid::projectPointsOntoSurface(std::vector<glm::vec3> points) const {
     // Project points from unit sphere to the custom ellipsoid
     std::vector<glm::vec3> projectedPoints;
     for (const auto &point: points) {
@@ -78,7 +78,7 @@ std::vector<glm::vec3> Ellipsoid::projectPointsOntoSurface(std::vector<glm::vec3
     return projectedPoints;
 }
 
-glm::vec3 Ellipsoid::projectPointOntoSurface(glm::vec3 point) {
+glm::vec3 Ellipsoid::projectPointOntoSurface(glm::vec3 point) const {
     // Convert from unit sphere to geodetic coordinates on the unit sphere
     glm::vec3 geodeticOnUnitSphere = convertWGS84ToGeographic(point);
     // Convert from geodetic coordinates on unit sphere to WGS84 coordinates on the custom ellipsoid
