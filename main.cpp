@@ -17,6 +17,7 @@
 #include "src/rendering/GuiFrameRenderer.h"
 #include "src/cameras/EarthCenteredCamera.h"
 #include "src/tiling/TileContainer.h"
+#include "src/rendering/TileEarthRenderer.h"
 
 #include <glm/vec3.hpp> // glm::vec3
 #include <glm/vec4.hpp> // glm::vec4
@@ -282,16 +283,7 @@ int main() {
     if (!initializeGlfw() || !initializeGlad() || !initializeImgui()) {
         return EXIT_FAILURE;
     }
-
-    TileMeshTesselator tileMeshTesselator;
-    TextureAtlas colorMapAtlas;
-    TextureAtlas heightMapAtlas;
-    TileContainer tileContainer(tileMeshTesselator, colorMapAtlas, heightMapAtlas, ellipsoid);
-
-    colorMapAtlas.registerAvailableTextures("textures/colorMaps");
-    heightMapAtlas.registerAvailableTextures("textures/heightMaps");
-    tileContainer.setupTiles();
-
+    bool useTiling = true;
 
     auto sunVsEarthRadiusFactor = 109.168105; // Sun_radius / Earth_radius
     auto sunRadius = sunVsEarthRadiusFactor * radii.x;
@@ -300,14 +292,35 @@ int main() {
     auto sunDistance = sunDistanceMeters / earthRadiusMeters * radii.x;
     auto lightPosition = glm::vec3(0.0f, 0.0f, sunDistance);
 
-    SubdivisionSphereTesselator subdivisionSurfaces;
-    auto earthRenderer =
-            std::make_shared<EarthRenderer>(ellipsoid, camera, lightPosition);
-    earthRenderer->constructVertices(subdivisionSurfaces);
-    earthRenderer->setupVertexArrays();
-    //earthRenderer->loadTextures("2_no_clouds_16k.jpg", "5_night_16k.jpg");
-    earthRenderer->loadTextures("2_no_clouds_8k.jpg", "5_night_8k.jpg");
+    std::vector<std::shared_ptr<Renderer>> renderers;
 
+    if (useTiling) {
+        TileMeshTesselator tileMeshTesselator;
+        TextureAtlas colorMapAtlas;
+        TextureAtlas heightMapAtlas;
+        TileContainer tileContainer(tileMeshTesselator, colorMapAtlas, heightMapAtlas, ellipsoid);
+
+        colorMapAtlas.registerAvailableTextures("textures/daymaps");
+        heightMapAtlas.registerAvailableTextures("textures/heightmaps");
+        tileContainer.setupTiles();
+
+        auto tileEarthRenderer =
+                std::make_shared<TileEarthRenderer>(tileContainer, ellipsoid, camera, lightPosition);
+        tileEarthRenderer->onInit();
+
+        renderers.push_back(tileEarthRenderer);
+    }
+    else {
+        SubdivisionSphereTesselator subdivisionSurfaces;
+        auto earthRenderer =
+                std::make_shared<EarthRenderer>(ellipsoid, camera, lightPosition);
+        earthRenderer->constructVertices(subdivisionSurfaces);
+        earthRenderer->setupVertexArrays();
+        //earthRenderer->loadTextures("2_no_clouds_16k.jpg", "5_night_16k.jpg");
+        earthRenderer->loadTextures("2_no_clouds_8k.jpg", "5_night_8k.jpg");
+
+        renderers.push_back(earthRenderer);
+    }
 
     auto sunRenderer =
             std::make_shared<SunRenderer>(camera, lightPosition, sunRadius);
@@ -318,9 +331,6 @@ int main() {
     auto guiRenderer =
             std::make_shared<GuiFrameRenderer>(simulationIsRunning);
 
-
-    std::vector<std::shared_ptr<Renderer>> renderers;
-    renderers.push_back(earthRenderer);
     renderers.push_back(sunRenderer);
     renderers.push_back(guiRenderer);
 

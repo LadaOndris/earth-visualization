@@ -1,0 +1,139 @@
+
+#include "TileEarthRenderer.h"
+
+std::vector<t_vertex> convertToVertices(const std::vector<glm::vec3> &projectedVertices) {
+    std::vector<t_vertex> convertedVertices;
+    for (const auto &vec3: projectedVertices) {
+        t_vertex vertex;
+        vertex.x = vec3.x;
+        vertex.y = vec3.y;
+        vertex.z = vec3.z;
+
+        convertedVertices.push_back(vertex);
+    }
+    return convertedVertices;
+}
+
+void TileEarthRenderer::onInit() {
+    int numLevels = tileContainer.getNumLevels();
+    initVertexArraysForAllLevels(numLevels);
+}
+
+/**
+ * Creates a vertex buffer for each level of detail (LOD).
+ *
+ * These vertex buffers contain the full geometry of each level.
+ *
+ * @param numLevels The number of level of details.
+ */
+void TileEarthRenderer::initVertexArraysForAllLevels(int numLevels) {
+    for (int level = 0; level < numLevels; level++) {
+        Mesh_t fullMeshForThisLevel;
+        // Merge all tile meshes of this level together.
+        for (Tile &tile: tileContainer.getTiles()) {
+            auto resources = tile.getResourcesByLevel(level);
+            resources->setMeshBufferOffset(fullMeshForThisLevel.size());
+
+            Mesh_t mesh = resources->getMesh();
+            fullMeshForThisLevel.insert(fullMeshForThisLevel.end(), mesh.begin(), mesh.end());
+        }
+
+        std::vector<t_vertex> verticesForThisLevel = convertToVertices(fullMeshForThisLevel);
+
+        unsigned int VAO, VBO;
+        setupVertexArray(verticesForThisLevel, VAO, VBO);
+
+        for (Tile &tile: tileContainer.getTiles()) {
+            auto resources = tile.getResourcesByLevel(level);
+            resources->meshVAO = VAO;
+            resources->meshVBO = VBO;
+        }
+    }
+}
+
+void TileEarthRenderer::setupVertexArray(std::vector<t_vertex> vertices,
+                                         unsigned int &VAO, unsigned int &VBO) {
+    glGenBuffers(1, &VBO);
+
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(t_vertex), &vertices.front(), GL_STATIC_DRAW);
+
+    // Position
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
+    glEnableVertexAttribArray(0);
+}
+
+void TileEarthRenderer::prepareTexture(Texture &texture) {
+    if (!texture.isLoaded()) {
+        texture.load();
+    }
+
+    unsigned char *data = texture.getData();
+    Resolution resolution = texture.getResolution();
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, resolution.getWidth(), resolution.getHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE,
+                 data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+}
+
+void TileEarthRenderer::render(float currentTime, t_window_definition window) {
+    shader.use();
+
+    glGenTextures(1, &dayTextureId); // TODO: is this okay?
+
+    // Set up model, view, and projection matrix
+    setupMatrices(currentTime, window);
+
+    auto tiles = tileContainer.getTiles();
+    for (Tile &tile: tiles) {
+        std::shared_ptr<TileResources> resources = tile.getResources();
+        Mesh_t mesh = resources->getMesh();
+
+        // Load resources if needed
+//        Texture &dayTexture = resources->getDayTexture();
+//        prepareTexture(dayTexture);
+
+        // Bind texture
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, dayTextureId);
+
+        // Set fragment shader variables: texture, lighting
+        // Texture: offset
+
+        // Set VAO: we need the correct buffer? Is there one or more?
+        glBindVertexArray(resources->meshVAO);
+        glDrawArrays(GL_TRIANGLES, resources->getMeshBufferOffset(), mesh.size());
+
+        // Draw mesh
+    }
+}
+
+void TileEarthRenderer::setupMatrices(float currentTime, t_window_definition window) {
+    glm::mat4 projectionMatrix;
+    projectionMatrix = glm::perspective(glm::radians(camera.getFov()),
+                                        (float) window.width / (float) window.height,
+                                        0.001f, 500.0f);
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+    glm::vec3 ellipsoidPosition = glm::vec3(0.f, 0.f, 0.f);
+    modelMatrix = glm::translate(modelMatrix, ellipsoidPosition);
+    float angle = 20.0f * 0;
+    modelMatrix = glm::rotate(modelMatrix, currentTime * glm::radians(angle),
+                              glm::vec3(1.0f, 0.3f, 0.5f));
+
+    shader.setMat4("projection", projectionMatrix);
+    shader.setMat4("view", camera.getViewMatrix());
+    shader.setMat4("model", modelMatrix);
+}
+
+void onExit() {
+
+}
+

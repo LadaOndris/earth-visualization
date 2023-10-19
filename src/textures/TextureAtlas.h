@@ -163,7 +163,7 @@ public:
      * @param tile
      * @return
      */
-    Texture getTexture(unsigned int level, const Tile &tile) {
+    Texture &getTexture(unsigned int level, const Tile &tile) {
         if (level < textures.size() && tile.getLongitude() >= 0.0 && tile.getLatitude() >= 0.0) {
             int x_index = static_cast<int>(tile.getLongitude() / 360.0 * textures[level].size());
             int y_index = static_cast<int>(tile.getLatitude() / 180.0 * textures[level][0].size());
@@ -173,8 +173,11 @@ public:
             }
         }
 
-        // Return a default empty texture if not found.
-        return Texture("");
+        std::stringstream ss;
+        ss << "Could not find texture for level " << level << " and tile ("
+           << tile.getLatitude() << ", " << tile.getLongitude() << ", "
+           << tile.getLatitudeWidth() << ", " << tile.getLongitudeWidth() << ")";
+        throw std::runtime_error(ss.str());
     }
 };
 

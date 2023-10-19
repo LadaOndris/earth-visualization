@@ -5,6 +5,7 @@
 #ifndef EARTH_VISUALIZATION_CAMERA_H
 #define EARTH_VISUALIZATION_CAMERA_H
 
+#include <glm/mat4x4.hpp> // glm::mat4
 
 class Camera {
 protected:

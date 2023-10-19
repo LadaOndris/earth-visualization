@@ -15,8 +15,9 @@ class CameraParams {
 
 class Tile {
 private:
-    std::vector<TileResources> lodResources;
+    std::vector<std::shared_ptr<TileResources>> lodResources;
     double latitude, longitude, latitudeWidth, longitudeWidth;
+    int lastLevel = -1;
 
     /**
      * Compute the screen-space error based on the given parameters.
@@ -69,20 +70,37 @@ public:
      * @param cameraParams Parameters containing the angle of the camera
      * @return
      */
-    TileResources getResources(double screenSpaceWidth, double viewFrustrumWidth, double distanceToCamera,
-                               double cameraViewAngle, double geometricError) {
+    std::shared_ptr<TileResources> getResources() {
+        //double screenSpaceWidth, double viewFrustrumWidth, double distanceToCamera,
+        //                               double cameraViewAngle, double geometricError
         // Calculate the screen-space error based on the provided parameters.
-        double screenSpaceError = computeScreenSpaceError(screenSpaceWidth, viewFrustrumWidth, distanceToCamera, cameraViewAngle, geometricError);
+        //double screenSpaceError = computeScreenSpaceError(screenSpaceWidth, viewFrustrumWidth, distanceToCamera, cameraViewAngle, geometricError);
 
         // Determine the appropriate level of detail (LOD) based on the screen-space error.
-        int selectedLOD = selectLOD(screenSpaceError);
-
+        //int selectedLOD = selectLOD(screenSpaceError);
+        int selectedLOD = 0;
         // Return the resources for the selected LOD.
         return lodResources[selectedLOD];
     }
 
-    void addResources(const TileResources &resources) {
-        // Implement adding resources to the tile.
+    std::shared_ptr<TileResources> getResourcesByLevel(int level) {
+        assert(level < lodResources.size());
+        return lodResources[level];
+    }
+
+    void addResources(const std::shared_ptr<TileResources>& resources, int level) {
+        // Assumes resources are added from coarse to fine for simplicity.
+        // Check it is true.
+        assert(level > lastLevel);
+        lastLevel = level;
+
+        // Cross-reference resources of neighboring LODs
+        auto lastResources = lodResources.back();
+        lastResources->finerResources.push_back(resources);
+        resources->coarserResources = lastResources;
+
+        // Add resources to the current tile
+        lodResources.push_back(resources);
     }
 
     double getLatitude() const {

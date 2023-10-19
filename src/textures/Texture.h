@@ -7,7 +7,6 @@
 
 #include <iostream>
 #include <utility>
-#include <GL/glew.h>
 #include <stb_image.h>
 #include "../tiling/Resolution.h"
 
@@ -26,6 +25,7 @@ public:
         if (_isLoaded) {
             return; // Texture is already loaded.
         }
+        std::cout << "Loading texture." << std::endl;
         int width, height;
         stbi_set_flip_vertically_on_load(true);
         data = stbi_load(path.c_str(), &width, &height, nullptr, 0);
@@ -60,6 +60,10 @@ public:
 
     Resolution getResolution() const {
         return resolution;
+    }
+
+    unsigned char *getData() const {
+        return data;
     }
 
 };

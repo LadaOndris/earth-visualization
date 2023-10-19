@@ -42,9 +42,9 @@ private:
             // The ellipsoid is used to project the mesh onto it.
             // The tile determines the position of the mesh on the ellipsoid.
             Mesh_t mesh = tileMeshTesselator.generate(meshResolution, ellipsoid, tile);
-            TileResources tileResource(mesh, colorMap, heightMap);
+            auto tileResource = std::make_shared<TileResources>(mesh, colorMap, heightMap);
 
-            tile.addResources(tileResource);
+            tile.addResources(tileResource, level);
         }
     }
 
@@ -137,6 +137,10 @@ public:
 
     std::vector<Tile> getTiles() {
         return tiles;
+    }
+
+    int getNumLevels() const {
+        return colorMapAtlas.getNumLevelsOfDetail();
     }
 };
 
