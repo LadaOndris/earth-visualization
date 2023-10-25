@@ -294,16 +294,16 @@ int main() {
 
     std::vector<std::shared_ptr<Renderer>> renderers;
 
+    TileMeshTesselator tileMeshTesselator;
+    TextureAtlas colorMapAtlas;
+    TextureAtlas heightMapAtlas;
+    TileContainer tileContainer(tileMeshTesselator, colorMapAtlas, heightMapAtlas, ellipsoid);
+
+    colorMapAtlas.registerAvailableTextures("textures/daymaps");
+    heightMapAtlas.registerAvailableTextures("textures/heightmaps");
+    tileContainer.setupTiles();
+
     if (useTiling) {
-        TileMeshTesselator tileMeshTesselator;
-        TextureAtlas colorMapAtlas;
-        TextureAtlas heightMapAtlas;
-        TileContainer tileContainer(tileMeshTesselator, colorMapAtlas, heightMapAtlas, ellipsoid);
-
-        colorMapAtlas.registerAvailableTextures("textures/daymaps");
-        heightMapAtlas.registerAvailableTextures("textures/heightmaps");
-        tileContainer.setupTiles();
-
         auto tileEarthRenderer =
                 std::make_shared<TileEarthRenderer>(tileContainer, ellipsoid, camera, lightPosition);
         tileEarthRenderer->onInit();
@@ -331,7 +331,7 @@ int main() {
     auto guiRenderer =
             std::make_shared<GuiFrameRenderer>(simulationIsRunning);
 
-    renderers.push_back(sunRenderer);
+    // renderers.push_back(sunRenderer);
     renderers.push_back(guiRenderer);
 
     startRendering(renderers);

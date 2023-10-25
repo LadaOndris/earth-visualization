@@ -56,8 +56,8 @@ public:
         // You should generate mesh vertices and populate the meshVertices vector.
 
         // Example: Generate a simple quad mesh (adjust for your actual mesh generation):
-        for (int y = 0; y < meshResolution.getHeight() - 1; y++) {
-            for (int x = 0; x < meshResolution.getWidth() - 1; x++) {
+        for (int y = 0; y < meshResolution.getHeight(); y++) {
+            for (int x = 0; x < meshResolution.getWidth(); x++) {
                 // Calculate vertex positions based on resolution, ellipsoid, and tile information.
                 glm::vec3 vertex1 = calculateVertexPosition(x, y, meshResolution, tile);
                 glm::vec3 vertex2 = calculateVertexPosition(x + 1, y, meshResolution, tile);
