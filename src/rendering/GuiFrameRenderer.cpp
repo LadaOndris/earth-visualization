@@ -125,3 +125,11 @@ std::string GuiFrameRenderer::getCurrentSimulationTime() const {
 RenderingOptions GuiFrameRenderer::getRenderingOptions() const {
     return renderingOptions;
 }
+
+bool GuiFrameRenderer::initialize() {
+    return true;
+}
+
+void GuiFrameRenderer::destroy() {
+
+}

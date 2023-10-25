@@ -127,3 +127,15 @@ void EarthRenderer::render(float currentTime, t_window_definition window, Render
 
     glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 }
+
+bool EarthRenderer::initialize() {
+    constructVertices(subdivisionSurfaces);
+    setupVertexArrays();
+    //earthRenderer->loadTextures("2_no_clouds_16k.jpg", "5_night_16k.jpg");
+    loadTextures("2_no_clouds_8k.jpg", "5_night_8k.jpg");
+    return true;
+}
+
+void EarthRenderer::destroy() {
+
+}

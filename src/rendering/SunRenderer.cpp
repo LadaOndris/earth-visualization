@@ -10,6 +10,14 @@ const unsigned int SunRenderer::sunIndices[] = {
         0, 1, 2,  // Triangle 1
 };
 
+
+bool SunRenderer::initialize() {
+    constructVertices();
+    setupVertexArrays();
+    return true;
+}
+
+
 void SunRenderer::constructVertices() {
     auto radius = sunRadius;
     int numSegments = 360;
@@ -83,4 +91,8 @@ void SunRenderer::render(float currentTime, t_window_definition window, Renderin
 
 //    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 //    glDrawElements(GL_TRIANGLES, vertices.size(), GL_FLOAT, 0);
+}
+
+void SunRenderer::destroy() {
+
 }

@@ -24,6 +24,7 @@
 
 class EarthRenderer : public Renderer {
 private:
+    SubdivisionSphereTesselator &subdivisionSurfaces;
     Camera &camera;
     Ellipsoid &ellipsoid;
     Shader shader;
@@ -38,17 +39,22 @@ private:
 
     std::vector<t_vertex> convertToVertices(const std::vector<glm::vec3> &projectedVertices);
 
-public:
-    EarthRenderer(Ellipsoid &ellipsoid, Camera &camera, glm::vec3 lightPosition)
-            : shader("shaders/shader.vs", "shaders/shader.fs"),
-              camera(camera), ellipsoid(ellipsoid), lightPosition(lightPosition) {
-    }
-
     void constructVertices(SphereTesselator &tesselator);
 
     void setupVertexArrays();
 
     void loadTextures(std::string dayTextureName, std::string nightTextureName);
+
+public:
+    EarthRenderer(SubdivisionSphereTesselator &subdivisionSurfaces, Ellipsoid &ellipsoid, Camera &camera,
+                  glm::vec3 lightPosition)
+            : shader("shaders/shader.vs", "shaders/shader.fs"), subdivisionSurfaces(subdivisionSurfaces),
+              camera(camera), ellipsoid(ellipsoid), lightPosition(lightPosition) {
+    }
+
+    bool initialize() override;
+
+    void destroy() override;
 
     void render(float currentTime, t_window_definition window, RenderingOptions options) override;
 };

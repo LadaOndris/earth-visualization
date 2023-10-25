@@ -246,6 +246,15 @@ std::string formatTime(const std::chrono::system_clock::time_point &timePoint) {
     return buffer;
 }
 
+bool initializeRenderers(std::vector<std::shared_ptr<Renderer>> renderers) {
+    for (const auto &renderer: renderers) {
+        bool initializationResult = renderer->initialize();
+        if (!initializationResult) {
+            return false;
+        }
+    }
+    return true;
+}
 
 void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers,
                     const std::shared_ptr<GuiFrameRenderer> &guiRenderer) {
@@ -271,7 +280,11 @@ void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers,
     }
 }
 
-void cleanup() {
+void cleanup(const std::vector<std::shared_ptr<Renderer>> &renderers) {
+    for (const auto &renderer: renderers) {
+        renderer->destroy();
+    }
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
@@ -296,6 +309,8 @@ int main() {
 
     std::vector<std::shared_ptr<Renderer>> renderers;
 
+    SubdivisionSphereTesselator subdivisionSurfaces;
+
     TileMeshTesselator tileMeshTesselator;
     TextureAtlas colorMapAtlas;
     TextureAtlas heightMapAtlas;
@@ -308,25 +323,16 @@ int main() {
     if (useTiling) {
         auto tileEarthRenderer =
                 std::make_shared<TileEarthRenderer>(tileContainer, ellipsoid, camera, lightPosition);
-        tileEarthRenderer->onInit();
-
         renderers.push_back(tileEarthRenderer);
     } else {
-        SubdivisionSphereTesselator subdivisionSurfaces;
         auto earthRenderer =
-                std::make_shared<EarthRenderer>(ellipsoid, camera, lightPosition);
-        earthRenderer->constructVertices(subdivisionSurfaces);
-        earthRenderer->setupVertexArrays();
-        //earthRenderer->loadTextures("2_no_clouds_16k.jpg", "5_night_16k.jpg");
-        earthRenderer->loadTextures("2_no_clouds_8k.jpg", "5_night_8k.jpg");
-
+                std::make_shared<EarthRenderer>(subdivisionSurfaces, ellipsoid, camera, lightPosition);
         renderers.push_back(earthRenderer);
     }
 
     auto sunRenderer =
             std::make_shared<SunRenderer>(camera, lightPosition, sunRadius);
-    sunRenderer->constructVertices();
-    sunRenderer->setupVertexArrays();
+
 
     RenderingOptions options = {
             .isSimulationRunning = false
@@ -337,9 +343,15 @@ int main() {
     // renderers.push_back(sunRenderer);
     renderers.push_back(guiRenderer);
 
+    bool result = initializeRenderers(renderers);
+    if (!result) {
+        cleanup(renderers);
+        exit(EXIT_FAILURE);
+    }
     startRendering(renderers, guiRenderer);
-    cleanup();
+    cleanup(renderers);
 
     exit(EXIT_SUCCESS);
 }
+
 

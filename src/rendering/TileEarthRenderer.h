@@ -42,9 +42,10 @@ public:
 
     void render(float currentTime, t_window_definition window, RenderingOptions options) override;
 
-    bool onInit();
+    bool initialize() override;
 
-    void onExit();
+    void destroy() override;
+
 };
 
 

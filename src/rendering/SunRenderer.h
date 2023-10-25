@@ -27,17 +27,22 @@ private:
 
     glm::vec3 sunLocation;
 
+    void constructVertices();
+
+    void setupVertexArrays();
+
+
 public:
     SunRenderer(Camera &camera, glm::vec3 lightPosition, float sunRadius)
             : shader("shaders/sun/shader.vs", "shaders/sun/shader.fs"),
               camera(camera), lightPosition(lightPosition), sunRadius(sunRadius) {
     }
 
-    void constructVertices();
-
-    void setupVertexArrays();
+    bool initialize() override;
 
     void render(float currentTime, t_window_definition window, RenderingOptions options) override;
+
+    void destroy() override;
 };
 
 

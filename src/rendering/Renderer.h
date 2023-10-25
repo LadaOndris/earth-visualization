@@ -10,7 +10,11 @@
 
 class Renderer {
 public:
+    virtual bool initialize() = 0;
+
     virtual void render(float currentTime, t_window_definition window, RenderingOptions options) = 0;
+
+    virtual void destroy() = 0;
 };
 
 #endif //EARTH_VISUALIZATION_RENDERER_H

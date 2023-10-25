@@ -14,7 +14,7 @@ std::vector<t_vertex> convertToVertices(const std::vector<glm::vec3> &projectedV
     return convertedVertices;
 }
 
-bool TileEarthRenderer::onInit() {
+bool TileEarthRenderer::initialize() {
     bool isShaderProgramBuilt = shader.build();
     if (!isShaderProgramBuilt) {
         return false;
@@ -164,7 +164,19 @@ void TileEarthRenderer::setupMatrices(float currentTime, t_window_definition win
     shader.setMat4("model", modelMatrix);
 }
 
-void onExit() {
+void TileEarthRenderer::destroy() {
+    // Release texturee
+    glDeleteTextures(1, &dayTextureId);
+    // Release buffers
+    int numLevels = tileContainer.getNumLevels();
+    for (int level = 0; level < numLevels; level++) {
+        Tile tile = tileContainer.getTiles()[0];
+        auto resources = tile.getResourcesByLevel(level);
+        glDeleteVertexArrays(1, &resources->meshVAO);
+        glDeleteBuffers(1, &resources->meshVBO);
+    }
 
+    // TODO: unload textures
 }
+
 
