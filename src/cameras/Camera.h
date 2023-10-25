@@ -10,6 +10,7 @@
 class Camera {
 protected:
     float fov;
+    glm::vec3 position;
 public:
     explicit Camera(float fov = 45.0f) : fov(fov) {
     }
@@ -24,6 +25,10 @@ public:
 
     float getFov() const {
         return fov;
+    }
+
+    glm::vec3 getPosition() const {
+        return position;
     }
 };
 

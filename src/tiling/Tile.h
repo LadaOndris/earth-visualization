@@ -36,21 +36,6 @@ private:
         return screenSpaceError;
     }
 
-    /**
-     * Select the appropriate level of detail (LOD) based on the calculated screen-space error.
-     *
-     * @param screenSpaceError The calculated screen-space error.
-     * @return The index of the selected LOD.
-     */
-    int selectLOD(double screenSpaceError) {
-        if (screenSpaceError < 1.0) {
-            return 0; // Lowest LOD
-        } else if (screenSpaceError < 2.0) {
-            return 1; // Medium LOD
-        } else {
-            return 2; // Highest LOD
-        }
-    }
 
 public:
     explicit Tile(double latitude, double longitude, double latitudeWidth, double longitudeWidth)
@@ -59,27 +44,36 @@ public:
 
     /**
      * Selects the tile resources for the appropriate level of detail.
+     *
+     * We can use these quantities to compute the screen-space error and choose the LOD
+     * with the lowest screen-space error above a certain threshold.
+     *
+     * As the user zooms in, the screen space error becomes larger for all LODs.
+     * Thresholding at a certain value does the trick.
+     *
      * The following parameters play a role in which LOD gets selected:
      * - the width of the screen-space (x)
-     * - the width of the view-frustrum (w)
      * - distance from the center of the tile to the camera position (d)
      * - view angle of the camera (theta)
-     * - geometric error of the object, given the specific texture (e)
-     * We can use these quantities to compute the screen-space error and choose the LOD
-     * with the lowest screen-space error.
-     * @param cameraParams Parameters containing the angle of the camera
-     * @return
      */
-    std::shared_ptr<TileResources> getResources() {
-        //double screenSpaceWidth, double viewFrustrumWidth, double distanceToCamera,
-        //                               double cameraViewAngle, double geometricError
-        // Calculate the screen-space error based on the provided parameters.
-        //double screenSpaceError = computeScreenSpaceError(screenSpaceWidth, viewFrustrumWidth, distanceToCamera, cameraViewAngle, geometricError);
-
+    std::shared_ptr<TileResources> getResources(
+            double screenSpaceWidth, double distanceToCamera, double cameraViewAngle) {
         // Determine the appropriate level of detail (LOD) based on the screen-space error.
-        //int selectedLOD = selectLOD(screenSpaceError);
-        // Return the resources for the selected LOD.
-        return lodResources[lodResources.size() - 1];
+
+        int level = 0;
+        for (auto lod: lodResources) {
+            // Define the geometric error simply as the inverse of the number of triangles in a tile.
+            double geometricError = 1.0 / lod->getMesh().size();
+            double screenSpaceError = computeScreenSpaceError(screenSpaceWidth, distanceToCamera,
+                                                              cameraViewAngle, geometricError);
+            if (screenSpaceError > 0.7) {
+                break;
+            }
+            //std::cout << "[" << level << "] screen space error: " << screenSpaceError << std::endl;
+            level++;
+        }
+
+        return lodResources[level];
     }
 
     std::shared_ptr<TileResources> getResourcesByLevel(int level) {
@@ -87,7 +81,7 @@ public:
         return lodResources[level];
     }
 
-    void addResources(const std::shared_ptr<TileResources>& resources, int level) {
+    void addResources(const std::shared_ptr<TileResources> &resources, int level) {
         // Assumes resources are added from coarse to fine for simplicity.
         // Check it is true.
         assert(level > lastLevel);

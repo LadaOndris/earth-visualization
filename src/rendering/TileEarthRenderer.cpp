@@ -118,7 +118,12 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         shader.setFloat("uTileLongitudeWidth", tile.getLongitudeWidth());
         shader.setFloat("uTileLatitudeWidth", tile.getLatitudeWidth());
 
-        std::shared_ptr<TileResources> resources = tile.getResources();
+        double screenSpaceWidth = window.width;
+        double distanceToCamera = glm::length(camera.getPosition());
+        double fov = camera.getFov();
+
+
+        std::shared_ptr<TileResources> resources = tile.getResources(screenSpaceWidth, distanceToCamera, fov);
         Mesh_t mesh = resources->getMesh();
 
         // Load resources if needed
