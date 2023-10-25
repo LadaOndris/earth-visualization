@@ -247,7 +247,8 @@ std::string formatTime(const std::chrono::system_clock::time_point &timePoint) {
 }
 
 
-void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers) {
+void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers,
+                    const std::shared_ptr<GuiFrameRenderer> &guiRenderer) {
     glViewport(0, 0, windowDefinition.width, windowDefinition.height);
     glEnable(GL_DEPTH_TEST);
     float lastFrame = 0.0f; // Time of last frame
@@ -260,8 +261,9 @@ void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers) {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        RenderingOptions options = guiRenderer->getRenderingOptions();
         for (const auto &renderer: renderers) {
-            renderer->render(currentFrame, windowDefinition);
+            renderer->render(currentFrame, windowDefinition, options);
         }
 
         glfwSwapBuffers(window);
@@ -309,8 +311,7 @@ int main() {
         tileEarthRenderer->onInit();
 
         renderers.push_back(tileEarthRenderer);
-    }
-    else {
+    } else {
         SubdivisionSphereTesselator subdivisionSurfaces;
         auto earthRenderer =
                 std::make_shared<EarthRenderer>(ellipsoid, camera, lightPosition);
@@ -327,14 +328,16 @@ int main() {
     sunRenderer->constructVertices();
     sunRenderer->setupVertexArrays();
 
-    bool simulationIsRunning = false;
+    RenderingOptions options = {
+            .isSimulationRunning = false
+    };
     auto guiRenderer =
-            std::make_shared<GuiFrameRenderer>(simulationIsRunning);
+            std::make_shared<GuiFrameRenderer>(options);
 
     // renderers.push_back(sunRenderer);
     renderers.push_back(guiRenderer);
 
-    startRendering(renderers);
+    startRendering(renderers, guiRenderer);
     cleanup();
 
     exit(EXIT_SUCCESS);

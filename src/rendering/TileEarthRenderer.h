@@ -40,7 +40,7 @@ public:
               shader("shaders/tiling/shader.vs", "shaders/tiling/shader.fs") {
     }
 
-    void render(float currentTime, t_window_definition window) override;
+    void render(float currentTime, t_window_definition window, RenderingOptions options) override;
 
     bool onInit();
 

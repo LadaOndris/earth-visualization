@@ -84,7 +84,7 @@ void EarthRenderer::loadTexture(unsigned int &textureID, const std::string &text
     stbi_image_free(data);
 }
 
-void EarthRenderer::render(float currentTime, t_window_definition window) {
+void EarthRenderer::render(float currentTime, t_window_definition window, RenderingOptions options) {
     shader.use();
 
     glm::mat4 projectionMatrix;

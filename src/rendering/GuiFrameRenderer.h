@@ -8,23 +8,30 @@
 
 #include <string>
 #include "Renderer.h"
+#include "RenderingOptions.h"
 
 class GuiFrameRenderer : public Renderer {
 private:
-    bool simulationIsRunning;
+    int FIT_TO_CONTENT = 0;
+    RenderingOptions renderingOptions;
 
     void createSimulationWindow(t_window_definition window);
+
+    void createFeaturesWindow(t_window_definition window);
 
     void createCameraWindow(t_window_definition window);
 
     void startOrStopSimulation();
 
-    std::string getCurrentSimulationTime();
+    std::string getCurrentSimulationTime() const;
+
 
 public:
-    explicit GuiFrameRenderer(bool simulationIsRunning);
+    explicit GuiFrameRenderer(RenderingOptions options);
 
-    void render(float currentTime, t_window_definition window) override;
+    void render(float currentTime, t_window_definition window, RenderingOptions options) override;
+
+    RenderingOptions getRenderingOptions() const;
 };
 
 

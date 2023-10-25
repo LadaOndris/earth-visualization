@@ -6,10 +6,11 @@
 #define EARTH_VISUALIZATION_RENDERER_H
 
 #include "../window_definition.h"
+#include "RenderingOptions.h"
 
 class Renderer {
 public:
-    virtual void render(float currentTime, t_window_definition window) = 0;
+    virtual void render(float currentTime, t_window_definition window, RenderingOptions options) = 0;
 };
 
 #endif //EARTH_VISUALIZATION_RENDERER_H

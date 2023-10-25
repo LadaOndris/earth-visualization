@@ -37,7 +37,7 @@ public:
 
     void setupVertexArrays();
 
-    void render(float currentTime, t_window_definition window) override;
+    void render(float currentTime, t_window_definition window, RenderingOptions options) override;
 };
 
 

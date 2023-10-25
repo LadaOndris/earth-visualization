@@ -90,7 +90,7 @@ void TileEarthRenderer::prepareTexture(Texture &texture) {
     glGenerateMipmap(GL_TEXTURE_2D);
 }
 
-void TileEarthRenderer::render(float currentTime, t_window_definition window) {
+void TileEarthRenderer::render(float currentTime, t_window_definition window, RenderingOptions options) {
     shader.use();
 
     glGenTextures(1, &dayTextureId); // TODO: is this okay?
@@ -135,9 +135,12 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window) {
         // Set VAO: we need the correct buffer? Is there one or more?
         glBindVertexArray(resources->meshVAO);
 
-        //glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-        //glDrawArrays(GL_TRIANGLES, resources->getMeshBufferOffset(), mesh.size());
-        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+        if (options.isWireframeEnabled) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        }
+        else{
+            glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+        }
         glDrawArrays(GL_TRIANGLES, 0, mesh.size());
         drawTiles--;
         // Draw mesh

@@ -52,7 +52,7 @@ void SunRenderer::setupVertexArrays() {
     glBindVertexArray(0);
 }
 
-void SunRenderer::render(float currentTime, t_window_definition window) {
+void SunRenderer::render(float currentTime, t_window_definition window, RenderingOptions options) {
     glm::mat4 projectionMatrix;
     auto sunDistance = glm::length(lightPosition);
     auto minDepth = 1.f; //sunDistance - 3 * sunRadius;

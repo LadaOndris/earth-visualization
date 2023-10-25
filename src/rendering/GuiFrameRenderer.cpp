@@ -1,6 +1,3 @@
-//
-// Created by lada on 9/28/23.
-//
 
 #include "GuiFrameRenderer.h"
 
@@ -10,27 +7,66 @@
 #include <imgui_impl_opengl3.h>
 #include <iostream>
 
-GuiFrameRenderer::GuiFrameRenderer(bool simulationIsRunning)
-        : simulationIsRunning(simulationIsRunning) {
+GuiFrameRenderer::GuiFrameRenderer(RenderingOptions options) : renderingOptions(options) {
 }
 
 
-void GuiFrameRenderer::render(float currentTime, t_window_definition window) {
+void GuiFrameRenderer::render(float currentTime, t_window_definition window, RenderingOptions options) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
 
     ImGui::NewFrame();
 
     createSimulationWindow(window);
+    createFeaturesWindow(window);
     createCameraWindow(window);
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
+/**
+ * Creates a window that enables turning on and off features.
+ */
+void GuiFrameRenderer::createFeaturesWindow(t_window_definition window) {
+    int width = 200;
+    int height = FIT_TO_CONTENT;
+    int paddingTop = 210 + 10;
+    int paddingRight = 10;
+
+    // Window position
+    auto xPos = static_cast<float>(window.width - width - paddingRight);
+    auto yPos = static_cast<float>(paddingTop);
+    auto windowPosition = ImVec2(xPos, yPos);
+    ImGui::SetNextWindowPos(windowPosition, ImGuiCond_Always);
+    // Window size
+    ImGui::SetNextWindowSize(
+            ImVec2(static_cast<float>(width), static_cast<float>(height)),
+            ImGuiCond_Always
+    );
+    // Set window opacity
+    ImGui::SetNextWindowBgAlpha(0.7f);
+
+    auto windowFlags = ImGuiWindowFlags_NoResize |
+                       ImGuiWindowFlags_NoMove |
+                       ImGuiWindowFlags_NoScrollbar |
+                       ImGuiWindowFlags_NoCollapse;
+    ImGui::Begin("Turn on/off features", nullptr, windowFlags);
+
+    ImGui::Spacing();
+    ImGui::Checkbox("Wireframe", &renderingOptions.isWireframeEnabled);
+    ImGui::Spacing();
+    ImGui::Checkbox("Color texture", &renderingOptions.isTextureEnabled);
+    ImGui::Spacing();
+    ImGui::Checkbox("Terrain", &renderingOptions.isTerrainEnabled);
+    ImGui::Spacing();
+
+    ImGui::End();
+}
+
 void GuiFrameRenderer::createSimulationWindow(t_window_definition window) {
     int width = 200;
-    int height = 100;
+    int height = FIT_TO_CONTENT;
     int paddingTop = 10;
     int paddingRight = 10;
 
@@ -59,7 +95,7 @@ void GuiFrameRenderer::createSimulationWindow(t_window_definition window) {
     ImGui::Separator();
     ImGui::Spacing();
 
-    auto simulationButtonText = simulationIsRunning ? "Stop" : "Start";
+    auto simulationButtonText = renderingOptions.isSimulationRunning ? "Stop" : "Start";
     if (ImGui::Button(simulationButtonText)) {
         startOrStopSimulation();
     }
@@ -71,7 +107,6 @@ void GuiFrameRenderer::createSimulationWindow(t_window_definition window) {
     }
 
     ImGui::End();
-
 }
 
 void GuiFrameRenderer::createCameraWindow(t_window_definition window) {
@@ -80,9 +115,13 @@ void GuiFrameRenderer::createCameraWindow(t_window_definition window) {
 
 
 void GuiFrameRenderer::startOrStopSimulation() {
-    simulationIsRunning = ~simulationIsRunning;
+    renderingOptions.isSimulationRunning = ~renderingOptions.isSimulationRunning;
 }
 
-std::string GuiFrameRenderer::getCurrentSimulationTime() {
+std::string GuiFrameRenderer::getCurrentSimulationTime() const {
     return "10 June, 12:45:10";
+}
+
+RenderingOptions GuiFrameRenderer::getRenderingOptions() const {
+    return renderingOptions;
 }
