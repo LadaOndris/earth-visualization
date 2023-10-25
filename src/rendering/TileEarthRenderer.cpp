@@ -14,9 +14,14 @@ std::vector<t_vertex> convertToVertices(const std::vector<glm::vec3> &projectedV
     return convertedVertices;
 }
 
-void TileEarthRenderer::onInit() {
+bool TileEarthRenderer::onInit() {
+    bool isShaderProgramBuilt = shader.build();
+    if (!isShaderProgramBuilt) {
+        return false;
+    }
     int numLevels = tileContainer.getNumLevels();
     initVertexArraysForAllLevels(numLevels);
+    return true;
 }
 
 /**
@@ -36,6 +41,7 @@ void TileEarthRenderer::initVertexArraysForAllLevels(int numLevels) {
 
             Mesh_t mesh = resources->getMesh();
             fullMeshForThisLevel.insert(fullMeshForThisLevel.end(), mesh.begin(), mesh.end());
+            break; // TODO: remove cycle. All tiles share the same mesh.
         }
 
         std::vector<t_vertex> verticesForThisLevel = convertToVertices(fullMeshForThisLevel);
@@ -91,9 +97,27 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window) {
 
     // Set up model, view, and projection matrix
     setupMatrices(currentTime, window);
+    // Set ellipsoid parameters for the vertex shader
+    shader.setVec3("ellipsoidRadiiSquared", ellipsoid.getRadii());
+    shader.setVec3("ellipsoidOneOverRadiiSquared", ellipsoid.getOneOverRadiiSquared());
 
     auto tiles = tileContainer.getTiles();
+    int skipTiles = 1024;
+    int drawTiles = 1;
+
     for (Tile &tile: tiles) {
+        skipTiles--;
+        if (skipTiles < 0) {
+            //continue;
+        }
+        if (drawTiles == 0) {
+            //break;
+        }
+        shader.setFloat("uTileLongitudeOffset", tile.getLongitude());
+        shader.setFloat("uTileLatitudeOffset", tile.getLatitude());
+        shader.setFloat("uTileLongitudeWidth", tile.getLongitudeWidth());
+        shader.setFloat("uTileLatitudeWidth", tile.getLatitudeWidth());
+
         std::shared_ptr<TileResources> resources = tile.getResources();
         Mesh_t mesh = resources->getMesh();
 
@@ -110,8 +134,12 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window) {
 
         // Set VAO: we need the correct buffer? Is there one or more?
         glBindVertexArray(resources->meshVAO);
-        glDrawArrays(GL_TRIANGLES, resources->getMeshBufferOffset(), mesh.size());
 
+        //glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+        //glDrawArrays(GL_TRIANGLES, resources->getMeshBufferOffset(), mesh.size());
+        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+        glDrawArrays(GL_TRIANGLES, 0, mesh.size());
+        drawTiles--;
         // Draw mesh
     }
 }

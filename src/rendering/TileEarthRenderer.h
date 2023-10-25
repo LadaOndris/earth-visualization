@@ -37,12 +37,12 @@ public:
     explicit TileEarthRenderer(TileContainer &tileContainer, Ellipsoid &ellipsoid, Camera &camera,
                                glm::vec3 lightPosition)
             : tileContainer(tileContainer), camera(camera), ellipsoid(ellipsoid), lightPosition(lightPosition),
-              shader("shaders/shader.vs", "shaders/tiling/shader.fs") {
+              shader("shaders/tiling/shader.vs", "shaders/tiling/shader.fs") {
     }
 
     void render(float currentTime, t_window_definition window) override;
 
-    void onInit();
+    bool onInit();
 
     void onExit();
 };

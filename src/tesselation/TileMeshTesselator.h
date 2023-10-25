@@ -24,23 +24,19 @@ private:
      * @param tile The part of the ellipsoid being represented.
      * @return The 3D position of the vertex on the ellipsoid's surface.
      */
-    glm::vec3 calculateVertexPosition(int x, int y, const Resolution& meshResolution,
-                                      const Ellipsoid& ellipsoid, const Tile& tile) {
-        double tileLongitudeStart = tile.getLongitude();
-        double tileLongitudeEnd = tile.getLongitude() + tile.getLongitudeWidth();
-        double tileLatitudeStart = tile.getLatitude();
-        double tileLatitudeEnd = tile.getLatitude() + tile.getLatitudeWidth();
+    glm::vec3 calculateVertexPosition(int x, int y, const Resolution& meshResolution, Tile &tile) {
+        // Values in [0, 1]
+        double longitude = x / static_cast<double>(meshResolution.getWidth());
+        double latitude = y / static_cast<double>(meshResolution.getHeight());
 
-        // Adjust this logic to consider the ellipsoid's shape and projection method.
-        double longitude = tileLongitudeStart + (x / static_cast<double>(meshResolution.getWidth())) * (tileLongitudeEnd - tileLongitudeStart);
-        double latitude = tileLatitudeStart + (y / static_cast<double>(meshResolution.getHeight())) * (tileLatitudeEnd - tileLatitudeStart);
+//        double longitude = x / static_cast<double>(meshResolution.getWidth())
+//                * tile.getLongitudeWidth() + tile.getLongitude();
+//        double latitude = y / static_cast<double>(meshResolution.getHeight())
+//                * tile.getLatitudeWidth() + tile.getLatitude();
 
-        // Project the latitude and longitude to 3D coordinates on the ellipsoid's surface.
-        glm::vec3 geodeticCoordinates(longitude, latitude, 0.0);  // Adjust height as needed.
-        glm::vec3 surfaceNormal = ellipsoid.geodeticSurfaceNormalFromGeodetic(geodeticCoordinates);
-        glm::vec3 vertexPosition = ellipsoid.projectPointOntoSurface(surfaceNormal);  // Adjust as per your ellipsoid.
+        glm::vec3 geodeticCoordinates(longitude, latitude, 0.0);
 
-        return vertexPosition;
+        return geodeticCoordinates;
     }
 public:
     /**
@@ -53,7 +49,7 @@ public:
      * @param tile The specific part of the ellipsoid that the mesh represents.
      * @return A vector of 3D vertices forming triangles. Each group of three vertices defines a single triangle.
      */
-    std::vector<glm::vec3> generate(Resolution &meshResolution, Ellipsoid &ellipsoid, const Tile &tile) {
+    std::vector<glm::vec3> generate(Resolution &meshResolution, Tile &tile) {
 
         std::vector<glm::vec3> meshVertices;
 
@@ -63,10 +59,10 @@ public:
         for (int y = 0; y < meshResolution.getHeight() - 1; y++) {
             for (int x = 0; x < meshResolution.getWidth() - 1; x++) {
                 // Calculate vertex positions based on resolution, ellipsoid, and tile information.
-                glm::vec3 vertex1 = calculateVertexPosition(x, y, meshResolution, ellipsoid, tile);
-                glm::vec3 vertex2 = calculateVertexPosition(x + 1, y, meshResolution, ellipsoid, tile);
-                glm::vec3 vertex3 = calculateVertexPosition(x, y + 1, meshResolution, ellipsoid, tile);
-                glm::vec3 vertex4 = calculateVertexPosition(x + 1, y + 1, meshResolution, ellipsoid, tile);
+                glm::vec3 vertex1 = calculateVertexPosition(x, y, meshResolution, tile);
+                glm::vec3 vertex2 = calculateVertexPosition(x + 1, y, meshResolution, tile);
+                glm::vec3 vertex3 = calculateVertexPosition(x, y + 1, meshResolution, tile);
+                glm::vec3 vertex4 = calculateVertexPosition(x + 1, y + 1, meshResolution, tile);
 
                 // Add vertices to the meshVertices vector, forming triangles.
                 meshVertices.push_back(vertex1);

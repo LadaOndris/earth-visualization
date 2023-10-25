@@ -73,7 +73,7 @@ def generate_tiles(input_image_path, output_folder, output_file_name, initial_le
                 filename = f"{output_file_name}" \
                            f"_{x_index_on_current_level}_{y_index_on_current_level}" \
                            f"_{max_x_tiles_in_original}_{max_y_tiles_in_original}" \
-                           f"_{original_width}_{original_height}.png"
+                           f"_{original_width}_{original_height}_{target_tile_size}.png"
                 cv.imwrite(os.path.join(level_folder, filename), tile)
 
 

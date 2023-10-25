@@ -15,10 +15,16 @@ private:
     std::string path;
     bool _isLoaded = false;
     unsigned char *data = nullptr;
-    Resolution resolution = Resolution(0, 0);
+    Resolution resolution;
+    double latitudeWidth;
+    double longitudeWidth;
 public:
-    explicit Texture(std::string path) : path(std::move(path)) {
-
+    explicit Texture(std::string path, int width, double latitudeWidth,
+                     double longtitudeWidth)
+            : path(std::move(path)),
+              resolution(width, width),
+              longitudeWidth(longtitudeWidth),
+              latitudeWidth(latitudeWidth) {
     }
 
     void load() {
@@ -31,10 +37,8 @@ public:
         data = stbi_load(path.c_str(), &width, &height, nullptr, 0);
 
         if (data) {
-            resolution = Resolution(width, height);
             _isLoaded = true;
-        }
-        else {
+        } else {
             std::cout << "Failed to load texture: " << path << std::endl;
         }
     }
@@ -47,7 +51,6 @@ public:
         stbi_image_free(data);
         data = nullptr;
         _isLoaded = false;
-        resolution = Resolution(0, 0);
     }
 
     bool isLoaded() const {
@@ -64,6 +67,14 @@ public:
 
     unsigned char *getData() const {
         return data;
+    }
+
+    double getLatitudeWidth() const {
+        return latitudeWidth;
+    }
+
+    double getLongitudeWidth() const {
+        return longitudeWidth;
     }
 
 };

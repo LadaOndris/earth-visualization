@@ -23,7 +23,7 @@ private:
     TextureAtlas &colorMapAtlas;
     TextureAtlas &heightMapAtlas;
     Ellipsoid &ellipsoid;
-
+    std::vector<Mesh_t> cachedMeshes;
 
     /**
     * Assigns the corresponding resources from texture atlases to
@@ -38,10 +38,22 @@ private:
             Texture heightMap = heightMapAtlas.getTexture(level, tile);
             Texture colorMap = colorMapAtlas.getTexture(level, tile);
 
-            Resolution meshResolution = determineMeshResolution(heightMap, tile);
-            // The ellipsoid is used to project the mesh onto it.
-            // The tile determines the position of the mesh on the ellipsoid.
-            Mesh_t mesh = tileMeshTesselator.generate(meshResolution, ellipsoid, tile);
+            if (level >= cachedMeshes.size()) {
+                // The heightMap determines the resolution of the mesh.
+                // Altough, the resolution of each heightmap image is the same,
+                // the area it covers differs. Thus, the resolution of the
+                // resulting mesh will also differ.
+                Resolution meshResolution = determineMeshResolution(heightMap, tile);
+                std::cout << meshResolution.getWidth() << ", " << meshResolution.getHeight() << std::endl;
+                // The ellipsoid is used to project the mesh onto it.
+                // The tile determines the position of the mesh on the ellipsoid.
+                Mesh_t mesh = tileMeshTesselator.generate(meshResolution, tile);
+
+                std::cout << "Mesh size (triangles): " << mesh.size() / 3 << std::endl;
+                cachedMeshes.push_back(mesh);
+            }
+
+            Mesh_t mesh = cachedMeshes[level];
             auto tileResource = std::make_shared<TileResources>(mesh, colorMap, heightMap);
 
             tile.addResources(tileResource, level);
@@ -61,21 +73,20 @@ private:
     * dimensions of the texture portion.
     */
     Resolution determineMeshResolution(const Texture &heightMap, const Tile &tile) {
-        assert(heightMap.isLoaded());
+        double makeSmallerCoefficient = 1.0 / 10;
 
         // Get the dimensions of the height map texture.
         int textureWidth = heightMap.getResolution().getWidth();
         int textureHeight = heightMap.getResolution().getHeight();
+        assert(textureWidth > 0 && textureHeight > 0);
 
-        // Calculate the portion of the texture that corresponds to the given tile.
-        double textureXStart = (tile.getLongitude() + 180) / 360.0;
-        double textureYStart = (tile.getLatitude() + 90) / 180.0;
-        double textureXEnd = (tile.getLongitude() + tile.getLongitudeWidth() + 180) / 360.0;
-        double textureYEnd = (tile.getLatitude() + tile.getLatitudeWidth() + 90) / 180.0;
+        // Calculate the portion of the tile in the given texture
+        double tileWidthPortion = tile.getLongitudeWidth() / heightMap.getLongitudeWidth();
+        double tileHeightPortion = tile.getLatitudeWidth() / heightMap.getLatitudeWidth();
 
         // Calculate the width and height of the texture portion.
-        int texturePortionWidth = static_cast<int>(textureWidth * (textureXEnd - textureXStart));
-        int texturePortionHeight = static_cast<int>(textureHeight * (textureYEnd - textureYStart));
+        int texturePortionWidth = static_cast<int>(textureWidth * tileWidthPortion * makeSmallerCoefficient);
+        int texturePortionHeight = static_cast<int>(textureHeight * tileHeightPortion * makeSmallerCoefficient);
 
         // The mesh resolution should match the texture portion dimensions.
         return Resolution(texturePortionWidth, texturePortionHeight);

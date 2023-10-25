@@ -12,12 +12,20 @@
 
 
 class Shader {
+private:
+    const char *vertexPath;
+    const char *fragmentPath;
 public:
     // the program ID
     unsigned int ID;
 
     // constructor reads and builds the shader
-    Shader(const char *vertexPath, const char *fragmentPath) {
+    Shader(const char *vertexPath, const char *fragmentPath)
+        : vertexPath(vertexPath), fragmentPath(fragmentPath) {
+
+    }
+
+    bool build() {
         // 1. retrieve the vertex/fragment source code from filePath
         std::string vertexCode;
         std::string fragmentCode;
@@ -43,6 +51,7 @@ public:
         }
         catch (std::ifstream::failure e) {
             std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
+            return false;
         }
         const char *vShaderCode = vertexCode.c_str();
         const char *fShaderCode = fragmentCode.c_str();
@@ -61,6 +70,7 @@ public:
         if (!success) {
             glGetShaderInfoLog(vertex, 512, NULL, infoLog);
             std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+            return false;
         };
 
         // fragment Shader
@@ -72,6 +82,7 @@ public:
         if (!success) {
             glGetShaderInfoLog(fragment, 512, NULL, infoLog);
             std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+            return false;
         };
 
         // shader Program
@@ -84,11 +95,13 @@ public:
         if (!success) {
             glGetProgramInfoLog(ID, 512, NULL, infoLog);
             std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+            return false;
         }
 
         // delete the shaders as they're linked into our program now and no longer necessary
         glDeleteShader(vertex);
         glDeleteShader(fragment);
+        return true;
     }
 
     // use/activate the shader

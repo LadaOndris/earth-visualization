@@ -78,9 +78,8 @@ public:
 
         // Determine the appropriate level of detail (LOD) based on the screen-space error.
         //int selectedLOD = selectLOD(screenSpaceError);
-        int selectedLOD = 0;
         // Return the resources for the selected LOD.
-        return lodResources[selectedLOD];
+        return lodResources[lodResources.size() - 1];
     }
 
     std::shared_ptr<TileResources> getResourcesByLevel(int level) {
@@ -95,10 +94,11 @@ public:
         lastLevel = level;
 
         // Cross-reference resources of neighboring LODs
-        auto lastResources = lodResources.back();
-        lastResources->finerResources.push_back(resources);
-        resources->coarserResources = lastResources;
-
+        if (!lodResources.empty()) {
+            auto lastResources = lodResources.back();
+            lastResources->finerResources.push_back(resources);
+            resources->coarserResources = lastResources;
+        }
         // Add resources to the current tile
         lodResources.push_back(resources);
     }

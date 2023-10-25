@@ -21,11 +21,6 @@ class TextureAtlas {
 private:
     std::vector<std::vector<std::vector<Texture>>> textures; // A 3D vector to store textures.
 
-    Texture createTextureFromFile(std::string path) {
-        Texture texture(std::move(path));
-        return texture;
-    }
-
     // A helper function to ensure vector dimensions match the given x and y size.
     void ensureVectorSize(std::vector<std::vector<Texture>> &vec, int x_size, int y_size) {
         if (vec.size() < x_size) {
@@ -33,7 +28,7 @@ private:
         }
         for (auto &subvec: vec) {
             if (subvec.size() < y_size) {
-                subvec.resize(y_size, Texture(""));
+                subvec.resize(y_size, Texture("", 0, 0, 0));
             }
         }
     }
@@ -71,17 +66,22 @@ private:
             tokens.push_back(token);
         }
 
-        if (tokens.size() == 7) {
+        if (tokens.size() == 8) {
             int x_index = std::atoi(tokens[1].c_str());
             int y_index = std::atoi(tokens[2].c_str());
             int x_tiles = std::atoi(tokens[3].c_str());
             int y_tiles = std::atoi(tokens[4].c_str());
+            int image_width = std::atoi(tokens[7].c_str());
 
             assert(x_index < x_tiles && x_tiles > 0);
             assert(y_index < y_tiles && y_tiles > 0);
+            assert(image_width > 0);
+
+            double latitudeWidth = 1.0 / y_tiles * 180;
+            double longitudeWidth = 1.0 / x_tiles * 360;
 
             // Assuming you have a function to create a Texture instance from the file.
-            Texture texture = createTextureFromFile(texturePath);
+            Texture texture(std::move(texturePath), image_width, latitudeWidth, longitudeWidth);
 
             // Ensure the vectors are appropriately sized.
             ensureVectorSize(textures[level], x_tiles, y_tiles);
@@ -164,9 +164,9 @@ public:
      * @return
      */
     Texture &getTexture(unsigned int level, const Tile &tile) {
-        if (level < textures.size() && tile.getLongitude() >= 0.0 && tile.getLatitude() >= 0.0) {
-            int x_index = static_cast<int>(tile.getLongitude() / 360.0 * textures[level].size());
-            int y_index = static_cast<int>(tile.getLatitude() / 180.0 * textures[level][0].size());
+        if (level < textures.size() && tile.getLongitude() >= -180 && tile.getLatitude() >= -90) {
+            int x_index = static_cast<int>((tile.getLongitude() + 180) / 360.0 * textures[level].size());
+            int y_index = static_cast<int>((tile.getLatitude() + 90) / 180.0 * textures[level][0].size());
 
             if (x_index < textures[level].size() && y_index < textures[level][0].size()) {
                 return textures[level][x_index][y_index];
