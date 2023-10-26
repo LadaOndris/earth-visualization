@@ -110,6 +110,10 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     int skipTiles = 1024;
     int drawTiles = 1;
     int frustumCulledTiles = 0;
+    int backfacedCulledTiles = 0;
+
+    auto cameraPosition = camera.getPosition();
+    //std::cout << cameraPosition[0] << "," << cameraPosition[1] << "," << cameraPosition[2] << std::endl;
 
     for (Tile &tile: tiles) {
         skipTiles--;
@@ -122,6 +126,11 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         // Frustum culling
         if (!tile.isInViewFrustum(viewProjection)) {
             frustumCulledTiles++;
+            continue;
+        }
+        // Backface culling
+        if (!tile.isFacingCamera(cameraPosition)) {
+            backfacedCulledTiles++;
             continue;
         }
 
@@ -163,7 +172,8 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         // Draw mesh
     }
 
-    std::cout << "Frustum culled tiles: " << frustumCulledTiles << "/" << tiles.size() << std::endl;
+    std::cout << "Frustum-culled tiles: " << frustumCulledTiles << "/" << tiles.size() << std::endl;
+    std::cout << "Backfaced-culled tiles: " << backfacedCulledTiles << "/" << tiles.size() << std::endl;
 }
 
 glm::mat4 TileEarthRenderer::setupMatrices(float currentTime, t_window_definition window) {

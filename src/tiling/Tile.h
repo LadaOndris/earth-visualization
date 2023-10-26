@@ -9,6 +9,7 @@
 #include <cmath>
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp> // glm::mat4
+#include <glm/geometric.hpp>
 #include "TileResources.h"
 #include "../ellipsoid.h"
 
@@ -21,6 +22,8 @@ private:
     std::vector<std::shared_ptr<TileResources>> lodResources;
     double latitude, longitude, latitudeWidth, longitudeWidth;
     glm::vec3 geocentricPosition;
+    // Normal of the face of the tile.
+    glm::vec3 normal;
     double tileWidth;
 
     int lastLevel = -1;
@@ -145,6 +148,16 @@ public:
         return true;
     }
 
+    [[nodiscard]] bool isFacingCamera(const glm::vec3 &cameraPosition) const {
+        // Calculate the vector from the tile's center to the camera position.
+        glm::vec3 toCamera = cameraPosition - getGeocentricPosition();
+
+        // Calculate the dot product between the normal and the vector to the camera.
+        float dotProduct = glm::dot(normal, toCamera);
+        // If the dot product is positive, the tile is facing the camera.
+        return dotProduct > 0.0;
+    }
+
     /**
      * Uses longitude and latitude to project the centre of the tile
      * onto the surface of the ellipsoid.
@@ -156,13 +169,17 @@ public:
 
         auto upperLeftCorner = glm::vec3(longitude, latitude, 0) * toRadsCoeff;
         auto upperRightCorner = glm::vec3(longitude + longitudeWidth, latitude, 0) * toRadsCoeff;
+
         auto geocentricUpperLeftCorner = ellipsoid.convertGeodeticToGeocentric(upperLeftCorner);
         auto geocentricUpperRightCorner = ellipsoid.convertGeodeticToGeocentric(upperRightCorner);
         tileWidth = glm::length(geocentricUpperRightCorner - geocentricUpperLeftCorner);
 
         auto tileCentre = glm::vec3(longitudeCentre, latitudeCentre, 0) * toRadsCoeff;
         geocentricPosition = ellipsoid.convertGeodeticToGeocentric(tileCentre);
+
+        normal = ellipsoid.convertGeographicToGeodeticSurfaceNormal(tileCentre);
     }
+
 
     [[nodiscard]] double getTileRadius() const {
         return tileWidth / 2.0;
