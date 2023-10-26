@@ -7,7 +7,10 @@
 
 #include <vector>
 #include <cmath>
+#include <glm/vec4.hpp>
+#include <glm/mat4x4.hpp> // glm::mat4
 #include "TileResources.h"
+#include "../ellipsoid.h"
 
 class CameraParams {
 
@@ -17,6 +20,7 @@ class Tile {
 private:
     std::vector<std::shared_ptr<TileResources>> lodResources;
     double latitude, longitude, latitudeWidth, longitudeWidth;
+    glm::vec3 geocentricPosition;
     int lastLevel = -1;
 
     /**
@@ -39,7 +43,9 @@ private:
 
 public:
     explicit Tile(double latitude, double longitude, double latitudeWidth, double longitudeWidth)
-            : latitude(latitude), longitude(longitude), latitudeWidth(latitudeWidth), longitudeWidth(longitudeWidth) {
+            : latitude(latitude), longitude(longitude),
+              latitudeWidth(latitudeWidth), longitudeWidth(longitudeWidth),
+              geocentricPosition(glm::vec3(0, 0, 0)) {
     }
 
     /**
@@ -61,7 +67,7 @@ public:
         // Determine the appropriate level of detail (LOD) based on the screen-space error.
 
         int level = 0;
-        for (auto lod: lodResources) {
+        for (const auto& lod: lodResources) {
             // Define the geometric error simply as the inverse of the number of triangles in a tile.
             double geometricError = 1.0 / lod->getMesh().size();
             double screenSpaceError = computeScreenSpaceError(screenSpaceWidth, distanceToCamera,
@@ -97,19 +103,65 @@ public:
         lodResources.push_back(resources);
     }
 
-    double getLatitude() const {
+    bool isInViewFrustum(const glm::mat4& viewProjectionMatrix) {
+        // Calculate the bounding sphere of the tile based on its geocentric position and size.
+        // You can adapt this based on how you define your bounding volume.
+        // For a sphere, you'd calculate its center and radius.
+        glm::vec3 tileCenter = getGeocentricPosition();
+        double tileRadius = getTileRadius();
+
+        // Extract the frustum planes from the viewProjectionMatrix.
+        glm::vec4 planes[6];
+        planes[0] = viewProjectionMatrix[3] + viewProjectionMatrix[0];  // Left
+        planes[1] = viewProjectionMatrix[3] - viewProjectionMatrix[0];  // Right
+        planes[2] = viewProjectionMatrix[3] + viewProjectionMatrix[1];  // Bottom
+        planes[3] = viewProjectionMatrix[3] - viewProjectionMatrix[1];  // Top
+        planes[4] = viewProjectionMatrix[3] + viewProjectionMatrix[2];  // Near
+        planes[5] = viewProjectionMatrix[3] - viewProjectionMatrix[2];  // Far
+
+        // Check if the tile's bounding sphere is inside all frustum planes.
+        for (auto plane : planes) {
+            float signedDistance = glm::dot(plane, glm::vec4(tileCenter, 1.0));
+
+            // If the signed distance is less than the negative radius, the sphere is completely outside the frustum.
+            if (signedDistance < -tileRadius) {
+                std::cout << "Skipping tile" << std::endl;
+                return false;
+            }
+        }
+
+        // If the tile's bounding sphere is not completely outside any frustum plane, it's in the view frustum.
+        return true;
+    }
+
+    void updateGeocentricPosition(Ellipsoid &ellipsoid) {
+        // TODO
+        // set tileWidth
+        geocentricPosition = glm::vec3(0.f, 0.f, 0.f);
+    }
+
+    double getTileRadius() {
+        // TODO
+        return 0.1; //tileWidth / 2.0;
+    }
+
+    [[nodiscard]] glm::vec3 getGeocentricPosition() const {
+        return geocentricPosition;
+    }
+
+    [[nodiscard]] double getLatitude() const {
         return latitude;
     }
 
-    double getLongitude() const {
+    [[nodiscard]] double getLongitude() const {
         return longitude;
     }
 
-    double getLatitudeWidth() const {
+    [[nodiscard]] double getLatitudeWidth() const {
         return latitudeWidth;
     }
 
-    double getLongitudeWidth() const {
+    [[nodiscard]] double getLongitudeWidth() const {
         return longitudeWidth;
     }
 };

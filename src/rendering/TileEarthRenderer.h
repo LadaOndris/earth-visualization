@@ -31,7 +31,7 @@ private:
 
     void prepareTexture(Texture &texture);
 
-    void setupMatrices(float currentTime, t_window_definition window);
+    glm::mat4 setupMatrices(float currentTime, t_window_definition window);
 
 public:
     explicit TileEarthRenderer(TileContainer &tileContainer, Ellipsoid &ellipsoid, Camera &camera,

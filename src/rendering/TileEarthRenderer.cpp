@@ -96,7 +96,7 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     glGenTextures(1, &dayTextureId); // TODO: is this okay?
 
     // Set up model, view, and projection matrix
-    setupMatrices(currentTime, window);
+    glm::mat4 viewProjection = setupMatrices(currentTime, window);
     // Set ellipsoid parameters for the vertex shader
     shader.setVec3("ellipsoidRadiiSquared", ellipsoid.getRadii());
     shader.setVec3("ellipsoidOneOverRadiiSquared", ellipsoid.getOneOverRadiiSquared());
@@ -113,13 +113,18 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         if (drawTiles == 0) {
             //break;
         }
+        // Frustum culling
+        if (!tile.isInViewFrustum(viewProjection)) {
+            continue;
+        }
+
         shader.setFloat("uTileLongitudeOffset", tile.getLongitude());
         shader.setFloat("uTileLatitudeOffset", tile.getLatitude());
         shader.setFloat("uTileLongitudeWidth", tile.getLongitudeWidth());
         shader.setFloat("uTileLatitudeWidth", tile.getLatitudeWidth());
 
         double screenSpaceWidth = window.width;
-        double distanceToCamera = glm::length(camera.getPosition());
+        double distanceToCamera = glm::length(camera.getPosition() - tile.getGeocentricPosition());
         double fov = camera.getFov();
 
 
@@ -152,7 +157,7 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     }
 }
 
-void TileEarthRenderer::setupMatrices(float currentTime, t_window_definition window) {
+glm::mat4 TileEarthRenderer::setupMatrices(float currentTime, t_window_definition window) {
     glm::mat4 projectionMatrix;
     projectionMatrix = glm::perspective(glm::radians(camera.getFov()),
                                         (float) window.width / (float) window.height,
@@ -163,10 +168,14 @@ void TileEarthRenderer::setupMatrices(float currentTime, t_window_definition win
     float angle = 20.0f * 0;
     modelMatrix = glm::rotate(modelMatrix, currentTime * glm::radians(angle),
                               glm::vec3(1.0f, 0.3f, 0.5f));
+    glm::mat4 viewMatrix = camera.getViewMatrix();
 
     shader.setMat4("projection", projectionMatrix);
-    shader.setMat4("view", camera.getViewMatrix());
+    shader.setMat4("view", viewMatrix);
     shader.setMat4("model", modelMatrix);
+
+    glm::mat4 viewProjection = projectionMatrix * viewMatrix;
+    return viewProjection;
 }
 
 void TileEarthRenderer::destroy() {
