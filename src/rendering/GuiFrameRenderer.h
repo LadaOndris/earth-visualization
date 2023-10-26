@@ -9,15 +9,19 @@
 #include <string>
 #include "Renderer.h"
 #include "RenderingOptions.h"
+#include "RendererSubscriber.h"
 
-class GuiFrameRenderer : public Renderer {
+class GuiFrameRenderer : public Renderer, public RendererSubscriber {
 private:
     int FIT_TO_CONTENT = 0;
     RenderingOptions renderingOptions;
+    RenderingStatistics renderingStatistics;
 
     void createSimulationWindow(t_window_definition window);
 
     void createFeaturesWindow(t_window_definition window);
+
+    void createStatisticsWindow(t_window_definition window);
 
     void createCameraWindow(t_window_definition window);
 
@@ -36,6 +40,8 @@ public:
     void render(float currentTime, t_window_definition window, RenderingOptions options) override;
 
     RenderingOptions getRenderingOptions() const;
+
+    void notify(RenderingStatistics renderingStatistics) override;
 };
 
 

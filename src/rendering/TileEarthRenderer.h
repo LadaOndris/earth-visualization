@@ -13,6 +13,7 @@
 #include "../tiling/TileContainer.h"
 #include "shader.h"
 #include "../vertex.h"
+#include "RendererSubscriber.h"
 
 class TileEarthRenderer : public Renderer {
 private:
@@ -21,6 +22,7 @@ private:
     Ellipsoid &ellipsoid;
     glm::vec3 lightPosition;
     Shader shader;
+    std::vector<std::shared_ptr<RendererSubscriber>> subscribers;
 
     unsigned int dayTextureId;
 
@@ -45,6 +47,12 @@ public:
     bool initialize() override;
 
     void destroy() override;
+
+    /**
+     * Adds a subscriber which wants to be notified
+     * of the rendering results.
+     */
+    void addSubscriber(const std::shared_ptr<RendererSubscriber>& subscriber);
 
 };
 

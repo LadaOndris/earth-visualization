@@ -19,6 +19,7 @@ void GuiFrameRenderer::render(float currentTime, t_window_definition window, Ren
 
     createSimulationWindow(window);
     createFeaturesWindow(window);
+    createStatisticsWindow(window);
     createCameraWindow(window);
 
     ImGui::Render();
@@ -109,6 +110,42 @@ void GuiFrameRenderer::createSimulationWindow(t_window_definition window) {
     ImGui::End();
 }
 
+void GuiFrameRenderer::createStatisticsWindow(t_window_definition window) {
+    int width = 200;
+    int height = FIT_TO_CONTENT;
+    int paddingTop = 210 + 210 + 10;
+    int paddingRight = 10;
+
+    // Window position
+    auto xPos = static_cast<float>(window.width - width - paddingRight);
+    auto yPos = static_cast<float>(paddingTop);
+    auto windowPosition = ImVec2(xPos, yPos);
+    ImGui::SetNextWindowPos(windowPosition, ImGuiCond_Always);
+    // Window size
+    ImGui::SetNextWindowSize(
+            ImVec2(static_cast<float>(width), static_cast<float>(height)),
+            ImGuiCond_Always
+    );
+    // Set window opacity
+    ImGui::SetNextWindowBgAlpha(0.7f);
+
+    auto windowFlags = ImGuiWindowFlags_NoResize |
+                       ImGuiWindowFlags_NoMove |
+                       ImGuiWindowFlags_NoScrollbar |
+                       ImGuiWindowFlags_NoCollapse;
+    ImGui::Begin("Rendering Statistics", nullptr, windowFlags);
+
+    ImGui::Spacing();
+    ImGui::Text("Tiles: %d", renderingStatistics.numTiles);
+    ImGui::Spacing();
+    ImGui::Text("Frustum-culled tiles: %d", renderingStatistics.frustumCulledTiles);
+    ImGui::Spacing();
+    ImGui::Text("Back-faced-culled tiles: %d", renderingStatistics.backfacedCulledTiles);
+    ImGui::Spacing();
+
+    ImGui::End();
+}
+
 void GuiFrameRenderer::createCameraWindow(t_window_definition window) {
 
 }
@@ -132,4 +169,8 @@ bool GuiFrameRenderer::initialize() {
 
 void GuiFrameRenderer::destroy() {
 
+}
+
+void GuiFrameRenderer::notify(RenderingStatistics statistics) {
+    renderingStatistics = statistics;
 }

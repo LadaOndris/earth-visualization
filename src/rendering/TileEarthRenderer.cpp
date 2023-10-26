@@ -1,5 +1,6 @@
 
 #include "TileEarthRenderer.h"
+#include "RendererSubscriber.h"
 
 std::vector<t_vertex> convertToVertices(const std::vector<glm::vec3> &projectedVertices) {
     std::vector<t_vertex> convertedVertices;
@@ -107,30 +108,20 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     shader.setVec3("ellipsoidOneOverRadiiSquared", ellipsoid.getOneOverRadiiSquared());
 
     auto tiles = tileContainer.getTiles();
-    int skipTiles = 1024;
-    int drawTiles = 1;
-    int frustumCulledTiles = 0;
-    int backfacedCulledTiles = 0;
-
     auto cameraPosition = camera.getPosition();
-    //std::cout << cameraPosition[0] << "," << cameraPosition[1] << "," << cameraPosition[2] << std::endl;
+
+    RenderingStatistics renderingStats;
+    renderingStats.numTiles = tiles.size();
 
     for (Tile &tile: tiles) {
-        skipTiles--;
-        if (skipTiles < 0) {
-            //continue;
-        }
-        if (drawTiles == 0) {
-            //break;
-        }
         // Frustum culling
         if (!tile.isInViewFrustum(viewProjection)) {
-            frustumCulledTiles++;
+            renderingStats.frustumCulledTiles++;
             continue;
         }
         // Backface culling
         if (!tile.isFacingCamera(cameraPosition)) {
-            backfacedCulledTiles++;
+            renderingStats.backfacedCulledTiles++;
             continue;
         }
 
@@ -168,12 +159,11 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
             glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
         }
         glDrawArrays(GL_TRIANGLES, 0, mesh.size());
-        drawTiles--;
-        // Draw mesh
     }
 
-    std::cout << "Frustum-culled tiles: " << frustumCulledTiles << "/" << tiles.size() << std::endl;
-    std::cout << "Backfaced-culled tiles: " << backfacedCulledTiles << "/" << tiles.size() << std::endl;
+    for (auto &subscriber : subscribers) {
+        subscriber->notify(renderingStats);
+    }
 }
 
 glm::mat4 TileEarthRenderer::setupMatrices(float currentTime, t_window_definition window) {
@@ -212,4 +202,7 @@ void TileEarthRenderer::destroy() {
     // TODO: unload textures
 }
 
+void TileEarthRenderer::addSubscriber(const std::shared_ptr<RendererSubscriber>& subscriber) {
+    subscribers.push_back(subscriber);
+}
 

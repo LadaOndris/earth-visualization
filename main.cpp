@@ -320,9 +320,16 @@ int main() {
     heightMapAtlas.registerAvailableTextures("textures/heightmaps");
     tileContainer.setupTiles();
 
+    RenderingOptions options = {
+            .isSimulationRunning = false
+    };
+    auto guiRenderer =
+            std::make_shared<GuiFrameRenderer>(options);
+
     if (useTiling) {
         auto tileEarthRenderer =
                 std::make_shared<TileEarthRenderer>(tileContainer, ellipsoid, camera, lightPosition);
+        tileEarthRenderer->addSubscriber(guiRenderer);
         renderers.push_back(tileEarthRenderer);
     } else {
         auto earthRenderer =
@@ -333,12 +340,6 @@ int main() {
     auto sunRenderer =
             std::make_shared<SunRenderer>(camera, lightPosition, sunRadius);
 
-
-    RenderingOptions options = {
-            .isSimulationRunning = false
-    };
-    auto guiRenderer =
-            std::make_shared<GuiFrameRenderer>(options);
 
     // renderers.push_back(sunRenderer);
     renderers.push_back(guiRenderer);
