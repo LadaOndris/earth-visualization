@@ -23,7 +23,7 @@ vec3 convertGeocentricToGeocentricSurfaceNormal(vec3 point)  {
     return normalize(normal);
 }
 
-vec3 convertGeocentricToGeographic(vec3 point) {
+vec3 convertGeocentricToGeodetic(vec3 point) {
     vec3 normal = convertGeocentricToGeocentricSurfaceNormal(point);
     vec3 geographic = vec3(atan(normal.y, normal.x), asin(normal.z / length(normal)), 0.0);
     return geographic;
@@ -52,16 +52,6 @@ vec3 convertGeodeticToGeocentric(vec3 geodetic) {
     vec3 rSurface = k / gamma;
 
     return rSurface + (n * height);
-}
-
-vec3 projectPointOntoSurface(vec3 point) {
-    // Convert from unit sphere to geodetic coordinates on the unit sphere
-    vec3 geodeticOnUnitSphere = convertGeocentricToGeocentricSurfaceNormal(point);
-
-    // Convert from geodetic coordinates on unit sphere to geocentric coordinates on the custom ellipsoid
-    vec3 projectedPoint = convertGeodeticToGeocentric(geodeticOnUnitSphere);
-
-    return projectedPoint;
 }
 
 void main()

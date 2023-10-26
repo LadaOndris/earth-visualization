@@ -15,22 +15,25 @@ public:
 
     glm::vec3 getOneOverRadiiSquared() const;
 
-    glm::vec3 geodeticSurfaceNormalFromWGS84(glm::vec3 point) const;
-
     /**
-     *
-     * @param geodetic Tuple (longitude, latitude, height)
+     * Computes the geodetic surface normal given a point on the surface of the ellipsoid.
+     * @param vec Point on the surface of the ellipsoid.
      * @return
      */
-    glm::vec3 geodeticSurfaceNormalFromGeodetic(glm::vec3 geodetic) const;
+    glm::vec3 convertGeocentricToGeocentricSurfaceNormal(glm::vec3 point) const;
 
-    glm::vec3 convertGeographicToWGS84(glm::vec3 geodetic) const;
+    /**
+     * Converts a geocentric poitn (X, Y, Z) to a point geodetic point (longitude, latitude, 0).
+     */
+    glm::vec3 convertGeocentricToGeodetic(glm::vec3 point) const;
 
-    glm::vec3 convertWGS84ToGeographic(glm::vec3 point) const;
+    std::vector<glm::vec3> projectGeodeticCoordsOntoSurface(const std::vector<glm::vec3> &geodeticCoords) const;
 
-    std::vector<glm::vec3> projectPointsOntoSurface(std::vector<glm::vec3> points) const;
+    glm::vec3 projectGeocentricPointOntoSurface(glm::vec3 geocentricPoint) const;
 
-    glm::vec3 projectPointOntoSurface(glm::vec3 point) const;
+    glm::vec3 convertGeographicToGeodeticSurfaceNormal(glm::vec3 geographic) const;
+
+    glm::vec3 convertGeodeticToGeocentric(glm::vec3 geodetic) const;
 
     bool isPointOnTheOutside(glm::vec3);
 

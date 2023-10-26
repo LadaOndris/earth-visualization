@@ -22,7 +22,7 @@ private:
 
     float calcZoomSpeedFromDistance() {
         // Project camera onto surface to find out how far the camera from the surface is.
-        auto pointOnSurface = ellipsoid.projectPointOntoSurface(position);
+        auto pointOnSurface = ellipsoid.projectGeocentricPointOntoSurface(position);
         auto distance = glm::length(pointOnSurface - position);
         auto speed = distance / 10.f;
         //if (distance > 0.2f) {

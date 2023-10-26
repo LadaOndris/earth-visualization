@@ -21,6 +21,8 @@ private:
     std::vector<std::shared_ptr<TileResources>> lodResources;
     double latitude, longitude, latitudeWidth, longitudeWidth;
     glm::vec3 geocentricPosition;
+    double tileWidth;
+
     int lastLevel = -1;
 
     /**
@@ -52,10 +54,11 @@ public:
      * Selects the tile resources for the appropriate level of detail.
      *
      * We can use these quantities to compute the screen-space error and choose the LOD
-     * with the lowest screen-space error above a certain threshold.
+     * with the highest allowed screen-space error.
      *
      * As the user zooms in, the screen space error becomes larger for all LODs.
-     * Thresholding at a certain value does the trick.
+     * Thresholding at a certain value does the trick. We start at the lower resolution
+     * and increase the resolution until we get below a certain error.
      *
      * The following parameters play a role in which LOD gets selected:
      * - the width of the screen-space (x)
@@ -66,19 +69,19 @@ public:
             double screenSpaceWidth, double distanceToCamera, double cameraViewAngle) {
         // Determine the appropriate level of detail (LOD) based on the screen-space error.
 
-        int level = 0;
-        for (const auto& lod: lodResources) {
+        int level;
+        for (level = lodResources.size() - 1; level >= 0; level--) {
+            auto &lod = lodResources[level];
             // Define the geometric error simply as the inverse of the number of triangles in a tile.
-            double geometricError = 1.0 / lod->getMesh().size();
+            auto geometricError = 1.0 / lod->getMesh().size();
             double screenSpaceError = computeScreenSpaceError(screenSpaceWidth, distanceToCamera,
                                                               cameraViewAngle, geometricError);
-            if (screenSpaceError > 0.7) {
+            if (screenSpaceError < 5.0) {
                 break;
             }
-            //std::cout << "[" << level << "] screen space error: " << screenSpaceError << std::endl;
-            level++;
+            // std::cout << "[" << level << "] screen space error: " << screenSpaceError << std::endl;
         }
-
+        level = std::min(level, static_cast<int>(lodResources.size() - 1));
         return lodResources[level];
     }
 
@@ -103,7 +106,14 @@ public:
         lodResources.push_back(resources);
     }
 
-    bool isInViewFrustum(const glm::mat4& viewProjectionMatrix) {
+    /**
+     * From: Geometric Approach - Testing Points and Spheres
+     * https://cgvr.informatik.uni-bremen.de/teaching/cg_literatur/lighthouse3d_view_frustum_culling/index.html
+     *
+     * @param viewProjectionMatrix
+     * @return
+     */
+    [[nodiscard]] bool isInViewFrustum(const glm::mat4 &viewProjectionMatrix) const {
         // Calculate the bounding sphere of the tile based on its geocentric position and size.
         // You can adapt this based on how you define your bounding volume.
         // For a sphere, you'd calculate its center and radius.
@@ -111,21 +121,22 @@ public:
         double tileRadius = getTileRadius();
 
         // Extract the frustum planes from the viewProjectionMatrix.
+        // https://www8.cs.umu.se/kurser/5DV051/HT12/lab/plane_extraction.pdf
         glm::vec4 planes[6];
-        planes[0] = viewProjectionMatrix[3] + viewProjectionMatrix[0];  // Left
-        planes[1] = viewProjectionMatrix[3] - viewProjectionMatrix[0];  // Right
-        planes[2] = viewProjectionMatrix[3] + viewProjectionMatrix[1];  // Bottom
-        planes[3] = viewProjectionMatrix[3] - viewProjectionMatrix[1];  // Top
-        planes[4] = viewProjectionMatrix[3] + viewProjectionMatrix[2];  // Near
-        planes[5] = viewProjectionMatrix[3] - viewProjectionMatrix[2];  // Far
-
+        for (int i = 0; i < 4; i++) {
+            planes[0][i] = viewProjectionMatrix[i][3] + viewProjectionMatrix[i][0];  // Left
+            planes[1][i] = viewProjectionMatrix[i][3] - viewProjectionMatrix[i][0];  // Right
+            planes[2][i] = viewProjectionMatrix[i][3] + viewProjectionMatrix[i][1];  // Bottom
+            planes[3][i] = viewProjectionMatrix[i][3] - viewProjectionMatrix[i][1];  // Top
+            planes[4][i] = viewProjectionMatrix[i][3] + viewProjectionMatrix[i][2];  // Near
+            planes[5][i] = viewProjectionMatrix[i][3] - viewProjectionMatrix[i][2];  // Far
+        }
         // Check if the tile's bounding sphere is inside all frustum planes.
-        for (auto plane : planes) {
+        for (auto plane: planes) {
             float signedDistance = glm::dot(plane, glm::vec4(tileCenter, 1.0));
 
             // If the signed distance is less than the negative radius, the sphere is completely outside the frustum.
             if (signedDistance < -tileRadius) {
-                std::cout << "Skipping tile" << std::endl;
                 return false;
             }
         }
@@ -134,15 +145,27 @@ public:
         return true;
     }
 
+    /**
+     * Uses longitude and latitude to project the centre of the tile
+     * onto the surface of the ellipsoid.
+     */
     void updateGeocentricPosition(Ellipsoid &ellipsoid) {
-        // TODO
-        // set tileWidth
-        geocentricPosition = glm::vec3(0.f, 0.f, 0.f);
+        auto toRadsCoeff = static_cast<float>(M_PI / 180.0);
+        double longitudeCentre = longitude + longitudeWidth / 2.0;
+        double latitudeCentre = latitude + latitudeWidth / 2.0;
+
+        auto upperLeftCorner = glm::vec3(longitude, latitude, 0) * toRadsCoeff;
+        auto upperRightCorner = glm::vec3(longitude + longitudeWidth, latitude, 0) * toRadsCoeff;
+        auto geocentricUpperLeftCorner = ellipsoid.convertGeodeticToGeocentric(upperLeftCorner);
+        auto geocentricUpperRightCorner = ellipsoid.convertGeodeticToGeocentric(upperRightCorner);
+        tileWidth = glm::length(geocentricUpperRightCorner - geocentricUpperLeftCorner);
+
+        auto tileCentre = glm::vec3(longitudeCentre, latitudeCentre, 0) * toRadsCoeff;
+        geocentricPosition = ellipsoid.convertGeodeticToGeocentric(tileCentre);
     }
 
-    double getTileRadius() {
-        // TODO
-        return 0.1; //tileWidth / 2.0;
+    [[nodiscard]] double getTileRadius() const {
+        return tileWidth / 2.0;
     }
 
     [[nodiscard]] glm::vec3 getGeocentricPosition() const {

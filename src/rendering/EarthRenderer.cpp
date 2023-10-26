@@ -19,7 +19,7 @@ void EarthRenderer::constructVertices(SphereTesselator &tesselator) {
     std::cout << "Generating triangles..." << std::endl;
 
     auto verticesVecs = tesselator.tessellate(6);
-    auto projected_vertices = ellipsoid.projectPointsOntoSurface(std::move(verticesVecs));
+    auto projected_vertices = ellipsoid.projectGeodeticCoordsOntoSurface(std::move(verticesVecs));
 
     vertices = convertToVertices(projected_vertices);
 

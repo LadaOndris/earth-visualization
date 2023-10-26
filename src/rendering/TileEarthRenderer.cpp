@@ -15,6 +15,11 @@ std::vector<t_vertex> convertToVertices(const std::vector<glm::vec3> &projectedV
 }
 
 bool TileEarthRenderer::initialize() {
+    // Configure tiles to use the current ellipsoid
+    for (Tile &tile : tileContainer.getTiles()) {
+        tile.updateGeocentricPosition(ellipsoid);
+    }
+
     bool isShaderProgramBuilt = shader.build();
     if (!isShaderProgramBuilt) {
         return false;
@@ -104,6 +109,7 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     auto tiles = tileContainer.getTiles();
     int skipTiles = 1024;
     int drawTiles = 1;
+    int frustumCulledTiles = 0;
 
     for (Tile &tile: tiles) {
         skipTiles--;
@@ -115,6 +121,7 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         }
         // Frustum culling
         if (!tile.isInViewFrustum(viewProjection)) {
+            frustumCulledTiles++;
             continue;
         }
 
@@ -155,6 +162,8 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         drawTiles--;
         // Draw mesh
     }
+
+    std::cout << "Frustum culled tiles: " << frustumCulledTiles << "/" << tiles.size() << std::endl;
 }
 
 glm::mat4 TileEarthRenderer::setupMatrices(float currentTime, t_window_definition window) {
@@ -184,7 +193,7 @@ void TileEarthRenderer::destroy() {
     // Release buffers
     int numLevels = tileContainer.getNumLevels();
     for (int level = 0; level < numLevels; level++) {
-        Tile tile = tileContainer.getTiles()[0];
+        Tile &tile = tileContainer.getTiles()[0];
         auto resources = tile.getResourcesByLevel(level);
         glDeleteVertexArrays(1, &resources->meshVAO);
         glDeleteBuffers(1, &resources->meshVBO);

@@ -146,7 +146,7 @@ public:
         }
     }
 
-    std::vector<Tile> getTiles() {
+    std::vector<Tile> &getTiles() {
         return tiles;
     }
 

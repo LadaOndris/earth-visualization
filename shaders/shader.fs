@@ -64,7 +64,7 @@ vec2 computeTextureCoordinates(vec3 normal)
 void main()
 {
     // Compute on GPU per fragment to avoid interpolation of normals if computed per vertex
-    vec3 normal = geodeticSurfaceNormalFromWGS84(FragPos);
+    vec3 normal = convertGeocentricToGeocentricSurfaceNormal(FragPos);
     float diffuseIntensity = computeDiffuseLight(normal, FragPos);
     vec2 textureCoordinates = computeTextureCoordinates(normal);
 
