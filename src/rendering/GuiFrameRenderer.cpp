@@ -17,6 +17,7 @@ void GuiFrameRenderer::render(float currentTime, t_window_definition window, Ren
 
     ImGui::NewFrame();
 
+    paddingTop = paddingBetweenWindows;
     createSimulationWindow(window);
     createFeaturesWindow(window);
     createStatisticsWindow(window);
@@ -30,9 +31,8 @@ void GuiFrameRenderer::render(float currentTime, t_window_definition window, Ren
  * Creates a window that enables turning on and off features.
  */
 void GuiFrameRenderer::createFeaturesWindow(t_window_definition window) {
-    int width = 200;
+    int width = windowWidth;
     int height = FIT_TO_CONTENT;
-    int paddingTop = 210 + 10;
     int paddingRight = 10;
 
     // Window position
@@ -63,12 +63,13 @@ void GuiFrameRenderer::createFeaturesWindow(t_window_definition window) {
     ImGui::Spacing();
 
     ImGui::End();
+    float windowHeight = 150;
+    updateTopPadding(windowHeight);
 }
 
 void GuiFrameRenderer::createSimulationWindow(t_window_definition window) {
-    int width = 200;
+    int width = windowWidth;
     int height = FIT_TO_CONTENT;
-    int paddingTop = 10;
     int paddingRight = 10;
 
     // Window position
@@ -108,12 +109,13 @@ void GuiFrameRenderer::createSimulationWindow(t_window_definition window) {
     }
 
     ImGui::End();
+    float windowHeight = 150;
+    updateTopPadding(windowHeight);
 }
 
 void GuiFrameRenderer::createStatisticsWindow(t_window_definition window) {
-    int width = 200;
+    int width = windowWidth;
     int height = FIT_TO_CONTENT;
-    int paddingTop = 210 + 210 + 10;
     int paddingRight = 10;
 
     // Window position
@@ -131,8 +133,7 @@ void GuiFrameRenderer::createStatisticsWindow(t_window_definition window) {
 
     auto windowFlags = ImGuiWindowFlags_NoResize |
                        ImGuiWindowFlags_NoMove |
-                       ImGuiWindowFlags_NoScrollbar |
-                       ImGuiWindowFlags_NoCollapse;
+                       ImGuiWindowFlags_NoScrollbar;
     ImGui::Begin("Rendering Statistics", nullptr, windowFlags);
 
     ImGui::Spacing();
@@ -144,6 +145,15 @@ void GuiFrameRenderer::createStatisticsWindow(t_window_definition window) {
     ImGui::Spacing();
 
     ImGui::End();
+    float windowHeight = 100;
+    updateTopPadding(windowHeight);
+}
+
+void GuiFrameRenderer::updateTopPadding(float yPosWindow) {
+    // Calculate the height based on content
+    float windowHeight = yPosWindow;//ImGui::GetCursorPosY() - yPosWindow;
+    // Update paddingTop for the next window
+    paddingTop += windowHeight + paddingBetweenWindows;
 }
 
 void GuiFrameRenderer::createCameraWindow(t_window_definition window) {

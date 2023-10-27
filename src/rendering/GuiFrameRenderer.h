@@ -13,6 +13,9 @@
 
 class GuiFrameRenderer : public Renderer, public RendererSubscriber {
 private:
+    int windowWidth = 230;
+    float paddingBetweenWindows = 10;
+    float paddingTop = paddingBetweenWindows;
     int FIT_TO_CONTENT = 0;
     RenderingOptions renderingOptions;
     RenderingStatistics renderingStatistics;
@@ -29,7 +32,7 @@ private:
 
     std::string getCurrentSimulationTime() const;
 
-
+    void updateTopPadding(float yPosWindow);
 public:
     explicit GuiFrameRenderer(RenderingOptions options);
 
