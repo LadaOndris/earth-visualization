@@ -51,7 +51,7 @@ auto radii = ellipsoid.getRadii();
 EarthCenteredCamera camera(ellipsoid,
                            glm::vec3(-radii.x * 5, 0, 0),
                            glm::vec3(0, 0, 0),
-                           glm::vec3(0, 1, 0));
+                           glm::vec3(0, -1, 0));
 
 void error_callback(int error, const char *description) {
     fprintf(stderr, "Error: %s\n", description);

@@ -38,7 +38,7 @@ public:
             return; // Texture is already loaded.
         }
         int width, height, channels;
-        stbi_set_flip_vertically_on_load(true);
+        // stbi_set_flip_vertically_on_load(true);
         data = stbi_load(path.c_str(), &width, &height, &channels, 0);
 
         if (data) {

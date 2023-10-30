@@ -81,8 +81,8 @@ private:
             assert(y_index < y_tiles && y_tiles > 0);
             assert(image_width > 0);
 
-            double longitudeOffset = static_cast<double>(x_index) / x_tiles * 360;
-            double latitudeOffset = static_cast<double>(y_index) / y_tiles * 180;
+            double longitudeOffset = static_cast<double>(x_index) / x_tiles * 360 - 180;
+            double latitudeOffset = static_cast<double>(y_index) / y_tiles * 180 - 90;
             double longitudeWidth = 1.0 / x_tiles * 360;
             double latitudeWidth = 1.0 / y_tiles * 180;
 

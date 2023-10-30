@@ -122,7 +122,7 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     // Set up model, view, and projection matrix
     glm::mat4 viewProjection = setupMatrices(currentTime, window);
     // Set ellipsoid parameters for the vertex shader
-    shader.setVec3("ellipsoidRadiiSquared", ellipsoid.getRadii());
+    shader.setVec3("ellipsoidRadiiSquared", ellipsoid.getRadiiSquared());
     shader.setVec3("ellipsoidOneOverRadiiSquared", ellipsoid.getOneOverRadiiSquared());
     shader.setVec3("lightPos", lightPosition);
 
@@ -177,12 +177,11 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         prepareTexture(dayTexture);
 
         //
+        auto offset = dayTexture->getGeodeticOffset();
+        //std::cout << offset[0] << "," << offset[1]  << std::endl;
         shader.setVec2("textureGeodeticOffset",
                        dayTexture->getGeodeticOffset() * TO_RADS_COEFF);
         shader.setVec2("textureGridSize", dayTexture->getTextureGridSize());
-//        shader.setVec2("textureGeodeticOffset", glm::vec2(0.0, 0.0));
-//        shader.setVec2("textureGridSize", glm::vec2(1, 1));
-
 
         // Set fragment shader variables: texture, lighting
         // Texture: offset
@@ -216,8 +215,7 @@ glm::mat4 TileEarthRenderer::setupMatrices(float currentTime, t_window_definitio
     glm::vec3 ellipsoidPosition = glm::vec3(0.f, 0.f, 0.f);
     //modelMatrix = glm::translate(modelMatrix, ellipsoidPosition);
     //float angle = 20.0f * 0;
-    //modelMatrix = glm::rotate(modelMatrix, currentTime * glm::radians(angle),
-    //                          glm::vec3(1.0f, 0.3f, 0.5f));
+    //modelMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     glm::mat4 viewMatrix = camera.getViewMatrix();
 
     shader.setMat4("projection", projectionMatrix);

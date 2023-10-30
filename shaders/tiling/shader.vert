@@ -23,12 +23,6 @@ vec3 convertGeocentricToGeocentricSurfaceNormal(vec3 point)  {
     return normalize(normal);
 }
 
-vec3 convertGeocentricToGeodetic(vec3 point) {
-    vec3 normal = convertGeocentricToGeocentricSurfaceNormal(point);
-    vec3 geographic = vec3(atan(normal.y, normal.x), asin(normal.z / length(normal)), 0.0);
-    return geographic;
-}
-
 vec3 convertGeographicToGeodeticSurfaceNormal(vec3 geographic) {
     float longitude = geographic.x;
     float latitude = geographic.y;
@@ -36,8 +30,8 @@ vec3 convertGeographicToGeodeticSurfaceNormal(vec3 geographic) {
     float cosLatitude = cos(latitude);
     vec3 normal = vec3(
         cosLatitude * cos(longitude),
-        cosLatitude * sin(longitude),
-        sin(latitude));
+        sin(latitude),
+        cosLatitude * sin(longitude));
 
     return normal;
 }

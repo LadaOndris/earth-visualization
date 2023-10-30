@@ -43,8 +43,8 @@ glm::vec3 Ellipsoid::convertGeographicToGeodeticSurfaceNormal(glm::vec3 geograph
     float cosLatitude = std::cos(latitude);
     glm::vec3 normal = glm::vec3(
             cosLatitude * std::cos(longitude),
-            cosLatitude * std::sin(longitude),
-            std::sin(latitude));
+            std::sin(latitude),
+            cosLatitude * std::sin(longitude));
 
     return normal;
 }
@@ -90,6 +90,10 @@ bool Ellipsoid::isPointOnTheOutside(glm::vec3 point) {
     auto components = pointSquared * oneOverRadiiSquared;
     float result = components.x + components.y + components.z;
     return result > 1;
+}
+
+glm::vec3 Ellipsoid::getRadiiSquared() const {
+    return radiiSquared;
 }
 
 

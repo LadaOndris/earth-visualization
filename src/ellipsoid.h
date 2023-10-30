@@ -13,6 +13,8 @@ public:
 
     glm::vec3 getRadii() const;
 
+    glm::vec3 getRadiiSquared() const;
+
     glm::vec3 getOneOverRadiiSquared() const;
 
     /**
