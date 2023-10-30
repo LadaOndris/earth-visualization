@@ -17,7 +17,7 @@ std::vector<t_vertex> convertToVertices(const std::vector<glm::vec3> &projectedV
 
 bool TileEarthRenderer::initialize() {
     // Configure tiles to use the current ellipsoid
-    for (Tile &tile : tileContainer.getTiles()) {
+    for (Tile &tile: tileContainer.getTiles()) {
         tile.updateGeocentricPosition(ellipsoid);
     }
 
@@ -78,40 +78,75 @@ void TileEarthRenderer::setupVertexArray(std::vector<t_vertex> vertices,
     glEnableVertexAttribArray(0);
 }
 
-void TileEarthRenderer::prepareTexture(Texture &texture) {
-    if (!texture.isLoaded()) {
-        texture.load();
+void TileEarthRenderer::prepareTexture(std::shared_ptr<Texture> texture) {
+    if (!texture->isLoaded()) {
+        texture->load();
+
+        unsigned char *data = texture->getData();
+        Resolution resolution = texture->getResolution();
+
+        //unsigned int &textureId = texture->getTextureId();
+        glGenTextures(1, &texture->textureId);
+        //Check for OpenGL errors
+        GLenum error = glGetError();
+        if (error != GL_NO_ERROR) {
+            std::cerr << "OpenGL error after glGenTextures: " << error << std::endl;
+        }
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, resolution.getWidth(), resolution.getHeight(), 0, GL_RGB,
+                     GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        // Check for OpenGL errors after texture data loading
+        error = glGetError();
+        if (error != GL_NO_ERROR) {
+            std::cerr << "OpenGL error after texture data loading: " << error << std::endl;
+        }
+
+        //texture->freeData();
+        std::cout << "Loaded texture" << texture->getPath() << " with ID: " << texture->textureId << std::endl;
+        glBindTexture(GL_TEXTURE_2D, texture->textureId);
     }
-
-    unsigned char *data = texture.getData();
-    Resolution resolution = texture.getResolution();
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, resolution.getWidth(), resolution.getHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE,
-                 data);
-    glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 void TileEarthRenderer::render(float currentTime, t_window_definition window, RenderingOptions options) {
     shader.use();
-
-    glGenTextures(1, &dayTextureId); // TODO: is this okay?
+    shader.setInt("dayTextureSampler", 0); // Texture Unit 0
 
     // Set up model, view, and projection matrix
     glm::mat4 viewProjection = setupMatrices(currentTime, window);
     // Set ellipsoid parameters for the vertex shader
     shader.setVec3("ellipsoidRadiiSquared", ellipsoid.getRadii());
     shader.setVec3("ellipsoidOneOverRadiiSquared", ellipsoid.getOneOverRadiiSquared());
+    shader.setVec3("lightPos", lightPosition);
 
     auto tiles = tileContainer.getTiles();
     auto cameraPosition = camera.getPosition();
 
     RenderingStatistics renderingStats;
     renderingStats.numTiles = tiles.size();
+
+    glActiveTexture(GL_TEXTURE0);
+
+//    for (Tile &tile: tiles) {
+//        double screenSpaceWidth = window.width;
+//        double distanceToCamera = glm::length(camera.getPosition() - tile.getGeocentricPosition());
+//        double fov = camera.getFov();
+//
+//        std::shared_ptr<TileResources> resources = tile.getResources(screenSpaceWidth, distanceToCamera, fov);
+//        Mesh_t mesh = resources->getMesh();
+//
+//        // Load resources if needed
+//        auto dayTexture = resources->getDayTexture();
+//        prepareTexture(dayTexture);
+//    }
+
 
     for (Tile &tile: tiles) {
         // Frustum culling
@@ -134,34 +169,40 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         double distanceToCamera = glm::length(camera.getPosition() - tile.getGeocentricPosition());
         double fov = camera.getFov();
 
-
         std::shared_ptr<TileResources> resources = tile.getResources(screenSpaceWidth, distanceToCamera, fov);
         Mesh_t mesh = resources->getMesh();
 
         // Load resources if needed
-//        Texture &dayTexture = resources->getDayTexture();
-//        prepareTexture(dayTexture);
+        auto dayTexture = resources->getDayTexture();
+        prepareTexture(dayTexture);
 
-        // Bind texture
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, dayTextureId);
+        //
+        shader.setVec2("textureGeodeticOffset",
+                       dayTexture->getGeodeticOffset() * TO_RADS_COEFF);
+        shader.setVec2("textureGridSize", dayTexture->getTextureGridSize());
+//        shader.setVec2("textureGeodeticOffset", glm::vec2(0.0, 0.0));
+//        shader.setVec2("textureGridSize", glm::vec2(1, 1));
+
 
         // Set fragment shader variables: texture, lighting
         // Texture: offset
+
+        // Bind texture
+        glBindTexture(GL_TEXTURE_2D, dayTexture->textureId);
+
 
         // Set VAO: we need the correct buffer? Is there one or more?
         glBindVertexArray(resources->meshVAO);
 
         if (options.isWireframeEnabled) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        }
-        else{
-            glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
         glDrawArrays(GL_TRIANGLES, 0, mesh.size());
     }
 
-    for (auto &subscriber : subscribers) {
+    for (auto &subscriber: subscribers) {
         subscriber->notify(renderingStats);
     }
 }
@@ -173,10 +214,10 @@ glm::mat4 TileEarthRenderer::setupMatrices(float currentTime, t_window_definitio
                                         0.001f, 500.0f);
     glm::mat4 modelMatrix = glm::mat4(1.0f);
     glm::vec3 ellipsoidPosition = glm::vec3(0.f, 0.f, 0.f);
-    modelMatrix = glm::translate(modelMatrix, ellipsoidPosition);
-    float angle = 20.0f * 0;
-    modelMatrix = glm::rotate(modelMatrix, currentTime * glm::radians(angle),
-                              glm::vec3(1.0f, 0.3f, 0.5f));
+    //modelMatrix = glm::translate(modelMatrix, ellipsoidPosition);
+    //float angle = 20.0f * 0;
+    //modelMatrix = glm::rotate(modelMatrix, currentTime * glm::radians(angle),
+    //                          glm::vec3(1.0f, 0.3f, 0.5f));
     glm::mat4 viewMatrix = camera.getViewMatrix();
 
     shader.setMat4("projection", projectionMatrix);
@@ -189,7 +230,7 @@ glm::mat4 TileEarthRenderer::setupMatrices(float currentTime, t_window_definitio
 
 void TileEarthRenderer::destroy() {
     // Release texturee
-    glDeleteTextures(1, &dayTextureId);
+    // TODO glDeleteTextures
     // Release buffers
     int numLevels = tileContainer.getNumLevels();
     for (int level = 0; level < numLevels; level++) {
@@ -202,7 +243,7 @@ void TileEarthRenderer::destroy() {
     // TODO: unload textures
 }
 
-void TileEarthRenderer::addSubscriber(const std::shared_ptr<RendererSubscriber>& subscriber) {
+void TileEarthRenderer::addSubscriber(const std::shared_ptr<RendererSubscriber> &subscriber) {
     subscribers.push_back(subscriber);
 }
 

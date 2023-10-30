@@ -19,21 +19,25 @@
 
 class TextureAtlas {
 private:
-    std::vector<std::vector<std::vector<Texture>>> textures; // A 3D vector to store textures.
+    std::vector<std::vector<std::vector<std::shared_ptr<Texture>>>> textures; // A 3D vector to store textures.
 
     // A helper function to ensure vector dimensions match the given x and y size.
-    void ensureVectorSize(std::vector<std::vector<Texture>> &vec, int x_size, int y_size) {
+    void ensureVectorSize(std::vector<std::vector<std::shared_ptr<Texture>>> &vec, int x_size, int y_size) {
         if (vec.size() < x_size) {
             vec.resize(x_size);
         }
         for (auto &subvec: vec) {
             if (subvec.size() < y_size) {
-                subvec.resize(y_size, Texture("", 0, 0, 0));
+                auto geodeticOffset = glm::vec2(0, 0);
+                auto geodeticSize = glm::vec2(0, 0);
+                auto numTextureTiles = glm::vec2(0, 0);
+                subvec.resize(y_size, std::make_shared<Texture>(
+                        "", 0, geodeticOffset, geodeticSize, numTextureTiles));
             }
         }
     }
 
-    void registerTexturesFromSubdirectory(std::string levelDirPath, int level) {
+    void registerTexturesFromSubdirectory(const std::string &levelDirPath, int level) {
         // Open the level directory.
         DIR *levelDir = opendir(levelDirPath.c_str());
         if (!levelDir) {
@@ -53,7 +57,7 @@ private:
         closedir(levelDir);
     }
 
-    void registerTextureFile(std::string levelDirPath, const std::string& fileName, int level) {
+    void registerTextureFile(std::string levelDirPath, const std::string &fileName, int level) {
         std::string texturePath = std::move(levelDirPath);
         texturePath += "/";
         texturePath += fileName;
@@ -77,11 +81,18 @@ private:
             assert(y_index < y_tiles && y_tiles > 0);
             assert(image_width > 0);
 
-            double latitudeWidth = 1.0 / y_tiles * 180;
+            double longitudeOffset = static_cast<double>(x_index) / x_tiles * 360;
+            double latitudeOffset = static_cast<double>(y_index) / y_tiles * 180;
             double longitudeWidth = 1.0 / x_tiles * 360;
+            double latitudeWidth = 1.0 / y_tiles * 180;
 
             // Assuming you have a function to create a Texture instance from the file.
-            Texture texture(std::move(texturePath), image_width, latitudeWidth, longitudeWidth);
+            auto geodeticOffset = glm::vec2(longitudeOffset, latitudeOffset);
+            auto geodeticSize = glm::vec2(longitudeWidth, latitudeWidth);
+            auto numTextureTiles = glm::vec2(x_tiles, y_tiles);
+            auto texture = std::make_shared<Texture>(
+                    std::move(texturePath), image_width,
+                    geodeticOffset, geodeticSize, numTextureTiles);
 
             // Ensure the vectors are appropriately sized.
             ensureVectorSize(textures[level], x_tiles, y_tiles);
@@ -163,7 +174,7 @@ public:
      * @param tile
      * @return
      */
-    Texture &getTexture(unsigned int level, const Tile &tile) {
+    std::shared_ptr<Texture> getTexture(unsigned int level, const Tile &tile) {
         if (level < textures.size() && tile.getLongitude() >= -180 && tile.getLatitude() >= -90) {
             int x_index = static_cast<int>((tile.getLongitude() + 180) / 360.0 * textures[level].size());
             int y_index = static_cast<int>((tile.getLatitude() + 90) / 180.0 * textures[level][0].size());

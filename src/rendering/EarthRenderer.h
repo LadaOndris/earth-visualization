@@ -48,7 +48,7 @@ private:
 public:
     EarthRenderer(SubdivisionSphereTesselator &subdivisionSurfaces, Ellipsoid &ellipsoid, Camera &camera,
                   glm::vec3 lightPosition)
-            : shader("shaders/shader.vs", "shaders/shader.fs"), subdivisionSurfaces(subdivisionSurfaces),
+            : shader("shaders/shader.vert", "shaders/shader.frag"), subdivisionSurfaces(subdivisionSurfaces),
               camera(camera), ellipsoid(ellipsoid), lightPosition(lightPosition) {
     }
 

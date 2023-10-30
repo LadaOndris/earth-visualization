@@ -34,7 +34,7 @@ private:
 
 public:
     SunRenderer(Camera &camera, glm::vec3 lightPosition, float sunRadius)
-            : shader("shaders/sun/shader.vs", "shaders/sun/shader.fs"),
+            : shader("shaders/sun/shader.vert", "shaders/sun/shader.frag"),
               camera(camera), lightPosition(lightPosition), sunRadius(sunRadius) {
     }
 

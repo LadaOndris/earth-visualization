@@ -18,8 +18,8 @@ private:
     // Mesh covers always the tile only
     Mesh_t mesh;
     // Textures may cover many tiles
-    Texture &colorMap;
-    Texture &heightMap;
+    std::shared_ptr<Texture> colorMap;
+    std::shared_ptr<Texture> heightMap;
 
     // Offset in VAO
     unsigned int meshBufferOffset = -1;
@@ -29,20 +29,20 @@ public:
     std::shared_ptr<TileResources> coarserResources;
     std::vector<std::shared_ptr<TileResources>> finerResources;
 
-    explicit TileResources(Mesh_t mesh, Texture &colorMap, Texture &heightMap) :
+    explicit TileResources(Mesh_t mesh, std::shared_ptr<Texture> colorMap, std::shared_ptr<Texture> heightMap) :
             mesh(std::move(mesh)), colorMap(colorMap), heightMap(heightMap) {
 
     }
 
-    Mesh_t getMesh() const {
+    [[nodiscard]] Mesh_t getMesh() const {
         return mesh;
     }
 
-    Texture &getDayTexture() const {
+    [[nodiscard]] std::shared_ptr<Texture> getDayTexture() const {
         return colorMap;
     }
 
-    Texture &getHeightMapTexture() const {
+    [[nodiscard]] std::shared_ptr<Texture> getHeightMapTexture() const {
         return heightMap;
     }
 
@@ -54,7 +54,7 @@ public:
     /**
      * Returns offset in the vertex buffer in the number of vertices.
      */
-    unsigned int getMeshBufferOffset() const {
+    [[nodiscard]] unsigned int getMeshBufferOffset() const {
         return meshBufferOffset;
     }
 

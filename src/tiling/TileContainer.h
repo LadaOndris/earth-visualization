@@ -35,8 +35,8 @@ private:
         for (int level = 0; level < numLevels; ++level) {
             // Based on the information of the tile and the current level,
             // the texture atlas returns the correct texture
-            Texture heightMap = heightMapAtlas.getTexture(level, tile);
-            Texture colorMap = colorMapAtlas.getTexture(level, tile);
+            auto heightMap = heightMapAtlas.getTexture(level, tile);
+            auto colorMap = colorMapAtlas.getTexture(level, tile);
 
             if (level >= cachedMeshes.size()) {
                 // The heightMap determines the resolution of the mesh.
@@ -72,17 +72,17 @@ private:
     * @return A Resolution object representing the width and height of the mesh, matching the
     * dimensions of the texture portion.
     */
-    Resolution determineMeshResolution(const Texture &heightMap, const Tile &tile) {
+    Resolution determineMeshResolution(const std::shared_ptr<Texture> heightMap, const Tile &tile) {
         double makeSmallerCoefficient = 1.0 / 10;
 
         // Get the dimensions of the height map texture.
-        int textureWidth = heightMap.getResolution().getWidth();
-        int textureHeight = heightMap.getResolution().getHeight();
+        int textureWidth = heightMap->getResolution().getWidth();
+        int textureHeight = heightMap->getResolution().getHeight();
         assert(textureWidth > 0 && textureHeight > 0);
 
         // Calculate the portion of the tile in the given texture
-        double tileWidthPortion = tile.getLongitudeWidth() / heightMap.getLongitudeWidth();
-        double tileHeightPortion = tile.getLatitudeWidth() / heightMap.getLatitudeWidth();
+        double tileWidthPortion = tile.getLongitudeWidth() / heightMap->getLongitudeWidth();
+        double tileHeightPortion = tile.getLatitudeWidth() / heightMap->getLatitudeWidth();
 
         // Calculate the width and height of the texture portion.
         int texturePortionWidth = static_cast<int>(textureWidth * tileWidthPortion * makeSmallerCoefficient);

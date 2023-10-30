@@ -15,7 +15,7 @@ uniform float blendDurationScale;
 // Definition of the ellipsoid
 uniform vec3 oneOverRadiiSquared;
 
-vec3 geodeticSurfaceNormalFromWGS84(vec3 point)
+vec3 convertGeocentricToGeocentricSurfaceNormal(vec3 point)
 {
     vec3 normal = point * oneOverRadiiSquared;
     return normalize(normal);

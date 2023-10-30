@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <cmath>
+#include <stdexcept>
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp> // glm::mat4
 #include <glm/geometric.hpp>
@@ -93,10 +94,37 @@ public:
         return lodResources[level];
     }
 
+    /**
+     * Check the coords of this tile are within the coords of the resources.
+     */
+    bool isTileIsWithinResources(const std::shared_ptr<TileResources> &resources) {
+        auto dayTexture = resources->getDayTexture();
+
+        auto textureOffset = dayTexture->getGeodeticOffset();
+        auto textureLongWidth = dayTexture->getLongitudeWidth();
+        auto textureLatWidth = dayTexture->getLatitudeWidth();
+
+        if (this->longitude < textureOffset[0] ||
+            this->latitude < textureOffset[1]) {
+            return false;
+        }
+        if (this->longitude > textureOffset[0] + textureLongWidth ||
+            this->latitude > textureOffset[1] + textureLatWidth) {
+            return false;
+        }
+
+        return true;
+    }
+
     void addResources(const std::shared_ptr<TileResources> &resources, int level) {
         // Assumes resources are added from coarse to fine for simplicity.
         // Check it is true.
         assert(level > lastLevel);
+        if (!isTileIsWithinResources(resources)) {
+            throw std::runtime_error("The tile is located outside of the resources definition.");
+        }
+
+
         lastLevel = level;
 
         // Cross-reference resources of neighboring LODs

@@ -17,6 +17,7 @@
 
 class TileEarthRenderer : public Renderer {
 private:
+    float TO_RADS_COEFF = static_cast<float>(M_PI / 180.0);
     TileContainer &tileContainer;
     Camera &camera;
     Ellipsoid &ellipsoid;
@@ -24,14 +25,12 @@ private:
     Shader shader;
     std::vector<std::shared_ptr<RendererSubscriber>> subscribers;
 
-    unsigned int dayTextureId;
-
     void initVertexArraysForAllLevels(int numLevels);
 
     void setupVertexArray(std::vector<t_vertex> vertices,
                           unsigned int &VAO, unsigned int &VBO);
 
-    void prepareTexture(Texture &texture);
+    void prepareTexture(std::shared_ptr<Texture> texture);
 
     glm::mat4 setupMatrices(float currentTime, t_window_definition window);
 
@@ -39,7 +38,7 @@ public:
     explicit TileEarthRenderer(TileContainer &tileContainer, Ellipsoid &ellipsoid, Camera &camera,
                                glm::vec3 lightPosition)
             : tileContainer(tileContainer), camera(camera), ellipsoid(ellipsoid), lightPosition(lightPosition),
-              shader("shaders/tiling/shader.vs", "shaders/tiling/shader.fs") {
+              shader("shaders/tiling/shader.vert", "shaders/tiling/shader.frag") {
     }
 
     void render(float currentTime, t_window_definition window, RenderingOptions options) override;
