@@ -20,9 +20,6 @@ private:
     // Textures may cover many tiles
     std::shared_ptr<Texture> colorMap;
     std::shared_ptr<Texture> heightMap;
-
-    // Offset in VAO
-    unsigned int meshBufferOffset = -1;
 public:
     unsigned int meshVAO, meshVBO;
     // Coarser and finer resources form a hierarchical structure of the resources.
@@ -44,18 +41,6 @@ public:
 
     [[nodiscard]] std::shared_ptr<Texture> getHeightMapTexture() const {
         return heightMap;
-    }
-
-    void setMeshBufferOffset(unsigned int offsetInVertices) {
-        // Offset in number of vertices
-        meshBufferOffset = offsetInVertices;
-    }
-
-    /**
-     * Returns offset in the vertex buffer in the number of vertices.
-     */
-    [[nodiscard]] unsigned int getMeshBufferOffset() const {
-        return meshBufferOffset;
     }
 
 };

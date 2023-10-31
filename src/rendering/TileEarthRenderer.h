@@ -30,7 +30,7 @@ private:
     void setupVertexArray(std::vector<t_vertex> vertices,
                           unsigned int &VAO, unsigned int &VBO);
 
-    void prepareTexture(std::shared_ptr<Texture> texture);
+    void prepareTexture(const std::shared_ptr<Texture>& texture);
 
     glm::mat4 setupMatrices(float currentTime, t_window_definition window);
 

@@ -29,7 +29,7 @@ private:
         //auto speed = distance * distance / (distance + 30);
         //speed = std::min(speed, maxSpeed);
         //}
-        std::cout << "Distance: " << distance << " Speed: " << speed << std::endl;
+        //std::cout << "Distance: " << distance << " Speed: " << speed << std::endl;
         return speed;
     }
 

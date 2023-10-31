@@ -85,7 +85,10 @@ public:
             }
             // std::cout << "[" << level << "] screen space error: " << screenSpaceError << std::endl;
         }
+        // Avoid out-of-bounds indexing
+        level = std::max(level, 0);
         level = std::min(level, static_cast<int>(lodResources.size() - 1));
+        //return lodResources[lodResources.size() - 1];
         return lodResources[level];
     }
 
@@ -123,7 +126,6 @@ public:
         if (!isTileIsWithinResources(resources)) {
             throw std::runtime_error("The tile is located outside of the resources definition.");
         }
-
 
         lastLevel = level;
 

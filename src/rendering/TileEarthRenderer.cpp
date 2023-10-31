@@ -1,6 +1,7 @@
 
 #include "TileEarthRenderer.h"
 #include "RendererSubscriber.h"
+#include <unistd.h>
 
 std::vector<t_vertex> convertToVertices(const std::vector<glm::vec3> &projectedVertices) {
     std::vector<t_vertex> convertedVertices;
@@ -27,6 +28,7 @@ bool TileEarthRenderer::initialize() {
     }
     int numLevels = tileContainer.getNumLevels();
     initVertexArraysForAllLevels(numLevels);
+
     return true;
 }
 
@@ -43,7 +45,6 @@ void TileEarthRenderer::initVertexArraysForAllLevels(int numLevels) {
         // Merge all tile meshes of this level together.
         for (Tile &tile: tileContainer.getTiles()) {
             auto resources = tile.getResourcesByLevel(level);
-            resources->setMeshBufferOffset(fullMeshForThisLevel.size());
 
             Mesh_t mesh = resources->getMesh();
             fullMeshForThisLevel.insert(fullMeshForThisLevel.end(), mesh.begin(), mesh.end());
@@ -65,43 +66,46 @@ void TileEarthRenderer::initVertexArraysForAllLevels(int numLevels) {
 
 void TileEarthRenderer::setupVertexArray(std::vector<t_vertex> vertices,
                                          unsigned int &VAO, unsigned int &VBO) {
-    glGenBuffers(1, &VBO);
+    glCreateBuffers(1, &VBO);
 
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(t_vertex), &vertices.front(), GL_STATIC_DRAW);
+    glNamedBufferData(VBO, vertices.size() * sizeof(t_vertex), &vertices.front(), GL_STATIC_DRAW);
 
     // Position
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
     glEnableVertexAttribArray(0);
 }
 
-void TileEarthRenderer::prepareTexture(std::shared_ptr<Texture> texture) {
+void TileEarthRenderer::prepareTexture(const std::shared_ptr<Texture>& texture) {
     if (!texture->isLoaded()) {
         texture->load();
 
         unsigned char *data = texture->getData();
         Resolution resolution = texture->getResolution();
+        auto width = resolution.getWidth();
+        auto height = resolution.getHeight();
 
-        //unsigned int &textureId = texture->getTextureId();
-        glGenTextures(1, &texture->textureId);
+        unsigned int &textureId = texture->getTextureId();
+        glCreateTextures(GL_TEXTURE_2D, 1, &textureId);
+
         //Check for OpenGL errors
         GLenum error = glGetError();
         if (error != GL_NO_ERROR) {
             std::cerr << "OpenGL error after glGenTextures: " << error << std::endl;
         }
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTextureParameteri(textureId, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(textureId, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(textureId, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTextureParameteri(textureId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, resolution.getWidth(), resolution.getHeight(), 0, GL_RGB,
-                     GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
+        glTextureStorage2D(textureId, 1, GL_RGB8, width, height);
+        glTextureSubImage2D(textureId, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateTextureMipmap(textureId);
 
         // Check for OpenGL errors after texture data loading
         error = glGetError();
@@ -109,9 +113,8 @@ void TileEarthRenderer::prepareTexture(std::shared_ptr<Texture> texture) {
             std::cerr << "OpenGL error after texture data loading: " << error << std::endl;
         }
 
-        //texture->freeData();
-        std::cout << "Loaded texture" << texture->getPath() << " with ID: " << texture->textureId << std::endl;
-        glBindTexture(GL_TEXTURE_2D, texture->textureId);
+        texture->freeData();
+        //std::cout << "Loaded texture" << texture->getPath() << " with ID: " << texture->getTextureId() << std::endl;
     }
 }
 
@@ -132,21 +135,8 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     RenderingStatistics renderingStats;
     renderingStats.numTiles = tiles.size();
 
-    glActiveTexture(GL_TEXTURE0);
-
-//    for (Tile &tile: tiles) {
-//        double screenSpaceWidth = window.width;
-//        double distanceToCamera = glm::length(camera.getPosition() - tile.getGeocentricPosition());
-//        double fov = camera.getFov();
-//
-//        std::shared_ptr<TileResources> resources = tile.getResources(screenSpaceWidth, distanceToCamera, fov);
-//        Mesh_t mesh = resources->getMesh();
-//
-//        // Load resources if needed
-//        auto dayTexture = resources->getDayTexture();
-//        prepareTexture(dayTexture);
-//    }
-
+    double screenSpaceWidth = window.width;
+    double fov = camera.getFov();
 
     for (Tile &tile: tiles) {
         // Frustum culling
@@ -165,30 +155,18 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         shader.setFloat("uTileLongitudeWidth", tile.getLongitudeWidth());
         shader.setFloat("uTileLatitudeWidth", tile.getLatitudeWidth());
 
-        double screenSpaceWidth = window.width;
         double distanceToCamera = glm::length(camera.getPosition() - tile.getGeocentricPosition());
-        double fov = camera.getFov();
-
         std::shared_ptr<TileResources> resources = tile.getResources(screenSpaceWidth, distanceToCamera, fov);
         Mesh_t mesh = resources->getMesh();
 
-        // Load resources if needed
+        // Set up the neccessary texture
         auto dayTexture = resources->getDayTexture();
         prepareTexture(dayTexture);
 
-        //
-        auto offset = dayTexture->getGeodeticOffset();
-        //std::cout << offset[0] << "," << offset[1]  << std::endl;
-        shader.setVec2("textureGeodeticOffset",
-                       dayTexture->getGeodeticOffset() * TO_RADS_COEFF);
+        shader.setVec2("textureGeodeticOffset", dayTexture->getGeodeticOffset() * TO_RADS_COEFF);
         shader.setVec2("textureGridSize", dayTexture->getTextureGridSize());
 
-        // Set fragment shader variables: texture, lighting
-        // Texture: offset
-
-        // Bind texture
-        glBindTexture(GL_TEXTURE_2D, dayTexture->textureId);
-
+        glBindTextureUnit(0, dayTexture->getTextureId());
 
         // Set VAO: we need the correct buffer? Is there one or more?
         glBindVertexArray(resources->meshVAO);

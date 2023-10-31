@@ -44,10 +44,10 @@ TEST_F(TextureAtlasFixture, TextureIsCorrectlyRegistered) {
     Tile tile(0, 90, 10, 10);
     auto texture = textureAtlas->getTexture(0, tile);
 
-    bool isLoaded = texture.isLoaded();
+    bool isLoaded = texture->isLoaded();
     EXPECT_EQ(isLoaded, false);
 
-    std::string path = texture.getPath();
+    std::string path = texture->getPath();
     std::string fileName = extractFileNameFromPath(path);
     EXPECT_TRUE(strcmp(fileName.c_str(), "day_1_0_2_1_16200_8100.png"));
 }

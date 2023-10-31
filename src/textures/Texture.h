@@ -20,9 +20,9 @@ private:
     glm::vec2 geodeticOffset; // Offset of this texture on the ellipsoid
     glm::vec2 geodeticSize; // Width in longitude and latitude
     glm::vec2 textureGridSize;
-public:
-    unsigned int textureId;
 
+    unsigned int textureId;
+public:
     explicit Texture(std::string path, int width,
                      glm::vec2 geodeticOffset, glm::vec2 geodeticSize,
                      glm::vec2 textureGridSize)
@@ -34,12 +34,14 @@ public:
     }
 
     void load() {
-        if (_isLoaded) {
-            return; // Texture is already loaded.
-        }
+        assert(!_isLoaded);
+
         int width, height, channels;
         // stbi_set_flip_vertically_on_load(true);
         data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+
+        assert(width == this->resolution.getWidth());
+        assert(height == this->resolution.getHeight());
 
         if (data) {
             _isLoaded = true;

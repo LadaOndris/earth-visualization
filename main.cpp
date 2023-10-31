@@ -260,6 +260,7 @@ void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers,
                     const std::shared_ptr<GuiFrameRenderer> &guiRenderer) {
     glViewport(0, 0, windowDefinition.width, windowDefinition.height);
     glEnable(GL_DEPTH_TEST);
+
     float lastFrame = 0.0f; // Time of last frame
 
     while (!glfwWindowShouldClose(window)) {

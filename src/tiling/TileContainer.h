@@ -73,7 +73,7 @@ private:
     * dimensions of the texture portion.
     */
     Resolution determineMeshResolution(const std::shared_ptr<Texture> heightMap, const Tile &tile) {
-        double makeSmallerCoefficient = 1.0 / 10;
+        double makeSmallerCoefficient = 1.0 / 30;
 
         // Get the dimensions of the height map texture.
         int textureWidth = heightMap->getResolution().getWidth();

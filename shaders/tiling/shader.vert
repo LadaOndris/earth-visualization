@@ -1,7 +1,7 @@
 #version 330 core
 // Offset of the vertex within the tile in longitude and latitude
+// in the [0, 1] range.
 layout (location = 0) in vec3 aPos;
-// layout (location = 1) in vec3 aNormal;
 
 out vec3 vertexColor;
 out vec3 geocentricFragPos;

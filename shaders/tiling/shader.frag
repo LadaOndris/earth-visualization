@@ -17,8 +17,10 @@ uniform vec3 ellipsoidRadiiSquared;
 uniform vec3 ellipsoidOneOverRadiiSquared;
 
 const float PI = 3.14159265358979323846;
-float oneOverTwoPi = 1.0 / (2.0 * PI);
-float oneOverPi = 1.0 / PI;
+const float oneOverTwoPi = 1.0 / (2.0 * PI);
+const float oneOverPi = 1.0 / PI;
+const float eps = 0.001;
+
 
 vec3 convertGeocentricToGeocentricSurfaceNormal(vec3 point)
 {
@@ -56,23 +58,6 @@ vec2 computeTextureCoordinates(vec3 normal)
     );
 }
 
-vec2 convertCoordinatesToTextureTile(vec2 globalTexCoords)
-{
-    // globalTexCoords are in range [0, 1]
-    // textureGeodeticOffset are in range [0, 2pi] and [0, pi]
-    // The offset in global map is being normalized to the [0, 1] range.
-    float longitudeOffsetNormalized = textureGeodeticOffset[0] * oneOverTwoPi;
-    float latitudeOffsetNormalized = textureGeodeticOffset[1] * oneOverPi;
-
-    vec2 textureGeodeticOffsetNormalized = vec2(
-        longitudeOffsetNormalized, latitudeOffsetNormalized
-    );
-    // TODO: we must not subtract Tex Coords and Geo Coords (different "units")
-    // We need to shift the tile to the beginning of the coordinate system
-    // and scale it according to the fraction of the tile.
-    return (globalTexCoords - textureGeodeticOffsetNormalized) * textureGridSize;
-}
-
 vec3 convertGeographicToGeodeticSurfaceNormal(vec3 geographic) {
     float longitude = geographic.x;
     float latitude = geographic.y;
@@ -100,62 +85,27 @@ vec3 convertGeodeticToGeocentric(vec3 geodetic) {
 
 void main()
 {
-    const float eps = 0.001;
-
-    // This part is CORRECT
     vec3 normal = convertGeocentricToGeocentricSurfaceNormal(geocentricFragPos);
     float diffuseIntensity = computeDiffuseLight(normal, geocentricFragPos);
     vec2 globalTextureCoordinates = computeTextureCoordinates(normal);
 
-    // This part is INCORRECT
-    //    vec3 geodeticSurfaceNormal = convertGeographicToGeodeticSurfaceNormal(vec3(textureGeodeticOffset, 0));
-    //    vec3 textureGeocentricOffset = convertGeodeticToGeocentric(vec3(textureGeodeticOffset, 0));
-    //    vec3 textureOffsetNormal = convertGeocentricToGeocentricSurfaceNormal(textureGeocentricOffset);
-    //    vec2 textureCoordinatesOffset = computeTextureCoordinates(textureOffsetNormal);
-
-    // Handle the poles
-    //    if (abs(abs(textureGeodeticOffset[1]) - PI / 2.0) < eps) {
+    // Use the following direct approach to handle the problem with the poles
     float normalizedLongitude = (textureGeodeticOffset[0] + PI) / (2.0 * PI);
     float normalizedLatitude = (textureGeodeticOffset[1] + PI / 2.0) / PI;
     vec2 textureCoordinatesOffset = vec2(normalizedLongitude, normalizedLatitude);
-    //    }
-
 
     vec2 tileTextureCoordinates = (globalTextureCoordinates - textureCoordinatesOffset) * textureGridSize;
 
-    // Global coords should always be larger...
-    // wait? But the texture coordiantes are normalized.. to the same scale.
-    // The range of texture coordinates is somewhere between [0, 1] depending on
-    // which range of the globe it covers.
+    // Global coords (of the tile) should always be larger than the
+    // offset of the texture for the tile.
     if (textureCoordinatesOffset[0] > globalTextureCoordinates[0]) {
-        FragColor = vec4(textureCoordinatesOffset[0], 0, 0, 1);
+        FragColor = vec4(1, 0, 0, 1);
         return;
     }
     if (textureCoordinatesOffset[1] > globalTextureCoordinates[1]) {
         FragColor = vec4(0, 1, 0, 1);
         return;
     }
-    //FragColor = vec4(offsetNormalized[0] + 0.1, 0, 0, 1);
-    //FragColor = vec4(geodeticSurfaceNormal[0], 0, geodeticSurfaceNormal[2], 1);
-    //return;
 
-    //vec2 tileTextureCoordinates = convertCoordinatesToTextureTile(globalTextureCoordinates);
-
-    //    if (textureCoordinatesOffset[0] < 0 ||
-    //    textureCoordinatesOffset[1] < 0) {
-    //        FragColor = vec4(1, 0, 0, 1);
-    //        return;
-    //    }
-    //
-    //    if (textureCoordinatesOffset[0] > 1 ||
-    //    textureCoordinatesOffset[1] > 1) {
-    //        FragColor = vec4(0, 1, 0, 1);
-    //        return;
-    //    }
-
-    FragColor = texture(dayTextureSampler, tileTextureCoordinates); // Should be in [0, 1]
-    //FragColor = computeDayColor(normal, tileTextureCoordinates, diffuseIntensity);
-    //FragColor = vec4(tileTextureCoordinates[0], 0, 0, 1);
-    //FragColor = vec4(normal, 1);
-    // FragColor = vec4(0.1, 0.7, 0.3, 1);
+    FragColor = texture(dayTextureSampler, tileTextureCoordinates);
 }
