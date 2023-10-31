@@ -121,6 +121,7 @@ void TileEarthRenderer::prepareTexture(const std::shared_ptr<Texture>& texture) 
 void TileEarthRenderer::render(float currentTime, t_window_definition window, RenderingOptions options) {
     shader.use();
     shader.setInt("dayTextureSampler", 0); // Texture Unit 0
+    shader.setBool("useDayTexture", options.isTextureEnabled);
 
     // Set up model, view, and projection matrix
     glm::mat4 viewProjection = setupMatrices(currentTime, window);

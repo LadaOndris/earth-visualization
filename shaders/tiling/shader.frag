@@ -16,6 +16,11 @@ uniform vec2 textureGridSize;
 uniform vec3 ellipsoidRadiiSquared;
 uniform vec3 ellipsoidOneOverRadiiSquared;
 
+// Enable/disable features
+uniform bool useDayTexture;
+uniform bool useNightTexture;
+uniform bool useHeightMapTexture;
+
 const float PI = 3.14159265358979323846;
 const float oneOverTwoPi = 1.0 / (2.0 * PI);
 const float oneOverPi = 1.0 / PI;
@@ -85,6 +90,11 @@ vec3 convertGeodeticToGeocentric(vec3 geodetic) {
 
 void main()
 {
+    if (!useDayTexture) {
+        FragColor = vec4(0.2, 0.6, 0.2, 1);
+        return;
+    }
+
     vec3 normal = convertGeocentricToGeocentricSurfaceNormal(geocentricFragPos);
     float diffuseIntensity = computeDiffuseLight(normal, geocentricFragPos);
     vec2 globalTextureCoordinates = computeTextureCoordinates(normal);
