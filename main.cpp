@@ -317,6 +317,8 @@ int main() {
     TextureAtlas heightMapAtlas;
     TileContainer tileContainer(tileMeshTesselator, colorMapAtlas, heightMapAtlas, ellipsoid);
 
+    ResourceFetcher resourceFetcher;
+
     colorMapAtlas.registerAvailableTextures("textures/daymaps");
     heightMapAtlas.registerAvailableTextures("textures/heightmaps");
     tileContainer.setupTiles();
@@ -329,7 +331,9 @@ int main() {
 
     if (useTiling) {
         auto tileEarthRenderer =
-                std::make_shared<TileEarthRenderer>(tileContainer, ellipsoid, camera, lightPosition);
+                std::make_shared<TileEarthRenderer>(
+                        tileContainer, ellipsoid, camera, lightPosition, resourceFetcher
+                        );
         tileEarthRenderer->addSubscriber(guiRenderer);
         renderers.push_back(tileEarthRenderer);
     } else {

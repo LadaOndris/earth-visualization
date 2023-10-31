@@ -79,43 +79,21 @@ void TileEarthRenderer::setupVertexArray(std::vector<t_vertex> vertices,
     glEnableVertexAttribArray(0);
 }
 
-void TileEarthRenderer::prepareTexture(const std::shared_ptr<Texture>& texture) {
-    if (!texture->isLoaded()) {
-        texture->load();
+bool TileEarthRenderer::prepareTexture(const std::shared_ptr<Texture> &texture) {
+    // Places in the load queue or updates the replacement queue
+    resourceFetcher.request(texture);
 
-        unsigned char *data = texture->getData();
-        Resolution resolution = texture->getResolution();
-        auto width = resolution.getWidth();
-        auto height = resolution.getHeight();
-
-        unsigned int &textureId = texture->getTextureId();
-        glCreateTextures(GL_TEXTURE_2D, 1, &textureId);
-
-        //Check for OpenGL errors
-        GLenum error = glGetError();
-        if (error != GL_NO_ERROR) {
-            std::cerr << "OpenGL error after glGenTextures: " << error << std::endl;
+    if (texture->isPreparedInGlContext()) {
+        return true;
+    } else {
+        if (texture->isLoaded()) {
+            texture->prepare();
+            return true;
+        } else {
+            return false;
         }
-
-        glTextureParameteri(textureId, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTextureParameteri(textureId, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTextureParameteri(textureId, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTextureParameteri(textureId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glTextureStorage2D(textureId, 1, GL_RGB8, width, height);
-        glTextureSubImage2D(textureId, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateTextureMipmap(textureId);
-
-        // Check for OpenGL errors after texture data loading
-        error = glGetError();
-        if (error != GL_NO_ERROR) {
-            std::cerr << "OpenGL error after texture data loading: " << error << std::endl;
-        }
-
-        texture->freeData();
-        //std::cout << "Loaded texture" << texture->getPath() << " with ID: " << texture->getTextureId() << std::endl;
     }
+
 }
 
 void TileEarthRenderer::render(float currentTime, t_window_definition window, RenderingOptions options) {
@@ -162,23 +140,27 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
 
         // Set up the neccessary texture
         auto dayTexture = resources->getDayTexture();
-        prepareTexture(dayTexture);
 
-        shader.setVec2("textureGeodeticOffset", dayTexture->getGeodeticOffset() * TO_RADS_COEFF);
-        shader.setVec2("textureGridSize", dayTexture->getTextureGridSize());
+        // Draw only if the necessary resources are ready
+        if (prepareTexture(dayTexture)) {
+            shader.setVec2("textureGeodeticOffset", dayTexture->getGeodeticOffset() * TO_RADS_COEFF);
+            shader.setVec2("textureGridSize", dayTexture->getTextureGridSize());
 
-        glBindTextureUnit(0, dayTexture->getTextureId());
+            glBindTextureUnit(0, dayTexture->getTextureId());
 
-        // Set VAO: we need the correct buffer? Is there one or more?
-        glBindVertexArray(resources->meshVAO);
+            // Set VAO: we need the correct buffer? Is there one or more?
+            glBindVertexArray(resources->meshVAO);
 
-        if (options.isWireframeEnabled) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        } else {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            if (options.isWireframeEnabled) {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            } else {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            }
+            glDrawArrays(GL_TRIANGLES, 0, mesh.size());
         }
-        glDrawArrays(GL_TRIANGLES, 0, mesh.size());
     }
+
+    renderingStats.loadedTextures = resourceFetcher.getNumLoadedTextures();
 
     for (auto &subscriber: subscribers) {
         subscriber->notify(renderingStats);

@@ -10,11 +10,13 @@
 #include <stb_image.h>
 #include <glm/vec2.hpp>
 #include "../tiling/Resolution.h"
+#include "../include/glad/glad.h"
 
 class Texture {
 private:
     std::string path;
-    bool _isLoaded = false;
+    bool isDataLoadedFromFile = false;
+    bool isGlPrepared = false;
     unsigned char *data = nullptr;
     Resolution resolution; // Resolution in pixels
     glm::vec2 geodeticOffset; // Offset of this texture on the ellipsoid
@@ -34,7 +36,8 @@ public:
     }
 
     void load() {
-        assert(!_isLoaded);
+        assert(!isDataLoadedFromFile);
+        assert(!isGlPrepared);
 
         int width, height, channels;
         // stbi_set_flip_vertically_on_load(true);
@@ -44,7 +47,7 @@ public:
         assert(height == this->resolution.getHeight());
 
         if (data) {
-            _isLoaded = true;
+            isDataLoadedFromFile = true;
         } else {
             std::cout << "Failed to load texture: " << path << std::endl;
         }
@@ -56,17 +59,59 @@ public:
     }
 
     void unload() {
-        if (!_isLoaded) {
+        if (!isDataLoadedFromFile) {
             return; // Texture is not loaded.
         }
 
         stbi_image_free(data);
         data = nullptr;
-        _isLoaded = false;
+        isDataLoadedFromFile = false;
+
+        //TODO: destroy glTexture
+        isGlPrepared = false;
+    }
+
+    void prepare() {
+        assert(isDataLoadedFromFile);
+        assert(!isGlPrepared);
+
+        auto width = resolution.getWidth();
+        auto height = resolution.getHeight();
+
+        glCreateTextures(GL_TEXTURE_2D, 1, &textureId);
+
+        //Check for OpenGL errors
+        GLenum error = glGetError();
+        if (error != GL_NO_ERROR) {
+            std::cerr << "OpenGL error after glGenTextures: " << error << std::endl;
+        }
+
+        glTextureParameteri(textureId, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(textureId, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(textureId, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTextureParameteri(textureId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTextureStorage2D(textureId, 1, GL_RGB8, width, height);
+        glTextureSubImage2D(textureId, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateTextureMipmap(textureId);
+
+        // Check for OpenGL errors after texture data loading
+        error = glGetError();
+        if (error != GL_NO_ERROR) {
+            std::cerr << "OpenGL error after texture data loading: " << error << std::endl;
+        }
+
+        freeData();
+        isGlPrepared = true;
+    }
+
+    [[nodiscard]] bool isPreparedInGlContext() const {
+        return isGlPrepared;
     }
 
     [[nodiscard]] bool isLoaded() const {
-        return _isLoaded;
+        return isDataLoadedFromFile;
     }
 
     [[nodiscard]] std::string getPath() const {
@@ -75,10 +120,6 @@ public:
 
     [[nodiscard]] Resolution getResolution() const {
         return resolution;
-    }
-
-    [[nodiscard]] unsigned char *getData() const {
-        return data;
     }
 
     [[nodiscard]] double getLatitudeWidth() const {

@@ -143,6 +143,9 @@ void GuiFrameRenderer::createStatisticsWindow(t_window_definition window) {
     ImGui::Spacing();
     ImGui::Text("Back-faced-culled tiles: %d", renderingStatistics.backfacedCulledTiles);
     ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Text("Loaded textures: %d", renderingStatistics.loadedTextures);
+    ImGui::Spacing();
 
     ImGui::End();
     float windowHeight = 100;

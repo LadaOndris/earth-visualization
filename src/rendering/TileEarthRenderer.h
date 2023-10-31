@@ -14,6 +14,7 @@
 #include "shader.h"
 #include "../vertex.h"
 #include "RendererSubscriber.h"
+#include "../resources/ResourceFetcher.h"
 
 class TileEarthRenderer : public Renderer {
 private:
@@ -21,6 +22,7 @@ private:
     TileContainer &tileContainer;
     Camera &camera;
     Ellipsoid &ellipsoid;
+    ResourceFetcher &resourceFetcher;
     glm::vec3 lightPosition;
     Shader shader;
     std::vector<std::shared_ptr<RendererSubscriber>> subscribers;
@@ -30,14 +32,15 @@ private:
     void setupVertexArray(std::vector<t_vertex> vertices,
                           unsigned int &VAO, unsigned int &VBO);
 
-    void prepareTexture(const std::shared_ptr<Texture>& texture);
+    bool prepareTexture(const std::shared_ptr<Texture>& texture);
 
     glm::mat4 setupMatrices(float currentTime, t_window_definition window);
 
 public:
     explicit TileEarthRenderer(TileContainer &tileContainer, Ellipsoid &ellipsoid, Camera &camera,
-                               glm::vec3 lightPosition)
-            : tileContainer(tileContainer), camera(camera), ellipsoid(ellipsoid), lightPosition(lightPosition),
+                               glm::vec3 lightPosition, ResourceFetcher &resourceFetcher)
+            : tileContainer(tileContainer), camera(camera), ellipsoid(ellipsoid),
+              lightPosition(lightPosition), resourceFetcher(resourceFetcher),
               shader("shaders/tiling/shader.vert", "shaders/tiling/shader.frag") {
     }
 

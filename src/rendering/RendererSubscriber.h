@@ -9,6 +9,8 @@ struct RenderingStatistics {
     int frustumCulledTiles = 0;
     int backfacedCulledTiles = 0;
     int numTiles = 0;
+
+    int loadedTextures = 0;
 };
 
 class RendererSubscriber {
