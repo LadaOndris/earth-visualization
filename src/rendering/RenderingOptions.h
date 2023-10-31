@@ -11,6 +11,7 @@ struct RenderingOptions {
     bool isWireframeEnabled = true;
     bool isTextureEnabled = false;
     bool isTerrainEnabled = false;
+    bool isGridEnabled = false;
 };
 
 

@@ -16,10 +16,15 @@ uniform vec2 textureGridSize;
 uniform vec3 ellipsoidRadiiSquared;
 uniform vec3 ellipsoidOneOverRadiiSquared;
 
+// Grid definition
+uniform float gridResolution;
+uniform float gridLineWidth;
+
 // Enable/disable features
 uniform bool useDayTexture;
 uniform bool useNightTexture;
 uniform bool useHeightMapTexture;
+uniform bool displayGrid;
 
 const float PI = 3.14159265358979323846;
 const float oneOverTwoPi = 1.0 / (2.0 * PI);
@@ -88,8 +93,18 @@ vec3 convertGeodeticToGeocentric(vec3 geodetic) {
     return rSurface + (n * height);
 }
 
+bool isGrid(vec2 globalTextureCoordinates) {
+    vec2 distanceToLine = mod(globalTextureCoordinates, gridResolution);
+    vec2 dx = abs(dFdx(globalTextureCoordinates));
+    vec2 dy = abs(dFdy(globalTextureCoordinates));
+    vec2 dF = vec2(max(dx.s, dy.s),
+                   max(dx.t, dy.t)) * gridLineWidth;
+    return any(lessThan(distanceToLine, dF));
+}
+
 void main()
 {
+
     if (!useDayTexture) {
         FragColor = vec4(0.2, 0.6, 0.2, 1);
         return;
@@ -117,5 +132,10 @@ void main()
         return;
     }
 
-    FragColor = texture(dayTextureSampler, tileTextureCoordinates);
+    if (displayGrid && isGrid(globalTextureCoordinates)) {
+        FragColor = vec4(0.3, 0.3, 0.3, 1);
+    }
+    else {
+        FragColor = texture(dayTextureSampler, tileTextureCoordinates);
+    }
 }
