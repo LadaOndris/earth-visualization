@@ -11,6 +11,7 @@
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp> // glm::mat4
 #include <glm/geometric.hpp>
+#include <array>
 #include "TileResources.h"
 #include "../ellipsoid.h"
 
@@ -23,6 +24,7 @@ private:
     std::vector<std::shared_ptr<TileResources>> lodResources;
     double latitude, longitude, latitudeWidth, longitudeWidth;
     glm::vec3 geocentricPosition;
+    std::array<glm::vec3, 4> corners;
     // Normal of the face of the tile.
     glm::vec3 normal;
     double tileWidth;
@@ -147,12 +149,6 @@ public:
      * @return
      */
     [[nodiscard]] bool isInViewFrustum(const glm::mat4 &viewProjectionMatrix) const {
-        // Calculate the bounding sphere of the tile based on its geocentric position and size.
-        // You can adapt this based on how you define your bounding volume.
-        // For a sphere, you'd calculate its center and radius.
-        glm::vec3 tileCenter = getGeocentricPosition();
-        double tileRadius = getTileRadius();
-
         // Extract the frustum planes from the viewProjectionMatrix.
         // https://www8.cs.umu.se/kurser/5DV051/HT12/lab/plane_extraction.pdf
         glm::vec4 planes[6];
@@ -164,18 +160,22 @@ public:
             planes[4][i] = viewProjectionMatrix[i][3] + viewProjectionMatrix[i][2];  // Near
             planes[5][i] = viewProjectionMatrix[i][3] - viewProjectionMatrix[i][2];  // Far
         }
-        // Check if the tile's bounding sphere is inside all frustum planes.
-        for (auto plane: planes) {
-            float signedDistance = glm::dot(plane, glm::vec4(tileCenter, 1.0));
+        unsigned int cornersOutsideFrustum = 0;
 
-            // If the signed distance is less than the negative radius, the sphere is completely outside the frustum.
-            if (signedDistance < -tileRadius) {
-                return false;
+        for (auto tileCorner: getGeocentricTileCorners()) {
+            // Check if the tile's inside all frustum planes.
+            for (auto plane: planes) {
+                float signedDistance = glm::dot(plane, glm::vec4(tileCorner, 1.0));
+
+                // If the signed distance is less than the negative radius, the sphere is completely outside the frustum.
+                if (signedDistance < 0) {
+                    cornersOutsideFrustum++;
+                    break;
+                }
             }
         }
 
-        // If the tile's bounding sphere is not completely outside any frustum plane, it's in the view frustum.
-        return true;
+        return cornersOutsideFrustum < 4;
     }
 
     [[nodiscard]] bool isFacingCamera(const glm::vec3 &cameraPosition) const {
@@ -199,15 +199,27 @@ public:
 
         auto upperLeftCorner = glm::vec3(longitude, latitude, 0) * toRadsCoeff;
         auto upperRightCorner = glm::vec3(longitude + longitudeWidth, latitude, 0) * toRadsCoeff;
+        auto lowerLeftCorner = glm::vec3(longitude, latitude + latitudeWidth, 0) * toRadsCoeff;
+        auto lowerRightCorner = glm::vec3(longitude + longitudeWidth, latitude + latitudeWidth, 0) * toRadsCoeff;
 
         auto geocentricUpperLeftCorner = ellipsoid.convertGeodeticToGeocentric(upperLeftCorner);
         auto geocentricUpperRightCorner = ellipsoid.convertGeodeticToGeocentric(upperRightCorner);
+        auto geocentricLowerLeftCorner = ellipsoid.convertGeodeticToGeocentric(lowerLeftCorner);
+        auto geocentricLowerRightCorner = ellipsoid.convertGeodeticToGeocentric(lowerRightCorner);
+        corners = std::array<glm::vec3, 4>({
+                geocentricUpperLeftCorner, geocentricUpperRightCorner,
+                geocentricLowerLeftCorner, geocentricLowerRightCorner
+        });
         tileWidth = glm::length(geocentricUpperRightCorner - geocentricUpperLeftCorner);
 
         auto tileCentre = glm::vec3(longitudeCentre, latitudeCentre, 0) * toRadsCoeff;
         geocentricPosition = ellipsoid.convertGeodeticToGeocentric(tileCentre);
 
         normal = ellipsoid.convertGeographicToGeodeticSurfaceNormal(tileCentre);
+    }
+
+    [[nodiscard]] std::array<glm::vec3, 4> getGeocentricTileCorners() const {
+        return corners;
     }
 
 
