@@ -73,8 +73,8 @@ glm::vec3 Ellipsoid::projectGeocentricPointOntoSurface(glm::vec3 geocentricPoint
 
 glm::vec3 Ellipsoid::convertGeocentricToGeodetic(glm::vec3 point) const {
     auto normal = convertGeocentricToGeocentricSurfaceNormal(point);
-    auto geodetic = glm::vec3(std::atan2(normal.y, normal.x),
-                              std::asin(normal.z / glm::length(normal)),
+    auto geodetic = glm::vec3(std::atan2(normal.z, normal.x),
+                              std::asin(normal.y / glm::length(normal)),
                               0);
     return geodetic;
 }

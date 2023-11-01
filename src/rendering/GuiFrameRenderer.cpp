@@ -139,14 +139,27 @@ void GuiFrameRenderer::createStatisticsWindow(t_window_definition window) {
     ImGui::Begin("Rendering Statistics", nullptr, windowFlags);
 
     ImGui::Spacing();
+    ImGui::Text("\tTiles");
+    ImGui::Spacing();
     ImGui::Text("Tiles: %d", renderingStatistics.numTiles);
     ImGui::Spacing();
     ImGui::Text("Frustum-culled tiles: %d", renderingStatistics.frustumCulledTiles);
     ImGui::Spacing();
     ImGui::Text("Back-faced-culled tiles: %d", renderingStatistics.backfacedCulledTiles);
     ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+    ImGui::Text("\tTextures");
     ImGui::Spacing();
     ImGui::Text("Loaded textures: %d", renderingStatistics.loadedTextures);
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+    ImGui::Text("\tCamera");
+    ImGui::Spacing();
+    ImGui::Text("Longitude: %.3f°", renderingStatistics.cameraPosition[0] * TO_DEGS_COEFF);
+    ImGui::Spacing();
+    ImGui::Text("Latitude: %.3f°", renderingStatistics.cameraPosition[1] * TO_DEGS_COEFF);
     ImGui::Spacing();
 
     ImGui::End();

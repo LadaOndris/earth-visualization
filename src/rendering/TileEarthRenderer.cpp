@@ -163,8 +163,10 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
             glDrawArrays(GL_TRIANGLES, 0, mesh.size());
         }
     }
+    auto geodeticCameraPosition = ellipsoid.convertGeocentricToGeodetic(camera.getPosition());
 
     renderingStats.loadedTextures = resourceFetcher.getNumLoadedTextures();
+    renderingStats.cameraPosition = geodeticCameraPosition;
 
     for (auto &subscriber: subscribers) {
         subscriber->notify(renderingStats);
