@@ -294,11 +294,18 @@ void cleanup(const std::vector<std::shared_ptr<Renderer>> &renderers) {
     glfwTerminate();
 }
 
+void resourceLoaderThreadStart() {
+    ResourceLoader loader;
+    loader.start();
+}
+
 int main() {
     std::cout << "Starting the application..." << std::endl;
     if (!initializeGlfw() || !initializeGlad() || !initializeImgui()) {
         return EXIT_FAILURE;
     }
+    std::thread loaderThread(resourceLoaderThreadStart);
+
     bool useTiling = true;
 
     auto sunVsEarthRadiusFactor = 109.168105; // Sun_radius / Earth_radius
@@ -318,6 +325,7 @@ int main() {
     TileContainer tileContainer(tileMeshTesselator, colorMapAtlas, heightMapAtlas, ellipsoid);
 
     ResourceFetcher resourceFetcher;
+    ResourceManager resourceManager(300);
 
     colorMapAtlas.registerAvailableTextures("textures/daymaps");
     heightMapAtlas.registerAvailableTextures("textures/heightmaps");
@@ -332,8 +340,9 @@ int main() {
     if (useTiling) {
         auto tileEarthRenderer =
                 std::make_shared<TileEarthRenderer>(
-                        tileContainer, ellipsoid, camera, lightPosition, resourceFetcher
-                        );
+                        tileContainer, ellipsoid, camera, lightPosition,
+                        resourceFetcher, resourceManager
+                );
         tileEarthRenderer->addSubscriber(guiRenderer);
         renderers.push_back(tileEarthRenderer);
     } else {
@@ -357,6 +366,7 @@ int main() {
     startRendering(renderers, guiRenderer);
     cleanup(renderers);
 
+    loaderThread.join();
     exit(EXIT_SUCCESS);
 }
 

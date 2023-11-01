@@ -9,21 +9,26 @@
 #include <utility>
 #include <stb_image.h>
 #include <glm/vec2.hpp>
+#include <vector>
 #include "../tiling/Resolution.h"
 #include "../include/glad/glad.h"
 
 class Texture {
 private:
-    std::string path;
-    bool isDataLoadedFromFile = false;
     bool isGlPrepared = false;
-    unsigned char *data = nullptr;
+    std::string path;
+    std::vector<unsigned char> data;
     Resolution resolution; // Resolution in pixels
     glm::vec2 geodeticOffset; // Offset of this texture on the ellipsoid
     glm::vec2 geodeticSize; // Width in longitude and latitude
     glm::vec2 textureGridSize;
 
     unsigned int textureId;
+
+    void freeData() {
+        data.clear();
+    }
+
 public:
     explicit Texture(std::string path, int width,
                      glm::vec2 geodeticOffset, glm::vec2 geodeticSize,
@@ -35,44 +40,12 @@ public:
               textureGridSize(textureGridSize) {
     }
 
-    void load() {
-        assert(!isDataLoadedFromFile);
-        assert(!isGlPrepared);
-
-        int width, height, channels;
-        // stbi_set_flip_vertically_on_load(true);
-        data = stbi_load(path.c_str(), &width, &height, &channels, 0);
-
-        assert(width == this->resolution.getWidth());
-        assert(height == this->resolution.getHeight());
-
-        if (data) {
-            isDataLoadedFromFile = true;
-        } else {
-            std::cout << "Failed to load texture: " << path << std::endl;
-        }
+    void setData(std::vector<unsigned char> dataOther) {
+        data = std::move(dataOther);
     }
 
-    void freeData() {
-        stbi_image_free(data);
-        data = nullptr;
-    }
-
-    void unload() {
-        if (!isDataLoadedFromFile) {
-            return; // Texture is not loaded.
-        }
-
-        stbi_image_free(data);
-        data = nullptr;
-        isDataLoadedFromFile = false;
-
-        //TODO: destroy glTexture
-        isGlPrepared = false;
-    }
-
-    void prepare() {
-        assert(isDataLoadedFromFile);
+    void loadIntoGL() {
+        assert(!data.empty());
         assert(!isGlPrepared);
 
         auto width = resolution.getWidth();
@@ -93,7 +66,7 @@ public:
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glTextureStorage2D(textureId, 1, GL_RGB8, width, height);
-        glTextureSubImage2D(textureId, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glTextureSubImage2D(textureId, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data.data());
         glGenerateTextureMipmap(textureId);
 
         // Check for OpenGL errors after texture data loading
@@ -103,7 +76,15 @@ public:
         }
 
         freeData();
+
         isGlPrepared = true;
+    }
+
+    void unloadFromGL() {
+        if (isGlPrepared) {
+            glDeleteTextures(1, &textureId);
+            isGlPrepared = false;
+        }
     }
 
     [[nodiscard]] bool isPreparedInGlContext() const {
@@ -111,7 +92,7 @@ public:
     }
 
     [[nodiscard]] bool isLoaded() const {
-        return isDataLoadedFromFile;
+        return !data.empty();
     }
 
     [[nodiscard]] std::string getPath() const {

@@ -80,23 +80,54 @@ void TileEarthRenderer::setupVertexArray(std::vector<t_vertex> vertices,
 }
 
 bool TileEarthRenderer::prepareTexture(const std::shared_ptr<Texture> &texture) {
-    // Places in the load queue or updates the replacement queue
-    resourceFetcher.request(texture);
-
     if (texture->isPreparedInGlContext()) {
+        // The texture is ready to use in OpenGL
+        // Notify the resource manager about the current usage of textures
+        resourceManager.noteUsage(texture);
         return true;
     } else {
-        if (texture->isLoaded()) {
-            texture->prepare();
-            return true;
-        } else {
-            return false;
+        auto it = requestMap.find(texture->getPath());
+        if (it == requestMap.end()) {
+            // The texture hasn't been loaded from disk
+            TextureLoadRequest request = {
+                    .path = texture->getPath()
+            };
+            resourceFetcher.request(request);
+            // Register a request into a data structure
+            // so that it can be connected to a TextureLoadResult by the path
+            requestMap[texture->getPath()] = texture;
+        }
+        return false;
+
+    }
+}
+
+void TileEarthRenderer::updateTexturesWithData(const std::vector<TextureLoadResult> &results) {
+    for (const TextureLoadResult &result: results) {
+        // Get the instance of the texture from the HashMap
+        auto it = requestMap.find(result.path);
+        if (it != requestMap.end()) {
+            std::shared_ptr<Texture> texture = it->second;
+
+            // Copy the data from the TextureLoadResult to the texture instance.
+            texture->setData(result.data);
+
+            // Remove the registration from the HashMap
+            requestMap.erase(it);
+
+            assert(result.width == texture->getResolution().getWidth());
+            assert(result.height == texture->getResolution().getHeight());
+
+            // Now, the texture is loaded and can be prepared for OpenGL
+            resourceManager.addTextureIntoContext(texture);
         }
     }
-
 }
 
 void TileEarthRenderer::render(float currentTime, t_window_definition window, RenderingOptions options) {
+    auto newlyLoadedTexturesData = resourceFetcher.retrieveLoadedResources();
+    updateTexturesWithData(newlyLoadedTexturesData);
+
     shader.use();
     shader.setInt("dayTextureSampler", 0); // Texture Unit 0
     shader.setBool("useDayTexture", options.isTextureEnabled);
@@ -165,7 +196,7 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     }
     auto geodeticCameraPosition = ellipsoid.convertGeocentricToGeodetic(camera.getPosition());
 
-    renderingStats.loadedTextures = resourceFetcher.getNumLoadedTextures();
+    renderingStats.loadedTextures = resourceManager.getNumLoadedTextures();
     renderingStats.cameraPosition = geodeticCameraPosition;
 
     for (auto &subscriber: subscribers) {
@@ -194,8 +225,9 @@ glm::mat4 TileEarthRenderer::setupMatrices(float currentTime, t_window_definitio
 }
 
 void TileEarthRenderer::destroy() {
-    // Release texturee
-    // TODO glDeleteTextures
+    // Release textures
+    resourceManager.releaseAll();
+
     // Release buffers
     int numLevels = tileContainer.getNumLevels();
     for (int level = 0; level < numLevels; level++) {
@@ -204,8 +236,6 @@ void TileEarthRenderer::destroy() {
         glDeleteVertexArrays(1, &resources->meshVAO);
         glDeleteBuffers(1, &resources->meshVBO);
     }
-
-    // TODO: unload textures
 }
 
 void TileEarthRenderer::addSubscriber(const std::shared_ptr<RendererSubscriber> &subscriber) {

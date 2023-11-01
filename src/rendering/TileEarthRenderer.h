@@ -7,6 +7,7 @@
 
 
 #include <glm/vec3.hpp>
+#include <unordered_map>
 #include "Renderer.h"
 #include "../cameras/Camera.h"
 #include "../ellipsoid.h"
@@ -15,6 +16,7 @@
 #include "../vertex.h"
 #include "RendererSubscriber.h"
 #include "../resources/ResourceFetcher.h"
+#include "../resources/ResourceManager.h"
 
 class TileEarthRenderer : public Renderer {
 private:
@@ -23,9 +25,12 @@ private:
     Camera &camera;
     Ellipsoid &ellipsoid;
     ResourceFetcher &resourceFetcher;
+    ResourceManager &resourceManager;
     glm::vec3 lightPosition;
     Shader shader;
     std::vector<std::shared_ptr<RendererSubscriber>> subscribers;
+    std::unordered_map<std::string, std::shared_ptr<Texture>> requestMap;
+
 
     void initVertexArraysForAllLevels(int numLevels);
 
@@ -36,11 +41,18 @@ private:
 
     glm::mat4 setupMatrices(float currentTime, t_window_definition window);
 
+    void updateTexturesWithData(const std::vector<TextureLoadResult> &results);
+
 public:
-    explicit TileEarthRenderer(TileContainer &tileContainer, Ellipsoid &ellipsoid, Camera &camera,
-                               glm::vec3 lightPosition, ResourceFetcher &resourceFetcher)
+    explicit TileEarthRenderer(TileContainer &tileContainer,
+                               Ellipsoid &ellipsoid,
+                               Camera &camera,
+                               glm::vec3 lightPosition,
+                               ResourceFetcher &resourceFetcher,
+                               ResourceManager &resourceManager)
             : tileContainer(tileContainer), camera(camera), ellipsoid(ellipsoid),
               lightPosition(lightPosition), resourceFetcher(resourceFetcher),
+              resourceManager(resourceManager),
               shader("shaders/tiling/shader.vert", "shaders/tiling/shader.frag") {
     }
 
