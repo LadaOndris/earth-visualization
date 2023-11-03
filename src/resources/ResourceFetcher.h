@@ -9,6 +9,7 @@
 #include <queue>
 #include <thread>
 #include <mutex>
+#include <atomic>
 #include <condition_variable>
 #include <memory>
 #include "../textures/Texture.h"
@@ -30,13 +31,19 @@ extern std::deque<TextureLoadResult> resultsQueue;
 extern std::mutex loadingMutex;
 extern std::mutex resultsMutex;
 extern std::condition_variable cv;
+extern std::atomic<bool> stopThread;
 
 class ResourceLoader {
 public:
-    [[noreturn]] void start() {
+    void start() {
         while (true) {
             std::unique_lock<std::mutex> lock(loadingMutex);
-            cv.wait(lock, [] { return !loadingTexturesQueue.empty(); });
+            cv.wait(lock, [] { return !loadingTexturesQueue.empty() || stopThread; });
+
+            if (stopThread) {
+                break;
+            }
+
             TextureLoadRequest request = loadingTexturesQueue.front();
             loadingTexturesQueue.pop();
             lock.unlock();

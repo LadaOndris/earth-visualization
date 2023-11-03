@@ -32,6 +32,7 @@
 #include <chrono>
 #include <array>
 #include <algorithm>
+#include <future>
 
 t_window_definition windowDefinition;
 float lastX = 400, lastY = 300;
@@ -299,12 +300,11 @@ void resourceLoaderThreadStart() {
     loader.start();
 }
 
-int main() {
-    std::cout << "Starting the application..." << std::endl;
+void mainAppThread(std::promise<int> && returnCodePromise) {
     if (!initializeGlfw() || !initializeGlad() || !initializeImgui()) {
-        return EXIT_FAILURE;
+        returnCodePromise.set_value(EXIT_FAILURE);
+        return;
     }
-    std::thread loaderThread(resourceLoaderThreadStart);
 
     bool useTiling = true;
 
@@ -361,13 +361,35 @@ int main() {
     bool result = initializeRenderers(renderers);
     if (!result) {
         cleanup(renderers);
-        exit(EXIT_FAILURE);
+        returnCodePromise.set_value(EXIT_FAILURE);
+        return;
     }
+
     startRendering(renderers, guiRenderer);
     cleanup(renderers);
 
+    returnCodePromise.set_value(EXIT_SUCCESS);
+}
+
+int main() {
+    std::cout << "Starting the application..." << std::endl;
+    std::cout << "Starting application thread: " << std::this_thread::get_id() << std::endl;
+
+    std::thread loaderThread(resourceLoaderThreadStart);
+
+    std::promise<int> p;
+    auto futureReturnCode = p.get_future();
+    std::thread mainThread(mainAppThread, std::move(p));
+
+    mainThread.join();
+    int returnCode = futureReturnCode.get();
+
+    // Stop loader thread
+    stopThread = true;
+    cv.notify_all();
     loaderThread.join();
-    exit(EXIT_SUCCESS);
+
+    return returnCode;
 }
 
 
