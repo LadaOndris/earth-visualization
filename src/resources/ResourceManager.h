@@ -21,7 +21,7 @@ private:
      * Decides whether a texture should be removed before a new one
      * is added.
      */
-    bool shouldReplaceTexture() const {
+    [[nodiscard]] bool shouldReplaceTexture() const {
         return loadedTextures >= maxTextures;
     }
 
@@ -68,6 +68,9 @@ public:
         }
     }
 
+    /**
+     * Releases all loaded textures from the OpenGL context.
+     */
     void releaseAll() {
         for (const auto &texture : replacementQueue) {
             texture->unloadFromGL();

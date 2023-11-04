@@ -135,6 +135,8 @@ public:
     * and divides the globe into tiles based on the most detailed level of detail.
     */
     void setupTiles() {
+        assert(colorMapAtlas.getNumLevelsOfDetail() > 0);
+        assert(heightMapAtlas.getNumLevelsOfDetail() > 0);
         assert(colorMapAtlas.getNumLevelsOfDetail() == heightMapAtlas.getNumLevelsOfDetail());
 
         // Needs to know the finest heightMap resolution

@@ -205,10 +205,19 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
 }
 
 glm::mat4 TileEarthRenderer::setupMatrices(float currentTime, t_window_definition window) {
+    // Near and far plane has to be determined from the distance to Earth
+    auto closestPointOnSurface = ellipsoid.projectGeocentricPointOntoSurface(camera.getPosition());
+    auto distanceToSurface = glm::length(camera.getPosition() - closestPointOnSurface);
+    auto distanceToEllipsoidsCenter = glm::length(camera.getPosition() - ellipsoid.getGeocentricPosition());
+
+    // The near plane is set in the middle of the camera position and the surface
+    float nearPlane = static_cast<float>(distanceToSurface * 0.5);
+    float farPlane = distanceToEllipsoidsCenter;
+
     glm::mat4 projectionMatrix;
     projectionMatrix = glm::perspective(glm::radians(camera.getFov()),
                                         (float) window.width / (float) window.height,
-                                        0.001f, 500.0f);
+                                        nearPlane, farPlane);
     glm::mat4 modelMatrix = glm::mat4(1.0f);
     glm::vec3 ellipsoidPosition = glm::vec3(0.f, 0.f, 0.f);
     //modelMatrix = glm::translate(modelMatrix, ellipsoidPosition);

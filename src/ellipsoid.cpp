@@ -96,5 +96,9 @@ glm::vec3 Ellipsoid::getRadiiSquared() const {
     return radiiSquared;
 }
 
+[[nodiscard]] glm::vec3 Ellipsoid::getGeocentricPosition() const {
+    return glm::vec3(0.f);
+}
+
 
 

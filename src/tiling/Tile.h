@@ -151,7 +151,9 @@ public:
     [[nodiscard]] bool isInViewFrustum(const glm::mat4 &viewProjectionMatrix) const {
         // Extract the frustum planes from the viewProjectionMatrix.
         // https://www8.cs.umu.se/kurser/5DV051/HT12/lab/plane_extraction.pdf
-        glm::vec4 planes[6];
+        int numPlanes = 6;
+        glm::vec4 planes[numPlanes];
+
         for (int i = 0; i < 4; i++) {
             planes[0][i] = viewProjectionMatrix[i][3] + viewProjectionMatrix[i][0];  // Left
             planes[1][i] = viewProjectionMatrix[i][3] - viewProjectionMatrix[i][0];  // Right
@@ -160,22 +162,53 @@ public:
             planes[4][i] = viewProjectionMatrix[i][3] + viewProjectionMatrix[i][2];  // Near
             planes[5][i] = viewProjectionMatrix[i][3] - viewProjectionMatrix[i][2];  // Far
         }
-        unsigned int cornersOutsideFrustum = 0;
 
-        for (auto tileCorner: getGeocentricTileCorners()) {
+        unsigned int cornersOutsideFrustum = 0;
+        auto tileCorners = getGeocentricTileCorners();
+
+        for (int cornerIndex = 0; cornerIndex < tileCorners.size(); cornerIndex++) {
+            auto tileCorner = tileCorners[cornerIndex];
             // Check if the tile's inside all frustum planes.
-            for (auto plane: planes) {
+            for (int planeIndex = 0; planeIndex < numPlanes; planeIndex++) {
+                auto plane = planes[planeIndex];
                 float signedDistance = glm::dot(plane, glm::vec4(tileCorner, 1.0));
 
                 // If the signed distance is less than the negative radius, the sphere is completely outside the frustum.
                 if (signedDistance < 0) {
-                    cornersOutsideFrustum++;
-                    break;
+                    cornersOutsideFrustum |= (1 << cornerIndex);
                 }
             }
         }
 
-        return cornersOutsideFrustum < 4;
+        if (sumOfBits(cornersOutsideFrustum) < 4) {
+            return true;
+        }
+
+        // Check for intersection between tile edges and frustum planes
+        auto tileEdges = getEdges(); // Implement a function to get tile edges.
+        for (const auto &edge: tileEdges) {
+            for (int planeIndex = 0; planeIndex < numPlanes; planeIndex++) {
+                auto plane = planes[planeIndex];
+                float d1 = glm::dot(plane, glm::vec4(edge.first, 1.0));
+                float d2 = glm::dot(plane, glm::vec4(edge.second, 1.0));
+
+                if ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) {
+                    return true;
+                }
+            }
+        }
+        // No corner is inside frustum and
+        // no edge of the tile intersets the frustum.
+        return  false;
+    }
+
+    [[nodiscard]] unsigned char sumOfBits(unsigned char var) const {
+        unsigned int sum = 0;
+        while (var > 0) {
+            sum += (var & 0x1);
+            var >>= 1;
+        }
+        return sum;
     }
 
     [[nodiscard]] bool isFacingCamera(const glm::vec3 &cameraPosition) const {
@@ -207,9 +240,9 @@ public:
         auto geocentricLowerLeftCorner = ellipsoid.convertGeodeticToGeocentric(lowerLeftCorner);
         auto geocentricLowerRightCorner = ellipsoid.convertGeodeticToGeocentric(lowerRightCorner);
         corners = std::array<glm::vec3, 4>({
-                geocentricUpperLeftCorner, geocentricUpperRightCorner,
-                geocentricLowerLeftCorner, geocentricLowerRightCorner
-        });
+                                                   geocentricUpperLeftCorner, geocentricUpperRightCorner,
+                                                   geocentricLowerLeftCorner, geocentricLowerRightCorner
+                                           });
         tileWidth = glm::length(geocentricUpperRightCorner - geocentricUpperLeftCorner);
 
         auto tileCentre = glm::vec3(longitudeCentre, latitudeCentre, 0) * toRadsCoeff;
@@ -220,6 +253,15 @@ public:
 
     [[nodiscard]] std::array<glm::vec3, 4> getGeocentricTileCorners() const {
         return corners;
+    }
+
+    [[nodiscard]] std::array<std::pair<glm::vec3, glm::vec3>, 4> getEdges() const {
+        return {
+                std::pair(corners[0], corners[1]),
+                std::pair(corners[1], corners[2]),
+                std::pair(corners[2], corners[3]),
+                std::pair(corners[3], corners[0])
+        };
     }
 
 

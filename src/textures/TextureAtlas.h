@@ -20,6 +20,7 @@
 class TextureAtlas {
 private:
     std::vector<std::vector<std::vector<std::shared_ptr<Texture>>>> textures; // A 3D vector to store textures.
+    int numRegisteredTextures = 0;
 
     // A helper function to ensure vector dimensions match the given x and y size.
     void ensureVectorSize(std::vector<std::vector<std::shared_ptr<Texture>>> &vec, int x_size, int y_size) {
@@ -99,6 +100,7 @@ private:
 
             // Add the texture to the appropriate location in the textures vector.
             textures[level][x_index][y_index] = texture;
+            numRegisteredTextures++;
         }
     }
 
@@ -144,6 +146,10 @@ public:
             }
         }
         closedir(directory);
+
+        if (numRegisteredTextures == 0) {
+            std::cout << "No textures found in " << path << std::endl;
+        }
     }
 
     /**

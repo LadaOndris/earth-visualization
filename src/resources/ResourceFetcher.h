@@ -84,7 +84,7 @@ public:
 class ResourceFetcher {
 private:
 public:
-    void request(TextureLoadRequest job) {
+    void request(const TextureLoadRequest& job) {
         {
             std::lock_guard<std::mutex> lock(loadingMutex);
             loadingTexturesQueue.push(job);
