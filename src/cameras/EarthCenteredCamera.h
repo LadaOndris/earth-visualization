@@ -17,13 +17,17 @@ private:
     Ellipsoid &ellipsoid;
     glm::vec3 target;
     glm::vec3 up;
-    float zoomSpeedFactor;
-    float maxSpeed = 20;
+    float sensitivityFactor = 0.09f;
+
+    [[nodiscard]] float getDistanceToSurface() {
+        glm::vec3 pointOnSurface = ellipsoid.projectGeocentricPointOntoSurface(position);
+        float distance = glm::length(pointOnSurface - position);
+        return distance;
+    }
 
     float calcZoomSpeedFromDistance() {
         // Project camera onto surface to find out how far the camera from the surface is.
-        auto pointOnSurface = ellipsoid.projectGeocentricPointOntoSurface(position);
-        auto distance = glm::length(pointOnSurface - position);
+        auto distance = getDistanceToSurface();
         auto speed = distance / 10.f;
         //if (distance > 0.2f) {
         //auto speed = distance * distance / (distance + 30);
@@ -33,11 +37,18 @@ private:
         return speed;
     }
 
+    float calcDragSensitivityBasedOnDistance() {
+        auto distance = getDistanceToSurface();
+        auto radiiLength = glm::length(ellipsoid.getRadii());
+        // Normalize the distance by the radii of the Earth.
+        float sensitivity = distance / radiiLength;
+        return sensitivity * sensitivityFactor;
+    }
 
 public:
     EarthCenteredCamera(Ellipsoid &ellipsoid, glm::vec3 position, glm::vec3 target, glm::vec3 up,
                         float fov = 45.0f, float zoomSpeedFactor = 1.0f) :
-            ellipsoid(ellipsoid), Camera(fov), zoomSpeedFactor(zoomSpeedFactor) {
+            ellipsoid(ellipsoid), Camera(fov) {
         this->position = position;
         this->target = target;
         this->up = up;
@@ -61,7 +72,7 @@ public:
 
     void onMouseDrag(double xoffset, double yoffset) {
         // Calculate the rotation angles based on mouse movement
-        float sensitivity = 0.1f;
+        float sensitivity = calcDragSensitivityBasedOnDistance();
         float yaw = -static_cast<float>(xoffset) * sensitivity;
         float pitch = -static_cast<float>(yoffset) * sensitivity;
 
