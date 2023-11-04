@@ -218,12 +218,13 @@ glm::mat4 TileEarthRenderer::setupMatrices(float currentTime, t_window_definitio
     projectionMatrix = glm::perspective(glm::radians(camera.getFov()),
                                         (float) window.width / (float) window.height,
                                         nearPlane, farPlane);
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
-    glm::vec3 ellipsoidPosition = glm::vec3(0.f, 0.f, 0.f);
-    //modelMatrix = glm::translate(modelMatrix, ellipsoidPosition);
-    //float angle = 20.0f * 0;
-    //modelMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     glm::mat4 viewMatrix = camera.getViewMatrix();
+
+    // Do not rotate the model matrix to represent the Earth's inclination.
+    // The inclination will be simulated using the position of the Sun
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+    //float inclinationAngle = glm::radians(23.5f); // Convert degrees to radians
+    //modelMatrix = glm::rotate(modelMatrix, inclinationAngle, glm::vec3(1.0f, 0.0f, 0.0f));
 
     shader.setMat4("projection", projectionMatrix);
     shader.setMat4("view", viewMatrix);

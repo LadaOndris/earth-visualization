@@ -54,7 +54,7 @@ float computeLightIntensity(float diffuseIntensity)
     return intensity;
 }
 
-vec4 computeDayColor(vec3 normal, vec2 textureCoordinates, float diffuseStrength)
+vec4 computeDayColor(vec2 textureCoordinates, float diffuseStrength)
 {
     float lightIntensity = computeLightIntensity(diffuseStrength);
     return lightIntensity * texture(dayTextureSampler, textureCoordinates);
@@ -136,6 +136,6 @@ void main()
         FragColor = vec4(0.3, 0.3, 0.3, 1);
     }
     else {
-        FragColor = texture(dayTextureSampler, tileTextureCoordinates);
+        FragColor = computeDayColor(tileTextureCoordinates, diffuseIntensity);
     }
 }

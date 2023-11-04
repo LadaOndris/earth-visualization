@@ -17,7 +17,7 @@ private:
     const char *fragmentPath;
 public:
     // the program ID
-    unsigned int ID;
+    unsigned int ID = 0;
 
     // constructor reads and builds the shader
     Shader(const char *vertexPath, const char *fragmentPath)
@@ -105,7 +105,8 @@ public:
     }
 
     // use/activate the shader
-    void use() {
+    void use() const {
+        assert(ID != 0); // Assert the shader has been built.
         glUseProgram(ID);
     }
 

@@ -313,7 +313,7 @@ void mainAppThread(std::promise<int> && returnCodePromise) {
     auto sunDistanceMeters = 149597870700.f;
     auto earthRadiusMeters = 6378000.f;
     auto sunDistance = sunDistanceMeters / earthRadiusMeters * radii.x;
-    auto lightPosition = glm::vec3(0.0f, 0.0f, sunDistance);
+    auto lightPosition = glm::vec3(0.0f, -sunDistance, sunDistance);
 
     std::vector<std::shared_ptr<Renderer>> renderers;
 
@@ -354,8 +354,7 @@ void mainAppThread(std::promise<int> && returnCodePromise) {
     auto sunRenderer =
             std::make_shared<SunRenderer>(camera, lightPosition, sunRadius);
 
-
-    // renderers.push_back(sunRenderer);
+    renderers.push_back(sunRenderer);
     renderers.push_back(guiRenderer);
 
     bool result = initializeRenderers(renderers);

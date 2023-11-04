@@ -14,16 +14,15 @@
 
 class SunRenderer : public Renderer {
 private:
+    int numSegments = 36;
     Camera &camera;
     Shader shader;
     glm::vec3 lightPosition;
     float sunRadius;
     unsigned int VAO;
     unsigned int VBO;
-    unsigned int EBO;
 
     std::vector<float> sunVertices;
-    const static unsigned int sunIndices[];
 
     glm::vec3 sunLocation;
 
@@ -33,7 +32,7 @@ private:
 
 
 public:
-    SunRenderer(Camera &camera, glm::vec3 lightPosition, float sunRadius)
+    explicit SunRenderer(Camera &camera, glm::vec3 lightPosition, float sunRadius)
             : shader("shaders/sun/shader.vert", "shaders/sun/shader.frag"),
               camera(camera), lightPosition(lightPosition), sunRadius(sunRadius) {
     }
