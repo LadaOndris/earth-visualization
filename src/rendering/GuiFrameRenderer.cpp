@@ -61,13 +61,15 @@ void GuiFrameRenderer::createFeaturesWindow(t_window_definition window) {
     ImGui::Spacing();
     ImGui::Checkbox("Color texture", &renderingOptions.isTextureEnabled);
     ImGui::Spacing();
+    ImGui::Checkbox("Night", &renderingOptions.isNightEnabled);
+    ImGui::Spacing();
     ImGui::Checkbox("Terrain", &renderingOptions.isTerrainEnabled);
     ImGui::Spacing();
     ImGui::Checkbox("Grid", &renderingOptions.isGridEnabled);
     ImGui::Spacing();
 
     ImGui::End();
-    float windowHeight = 150;
+    float windowHeight = 180;
     updateTopPadding(windowHeight);
 }
 

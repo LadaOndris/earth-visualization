@@ -22,7 +22,7 @@ uniform float gridLineWidth;
 
 // Enable/disable features
 uniform bool useDayTexture;
-uniform bool useNightTexture;
+uniform bool isNightEnabled;
 uniform bool useHeightMapTexture;
 uniform bool displayGrid;
 
@@ -123,19 +123,24 @@ void main()
 
     // Global coords (of the tile) should always be larger than the
     // offset of the texture for the tile.
-    if (textureCoordinatesOffset[0] > globalTextureCoordinates[0]) {
-        FragColor = vec4(1, 0, 0, 1);
-        return;
-    }
-    if (textureCoordinatesOffset[1] > globalTextureCoordinates[1]) {
-        FragColor = vec4(0, 1, 0, 1);
-        return;
-    }
+//    if (textureCoordinatesOffset[0] > globalTextureCoordinates[0]) {
+//        FragColor = vec4(1, 0, 0, 1);
+//        return;
+//    }
+//    if (textureCoordinatesOffset[1] > globalTextureCoordinates[1]) {
+//        FragColor = vec4(0, 1, 0, 1);
+//        return;
+//    }
 
     if (displayGrid && isGrid(globalTextureCoordinates)) {
         FragColor = vec4(0.3, 0.3, 0.3, 1);
     }
     else {
-        FragColor = computeDayColor(tileTextureCoordinates, diffuseIntensity);
+        if (isNightEnabled) {
+            FragColor = computeDayColor(tileTextureCoordinates, diffuseIntensity);
+        }
+        else {
+            FragColor = computeDayColor(tileTextureCoordinates, 1.0);
+        }
     }
 }

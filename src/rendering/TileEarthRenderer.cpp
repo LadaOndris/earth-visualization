@@ -131,6 +131,7 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     shader.use();
     shader.setInt("dayTextureSampler", 0); // Texture Unit 0
     shader.setBool("useDayTexture", options.isTextureEnabled);
+    shader.setBool("isNightEnabled", options.isNightEnabled);
     shader.setBool("displayGrid", options.isGridEnabled);
 
     shader.setFloat("gridResolution", 0.05);
