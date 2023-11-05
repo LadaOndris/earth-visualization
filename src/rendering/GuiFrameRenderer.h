@@ -10,6 +10,7 @@
 #include "Renderer.h"
 #include "RenderingOptions.h"
 #include "RendererSubscriber.h"
+#include "../simulation/SolarSimulator.h"
 
 class GuiFrameRenderer : public Renderer, public RendererSubscriber {
 private:
@@ -20,6 +21,7 @@ private:
     RenderingOptions renderingOptions;
     RenderingStatistics renderingStatistics;
     float TO_DEGS_COEFF = 180 / 3.14159265;
+    const SolarSimulator &simulator;
 
     void createSimulationWindow(t_window_definition window);
 
@@ -35,7 +37,7 @@ private:
 
     void updateTopPadding(float yPosWindow);
 public:
-    explicit GuiFrameRenderer(RenderingOptions options);
+    explicit GuiFrameRenderer(RenderingOptions options, const SolarSimulator &simulator);
 
     bool initialize() override;
 

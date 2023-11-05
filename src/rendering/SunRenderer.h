@@ -11,13 +11,14 @@
 #include "shader.h"
 #include "../cameras/FreeCamera.h"
 #include "../vertex.h"
+#include "../simulation/LightSource.h"
 
 class SunRenderer : public Renderer {
 private:
     int numSegments = 36;
     Camera &camera;
+    const LightSource &lightSource;
     Shader shader;
-    glm::vec3 lightPosition;
     float sunRadius;
     unsigned int VAO;
     unsigned int VBO;
@@ -32,9 +33,9 @@ private:
 
 
 public:
-    explicit SunRenderer(Camera &camera, glm::vec3 lightPosition, float sunRadius)
+    explicit SunRenderer(Camera &camera, const LightSource &lightSource, float sunRadius)
             : shader("shaders/sun/shader.vert", "shaders/sun/shader.frag"),
-              camera(camera), lightPosition(lightPosition), sunRadius(sunRadius) {
+              camera(camera), lightSource(lightSource), sunRadius(sunRadius) {
     }
 
     bool initialize() override;

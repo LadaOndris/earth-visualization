@@ -17,7 +17,7 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 file(GLOB_RECURSE HEADERS "src/*.h")
 
 # Executable
-add_executable(earth_visualization main.cpp ${SOURCES} ${SOURCES_C} ${HEADERS} src/rendering/TileEarthRenderer.h src/resources/ResourceFetcher.h)
+add_executable(earth_visualization main.cpp ${SOURCES} ${SOURCES_C} ${HEADERS})
 target_link_libraries(earth_visualization ${OPENGL_gl_LIBRARY} glfw glm imgui)
 
 # Library for tests

@@ -6,8 +6,10 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <iostream>
+#include <iomanip>
 
-GuiFrameRenderer::GuiFrameRenderer(RenderingOptions options) : renderingOptions(options) {
+GuiFrameRenderer::GuiFrameRenderer(RenderingOptions options, const SolarSimulator &simulator)
+        : renderingOptions(options), simulator(simulator) {
 }
 
 
@@ -104,11 +106,8 @@ void GuiFrameRenderer::createSimulationWindow(t_window_definition window) {
         startOrStopSimulation();
     }
 
-    float value = 1.f;
     auto sliderFlags = ImGuiSliderFlags_None;
-    if (ImGui::SliderFloat("Speed", &value, 1.f, 100.f, "%.1f", sliderFlags)) {
-        std::cout << "Speed changed: " << value << std::endl;
-    }
+    ImGui::SliderInt("Speed", &renderingOptions.simulationSpeed, 1, 86400, "%d", sliderFlags);
 
     ImGui::End();
     float windowHeight = 150;
@@ -180,11 +179,16 @@ void GuiFrameRenderer::createCameraWindow(t_window_definition window) {
 
 
 void GuiFrameRenderer::startOrStopSimulation() {
-    renderingOptions.isSimulationRunning = ~renderingOptions.isSimulationRunning;
+    renderingOptions.isSimulationRunning = !renderingOptions.isSimulationRunning;
 }
 
 std::string GuiFrameRenderer::getCurrentSimulationTime() const {
-    return "10 June, 12:45:10";
+    std::tm datetime = simulator.getCurrentSimulationTime();
+
+    // Conver to the following format: "10 June, 12:45:10"
+    std::stringstream ss;
+    ss << std::put_time(&datetime, "%d %B, %H:%M:%S");
+    return ss.str();
 }
 
 RenderingOptions GuiFrameRenderer::getRenderingOptions() const {

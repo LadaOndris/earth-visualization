@@ -141,7 +141,7 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     // Set ellipsoid parameters for the vertex shader
     shader.setVec3("ellipsoidRadiiSquared", ellipsoid.getRadiiSquared());
     shader.setVec3("ellipsoidOneOverRadiiSquared", ellipsoid.getOneOverRadiiSquared());
-    shader.setVec3("lightPos", lightPosition);
+    shader.setVec3("lightPos", lightSource.getLightPosition());
 
     auto tiles = tileContainer.getTiles();
     auto cameraPosition = camera.getPosition();

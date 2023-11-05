@@ -8,10 +8,11 @@
 
 struct RenderingOptions {
     bool isSimulationRunning = false;
-    bool isWireframeEnabled = true;
-    bool isTextureEnabled = false;
+    bool isWireframeEnabled = false;
+    bool isTextureEnabled = true;
     bool isTerrainEnabled = false;
     bool isGridEnabled = false;
+    int simulationSpeed = 1;
 };
 
 

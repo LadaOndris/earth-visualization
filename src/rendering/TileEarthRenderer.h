@@ -17,6 +17,7 @@
 #include "RendererSubscriber.h"
 #include "../resources/ResourceFetcher.h"
 #include "../resources/ResourceManager.h"
+#include "../simulation/LightSource.h"
 
 class TileEarthRenderer : public Renderer {
 private:
@@ -26,7 +27,7 @@ private:
     Ellipsoid &ellipsoid;
     ResourceFetcher &resourceFetcher;
     ResourceManager &resourceManager;
-    glm::vec3 lightPosition;
+    const LightSource &lightSource;
     Shader shader;
     std::vector<std::shared_ptr<RendererSubscriber>> subscribers;
     std::unordered_map<std::string, std::shared_ptr<Texture>> requestMap;
@@ -47,11 +48,11 @@ public:
     explicit TileEarthRenderer(TileContainer &tileContainer,
                                Ellipsoid &ellipsoid,
                                Camera &camera,
-                               glm::vec3 lightPosition,
+                               LightSource &lightSource,
                                ResourceFetcher &resourceFetcher,
                                ResourceManager &resourceManager)
             : tileContainer(tileContainer), camera(camera), ellipsoid(ellipsoid),
-              lightPosition(lightPosition), resourceFetcher(resourceFetcher),
+              lightSource(lightSource), resourceFetcher(resourceFetcher),
               resourceManager(resourceManager),
               shader("shaders/tiling/shader.vert", "shaders/tiling/shader.frag") {
     }

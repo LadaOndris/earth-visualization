@@ -60,10 +60,13 @@ void SunRenderer::setupVertexArrays() {
 }
 
 void SunRenderer::render(float currentTime, t_window_definition window, RenderingOptions options) {
+    auto lightPosition = lightSource.getLightPosition();
+    glm::mat4 sunTransformationMatrix = lightSource.getTransformationMatrix();
+
     glm::mat4 projectionMatrix;
     auto toSun = lightPosition - glm::vec3(0.0f, 0.0f, 0.0f);
     auto sunDistance = glm::length(toSun);
-    auto minDepth = 1.f; //sunDistance - 3 * sunRadius;
+    auto minDepth = 1.f;
     auto maxDepth = sunDistance + 3 * sunRadius;
     projectionMatrix = glm::perspective(glm::radians(camera.getFov()),
                                         (float) window.width / (float) window.height,
@@ -74,10 +77,10 @@ void SunRenderer::render(float currentTime, t_window_definition window, Renderin
     // Angle between original XY plane and desired plane
     float angle = std::acos(glm::dot(glm::vec3(0.0f, 1.0f, 0.0f), direction));
 
-    glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), angle,
-                                           glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), direction));
-    glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), lightPosition);
-    glm::mat4 modelMatrix = translationMatrix * rotationMatrix;
+    glm::mat4 planeRotationMatrix = glm::rotate(glm::mat4(1.0f), angle,
+                                                glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), direction));
+
+    glm::mat4 modelMatrix = sunTransformationMatrix * planeRotationMatrix;
 
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
