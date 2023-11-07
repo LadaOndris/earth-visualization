@@ -42,7 +42,7 @@ bool lbutton_down = false;
 GLFWwindow *window = nullptr;
 
 
-Ellipsoid ellipsoid = Ellipsoid::unitSphere();
+Ellipsoid ellipsoid = Ellipsoid::unitSphereWithCorrectRatio();
 auto radii = ellipsoid.getRadii();
 // From the side of the Earth
 //Camera camera(5.0f, glm::vec3(-radii.x * 5, 0, 0),

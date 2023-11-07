@@ -3,6 +3,7 @@
 #define EARTH_VISUALIZATION_ELLIPSOID_H
 
 #include <glm/vec3.hpp>
+#include <glm/geometric.hpp>
 #include <vector>
 
 class Ellipsoid {
@@ -49,6 +50,12 @@ public:
 
     static Ellipsoid &unitSphere() {
         static Ellipsoid ellipsoid(1.0, 1.0, 1.0);
+        return ellipsoid;
+    }
+
+    static Ellipsoid &unitSphereWithCorrectRatio() {
+        auto radii = glm::normalize(glm::vec3(6378137.0, 6356752.314245, 6378137.0));
+        static Ellipsoid ellipsoid(radii[0], radii[1], radii[2]);
         return ellipsoid;
     }
 
