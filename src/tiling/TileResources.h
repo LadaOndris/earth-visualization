@@ -7,6 +7,7 @@
 
 #include "../textures/Texture.h"
 #include "../vertex.h"
+#include "Tile.h"
 #include <utility>
 #include <vector>
 #include <glm/vec3.hpp>
@@ -39,12 +40,10 @@ public:
     }
 
     /**
-     *
      * @return True if a texture ready in OpenGL context was found.
      */
     [[nodiscard]] bool getCoarserDayTexture(std::shared_ptr<Texture> &texture) const {
         if (coarserResources == nullptr) {
-            std::cout << mesh.size() << std::endl;
             return false;
         }
         auto coarserTexture = coarserResources->getDayTexture();
@@ -54,6 +53,27 @@ public:
         } else {
             return coarserResources->getCoarserDayTexture(texture);
         }
+    }
+
+    bool getFinerDayTexture(const Tile &tile, std::shared_ptr<Texture> &texture) const {
+        if (finerResources.empty()) {
+            return false;
+        }
+        for (auto &finerResource : finerResources) {
+            // Skip if the overlap of the tile and the resources in none.
+            if (!tile.isTileWithinResources(finerResource)) {
+                continue;
+            }
+
+            auto finerTexture = finerResource->getDayTexture();
+            if (finerTexture->isPreparedInGlContext()) {
+                texture = finerTexture;
+                return true;
+            } else {
+                return finerResource->getFinerDayTexture(tile, texture);
+            }
+        }
+        return false;
     }
 
     [[nodiscard]] std::shared_ptr<Texture> getHeightMapTexture() const {

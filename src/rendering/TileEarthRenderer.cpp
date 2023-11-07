@@ -168,7 +168,13 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         // Request and prepare the texture
         bool textureReady = prepareTexture(dayTexture);
         if (!textureReady) {
+            // Search for coarser textures
             textureReady = resources->getCoarserDayTexture(dayTexture);
+
+            // And, possibly, search for fine-grained textures
+            if (!textureReady) {
+                textureReady = resources->getFinerDayTexture(tile, dayTexture);
+            }
         }
 
         // Draw only if the necessary resources are ready
