@@ -83,7 +83,7 @@ def generate_tiles(input_image_path, output_folder, output_file_name, initial_le
 @click.argument('output_file_name', type=click.Path())
 @click.option('--max-level', type=int, default=3, help='Maximum level for tiling')
 def generate_texture_tiles(input_image_path, output_folder, output_file_name, max_level):
-    initial_level = 1
+    initial_level = 2
     base_level = 0
     generate_tiles(input_image_path, output_folder, output_file_name, initial_level,
                    max_level, base_level=base_level)
@@ -124,4 +124,4 @@ def generate_height_maps():
 
 
 if __name__ == "__main__":
-    generate_height_maps()
+    generate_texture_tiles()

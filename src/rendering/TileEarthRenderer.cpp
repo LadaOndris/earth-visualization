@@ -112,18 +112,47 @@ void TileEarthRenderer::updateTexturesWithData(const std::vector<TextureLoadResu
     }
 }
 
+bool TileEarthRenderer::getOrPrepareTexture(
+        const std::shared_ptr<TileResources> &resources,
+        const Tile &tile,
+        const TextureType textureType,
+        std::shared_ptr<Texture> &texture) {
+
+    // Set up the neccessary texture
+    texture = resources->getTexture(textureType);
+
+    // Request and prepare the texture
+    bool textureReady = prepareTexture(texture);
+    if (!textureReady) {
+        // Search for coarser textures
+        textureReady = resources->getCoarserTexture(texture, textureType);
+
+        // And, possibly, search for fine-grained textures
+        if (!textureReady) {
+            textureReady = resources->getFinerTexture(tile, texture, textureType);
+        }
+    }
+    return textureReady;
+}
+
 void TileEarthRenderer::render(float currentTime, t_window_definition window, RenderingOptions options) {
     auto newlyLoadedTexturesData = resourceFetcher.retrieveLoadedResources();
     updateTexturesWithData(newlyLoadedTexturesData);
 
     shader.use();
     shader.setInt("dayTextureSampler", 0); // Texture Unit 0
+    shader.setInt("nightTextureSampler", 1); // Texture Unit 1
     shader.setBool("useDayTexture", options.isTextureEnabled);
     shader.setBool("isNightEnabled", options.isNightEnabled);
     shader.setBool("displayGrid", options.isGridEnabled);
 
     shader.setFloat("gridResolution", 0.05);
     shader.setFloat("gridLineWidth", 2);
+
+    // Day/night blending
+    float blendDuration = 0.3f;
+    shader.setFloat("blendDuration", blendDuration);
+    shader.setFloat("blendDurationScale", 1 / (2 * blendDuration));
 
     // Set up model, view, and projection matrix
     glm::mat4 viewProjection = setupMatrices(currentTime, window);
@@ -162,27 +191,22 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         std::shared_ptr<TileResources> resources = tile.getResources(screenSpaceWidth, distanceToCamera, fov);
         Mesh_t mesh = resources->getMesh();
 
-        // Set up the neccessary texture
-        auto dayTexture = resources->getDayTexture();
-
-        // Request and prepare the texture
-        bool textureReady = prepareTexture(dayTexture);
-        if (!textureReady) {
-            // Search for coarser textures
-            textureReady = resources->getCoarserDayTexture(dayTexture);
-
-            // And, possibly, search for fine-grained textures
-            if (!textureReady) {
-                textureReady = resources->getFinerDayTexture(tile, dayTexture);
-            }
-        }
+        std::shared_ptr<Texture> dayTexture;
+        std::shared_ptr<Texture> nightTexture;
+        bool dayTextureReady = getOrPrepareTexture(resources, tile, TextureType::Day, dayTexture);
+        bool nightTextureReady = getOrPrepareTexture(resources, tile, TextureType::Night, nightTexture);
 
         // Draw only if the necessary resources are ready
-        if (textureReady) {
-            shader.setVec2("textureGeodeticOffset", dayTexture->getGeodeticOffset() * TO_RADS_COEFF);
-            shader.setVec2("textureGridSize", dayTexture->getTextureGridSize());
-
+        if (dayTextureReady && nightTextureReady) {
+            // Set up day texture
+            shader.setVec2("dayTextureGeodeticOffset", dayTexture->getGeodeticOffset() * TO_RADS_COEFF);
+            shader.setVec2("dayTextureGridSize", dayTexture->getTextureGridSize());
             glBindTextureUnit(0, dayTexture->getTextureId());
+
+            // Set up night texture
+            shader.setVec2("nightTextureGeodeticOffset", nightTexture->getGeodeticOffset() * TO_RADS_COEFF);
+            shader.setVec2("nightTextureGridSize", nightTexture->getTextureGridSize());
+            glBindTextureUnit(1, nightTexture->getTextureId());
 
             // Set VAO: we need the correct buffer? Is there one or more?
             glBindVertexArray(resources->meshVAO);
@@ -195,6 +219,8 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
             glDrawArrays(GL_TRIANGLES, 0, mesh.size());
         }
     }
+
+    // TODO: refactor: extract method
     auto geodeticCameraPosition = ellipsoid.convertGeocentricToGeodetic(camera.getPosition());
     auto surfacePoint = ellipsoid.projectGeocentricPointOntoSurface(camera.getPosition());
     auto distanceFromSurface = glm::length(camera.getPosition() - surfacePoint);

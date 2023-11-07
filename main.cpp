@@ -336,14 +336,17 @@ void mainAppThread(std::promise<int> &&returnCodePromise) {
     SubdivisionSphereTesselator subdivisionSurfaces;
 
     TileMeshTesselator tileMeshTesselator;
-    TextureAtlas colorMapAtlas;
+    TextureAtlas dayMapAtlas;
+    TextureAtlas nightMapAtlas;
     TextureAtlas heightMapAtlas;
-    TileContainer tileContainer(tileMeshTesselator, colorMapAtlas, heightMapAtlas, ellipsoid);
+    TileContainer tileContainer(tileMeshTesselator, dayMapAtlas,
+                                nightMapAtlas, heightMapAtlas, ellipsoid);
 
     ResourceFetcher resourceFetcher;
     ResourceManager resourceManager(300);
 
-    colorMapAtlas.registerAvailableTextures("textures/daymaps");
+    dayMapAtlas.registerAvailableTextures("textures/daymaps");
+    nightMapAtlas.registerAvailableTextures("textures/nightmaps");
     heightMapAtlas.registerAvailableTextures("textures/heightmaps");
     tileContainer.setupTiles();
 

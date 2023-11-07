@@ -14,6 +14,7 @@
 #include <glm/geometric.hpp>
 #include <array>
 #include "../ellipsoid.h"
+#include "../textures/Texture.h"
 
 class TileResources;
 
@@ -77,7 +78,7 @@ public:
     /**
      * Check the coords of this tile are within the coords of the resources.
      */
-    bool isTileWithinResources(const std::shared_ptr<TileResources> &resources) const;
+    [[nodiscard]] bool isTileWithinTexture(const std::shared_ptr<Texture> &texture) const ;
 
     void addResources(const std::shared_ptr<TileResources> &resources, int level);
 

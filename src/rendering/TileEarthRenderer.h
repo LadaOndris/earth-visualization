@@ -44,6 +44,11 @@ private:
 
     void updateTexturesWithData(const std::vector<TextureLoadResult> &results);
 
+    bool getOrPrepareTexture(
+            const std::shared_ptr<TileResources> &resources,
+            const Tile &tile,
+            TextureType textureType,
+            std::shared_ptr<Texture> &texture);
 public:
     explicit TileEarthRenderer(TileContainer &tileContainer,
                                Ellipsoid &ellipsoid,

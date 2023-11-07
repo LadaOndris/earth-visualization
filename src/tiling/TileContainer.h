@@ -22,7 +22,8 @@ class TileContainer {
 private:
     std::vector<Tile> tiles;
     TileMeshTesselator &tileMeshTesselator;
-    TextureAtlas &colorMapAtlas;
+    TextureAtlas &dayMapAtlas;
+    TextureAtlas &nightMapAtlas;
     TextureAtlas &heightMapAtlas;
     Ellipsoid &ellipsoid;
     std::vector<Mesh_t> cachedMeshes;
@@ -38,7 +39,8 @@ private:
             // Based on the information of the tile and the current level,
             // the texture atlas returns the correct texture
             auto heightMap = heightMapAtlas.getTexture(level, tile);
-            auto colorMap = colorMapAtlas.getTexture(level, tile);
+            auto nightMap = nightMapAtlas.getTexture(level, tile);
+            auto dayMap = dayMapAtlas.getTexture(level, tile);
 
             if (level >= cachedMeshes.size()) {
                 // The heightMap determines the resolution of the mesh.
@@ -56,7 +58,7 @@ private:
             }
 
             Mesh_t mesh = cachedMeshes[level];
-            auto tileResource = std::make_shared<TileResources>(mesh, colorMap, heightMap);
+            auto tileResource = std::make_shared<TileResources>(mesh, dayMap, nightMap, heightMap);
 
             tile.addResources(tileResource, level);
         }
@@ -121,11 +123,13 @@ private:
 
 public:
     explicit TileContainer(TileMeshTesselator &tileMeshTesselator,
-                           TextureAtlas &colorMapAtlas,
+                           TextureAtlas &dayMapAtlas,
+                           TextureAtlas &nightMapAtlas,
                            TextureAtlas &heightMapAtlas,
                            Ellipsoid &ellipsoid)
             : tileMeshTesselator(tileMeshTesselator),
-              colorMapAtlas(colorMapAtlas),
+              dayMapAtlas(dayMapAtlas),
+              nightMapAtlas(nightMapAtlas),
               heightMapAtlas(heightMapAtlas),
               ellipsoid(ellipsoid) {
 
@@ -137,9 +141,9 @@ public:
     * and divides the globe into tiles based on the most detailed level of detail.
     */
     void setupTiles() {
-        assert(colorMapAtlas.getNumLevelsOfDetail() > 0);
+        assert(dayMapAtlas.getNumLevelsOfDetail() > 0);
         assert(heightMapAtlas.getNumLevelsOfDetail() > 0);
-        assert(colorMapAtlas.getNumLevelsOfDetail() == heightMapAtlas.getNumLevelsOfDetail());
+        assert(dayMapAtlas.getNumLevelsOfDetail() == heightMapAtlas.getNumLevelsOfDetail());
 
         // Needs to know the finest heightMap resolution
         Resolution dimensions = heightMapAtlas.getMostDetailedLevelDimensions();
@@ -155,7 +159,7 @@ public:
     }
 
     int getNumLevels() const {
-        return colorMapAtlas.getNumLevelsOfDetail();
+        return dayMapAtlas.getNumLevelsOfDetail();
     }
 };
 

@@ -34,12 +34,10 @@ std::shared_ptr<TileResources> Tile::getResourcesByLevel(int level) {
     return lodResources[level];
 }
 
-bool Tile::isTileWithinResources(const std::shared_ptr<TileResources> &resources) const {
-    auto dayTexture = resources->getDayTexture();
-
-    auto textureOffset = dayTexture->getGeodeticOffset();
-    auto textureLongWidth = dayTexture->getLongitudeWidth();
-    auto textureLatWidth = dayTexture->getLatitudeWidth();
+bool Tile::isTileWithinTexture(const std::shared_ptr<Texture> &texture) const {
+    auto textureOffset = texture->getGeodeticOffset();
+    auto textureLongWidth = texture->getLongitudeWidth();
+    auto textureLatWidth = texture->getLatitudeWidth();
 
     if (this->longitude < textureOffset[0] ||
         this->latitude < textureOffset[1]) {
@@ -57,7 +55,7 @@ void Tile::addResources(const std::shared_ptr<TileResources> &resources, int lev
     // Assumes resources are added from coarse to fine for simplicity.
     // Check it is true.
     assert(level > lastLevel);
-    if (!isTileWithinResources(resources)) {
+    if (!isTileWithinTexture(resources->getTexture(TextureType::Day))) {
         throw std::runtime_error("The tile is located outside of the resources definition.");
     }
 

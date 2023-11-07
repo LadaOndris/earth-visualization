@@ -9,8 +9,15 @@ uniform vec3 lightPos;
 
 // Textures
 uniform sampler2D dayTextureSampler;
-uniform vec2 textureGeodeticOffset; // In radians
-uniform vec2 textureGridSize;
+uniform vec2 dayTextureGeodeticOffset; // In radians
+uniform vec2 dayTextureGridSize;
+
+uniform sampler2D nightTextureSampler;
+uniform vec2 nightTextureGeodeticOffset; // In radians
+uniform vec2 nightTextureGridSize;
+
+uniform float blendDuration;
+uniform float blendDurationScale;
 
 // Ellipsoid definition
 uniform vec3 ellipsoidRadiiSquared;
@@ -54,10 +61,37 @@ float computeLightIntensity(float diffuseIntensity)
     return intensity;
 }
 
-vec4 computeDayColor(vec2 textureCoordinates, float diffuseStrength)
+vec2 calcTileDayTextureCoordinates(vec2 globalTextureCoordinates) {
+    // Use the following direct approach to handle the problem with the poles
+    float normalizedLongitude = (dayTextureGeodeticOffset[0] + PI) / (2.0 * PI);
+    float normalizedLatitude = (dayTextureGeodeticOffset[1] + PI / 2.0) / PI;
+    vec2 textureCoordinatesOffset = vec2(normalizedLongitude, normalizedLatitude);
+
+    vec2 tileTextureCoordinates = (globalTextureCoordinates - textureCoordinatesOffset) * dayTextureGridSize;
+    return tileTextureCoordinates;
+}
+
+vec2 calcTileNightTextureCoordinates(vec2 globalTextureCoordinates) {
+    // Use the following direct approach to handle the problem with the poles
+    float normalizedLongitude = (nightTextureGeodeticOffset[0] + PI) / (2.0 * PI);
+    float normalizedLatitude = (nightTextureGeodeticOffset[1] + PI / 2.0) / PI;
+    vec2 textureCoordinatesOffset = vec2(normalizedLongitude, normalizedLatitude);
+
+    vec2 tileTextureCoordinates = (globalTextureCoordinates - textureCoordinatesOffset) * nightTextureGridSize;
+    return tileTextureCoordinates;
+}
+
+vec4 computeDayColor(vec2 globalTextureCoordinates, float diffuseStrength)
 {
+    vec2 tileTextureCoordinates = calcTileDayTextureCoordinates(globalTextureCoordinates);
     float lightIntensity = computeLightIntensity(diffuseStrength);
-    return lightIntensity * texture(dayTextureSampler, textureCoordinates);
+    return lightIntensity * texture(dayTextureSampler, tileTextureCoordinates);
+}
+
+vec4 computeNightColor(vec2 globalTextureCoordinates)
+{
+    vec2 tileTextureCoordinates = calcTileNightTextureCoordinates(globalTextureCoordinates);
+    return texture(nightTextureSampler, tileTextureCoordinates);
 }
 
 vec2 computeTextureCoordinates(vec3 normal)
@@ -102,6 +136,24 @@ bool isGrid(vec2 globalTextureCoordinates) {
     return any(lessThan(distanceToLine, dF));
 }
 
+vec4 blendDayAndNight(vec2 globalTextureCoordinates, vec3 normal, float diffuseIntensity) {
+    if (diffuseIntensity > blendDuration)
+    {
+        return computeDayColor(globalTextureCoordinates, diffuseIntensity);
+    }
+    else if (diffuseIntensity < -blendDuration)
+    {
+        return computeNightColor(globalTextureCoordinates);
+    }
+    else
+    {
+        vec4 dayColor = computeDayColor(globalTextureCoordinates, diffuseIntensity);
+        vec4 nightColor = computeNightColor(globalTextureCoordinates);
+        float ratio = (diffuseIntensity + blendDuration) * blendDurationScale;
+        return mix(nightColor, dayColor, ratio);
+    }
+}
+
 void main()
 {
 
@@ -113,13 +165,6 @@ void main()
     vec3 normal = convertGeocentricToGeocentricSurfaceNormal(geocentricFragPos);
     float diffuseIntensity = computeDiffuseLight(normal, geocentricFragPos);
     vec2 globalTextureCoordinates = computeTextureCoordinates(normal);
-
-    // Use the following direct approach to handle the problem with the poles
-    float normalizedLongitude = (textureGeodeticOffset[0] + PI) / (2.0 * PI);
-    float normalizedLatitude = (textureGeodeticOffset[1] + PI / 2.0) / PI;
-    vec2 textureCoordinatesOffset = vec2(normalizedLongitude, normalizedLatitude);
-
-    vec2 tileTextureCoordinates = (globalTextureCoordinates - textureCoordinatesOffset) * textureGridSize;
 
     // Global coords (of the tile) should always be larger than the
     // offset of the texture for the tile.
@@ -137,10 +182,11 @@ void main()
     }
     else {
         if (isNightEnabled) {
-            FragColor = computeDayColor(tileTextureCoordinates, diffuseIntensity);
+
+            FragColor = blendDayAndNight(globalTextureCoordinates, normal, diffuseIntensity);
         }
         else {
-            FragColor = computeDayColor(tileTextureCoordinates, 1.0);
+            FragColor = computeDayColor(globalTextureCoordinates, 1.0);
         }
     }
 }
