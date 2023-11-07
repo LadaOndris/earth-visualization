@@ -1,7 +1,10 @@
 cmake-build-debug/
 .idea/
 
+videos/
 imgui.ini
 tests/lib/
 textures/heightmaps/
 textures/daymaps/
+textures/nightmaps/
+massif*

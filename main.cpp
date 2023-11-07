@@ -343,7 +343,7 @@ void mainAppThread(std::promise<int> &&returnCodePromise) {
                                 nightMapAtlas, heightMapAtlas, ellipsoid);
 
     ResourceFetcher resourceFetcher;
-    ResourceManager resourceManager(300);
+    ResourceManager resourceManager(1000);
 
     dayMapAtlas.registerAvailableTextures("textures/daymaps");
     nightMapAtlas.registerAvailableTextures("textures/nightmaps");

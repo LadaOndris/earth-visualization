@@ -112,7 +112,7 @@ void GuiFrameRenderer::createSimulationWindow(t_window_definition window) {
     ImGui::SliderInt("Speed", &renderingOptions.simulationSpeed, 1, 86400, "%d", sliderFlags);
 
     ImGui::End();
-    float windowHeight = 150;
+    float windowHeight = 130;
     updateTopPadding(windowHeight);
 }
 
