@@ -134,8 +134,9 @@ public:
         // Cross-reference resources of neighboring LODs
         if (!lodResources.empty()) {
             auto lastResources = lodResources.back();
-            lastResources->finerResources.push_back(resources);
-            resources->coarserResources = lastResources;
+            assert(lastResources->getMesh().size() > resources->getMesh().size());
+            resources->finerResources.push_back(lastResources);
+            lastResources->coarserResources = resources;
         }
         // Add resources to the current tile
         lodResources.push_back(resources);

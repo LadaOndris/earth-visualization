@@ -73,6 +73,7 @@ bool TileEarthRenderer::prepareTexture(const std::shared_ptr<Texture> &texture) 
         resourceManager.noteUsage(texture);
         return true;
     } else {
+        // Check if a request has been made for this texture
         auto it = requestMap.find(texture->getPath());
         if (it == requestMap.end()) {
             // The texture hasn't been loaded from disk
@@ -164,8 +165,14 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         // Set up the neccessary texture
         auto dayTexture = resources->getDayTexture();
 
+        // Request and prepare the texture
+        bool textureReady = prepareTexture(dayTexture);
+        if (!textureReady) {
+            textureReady = resources->getCoarserDayTexture(dayTexture);
+        }
+
         // Draw only if the necessary resources are ready
-        if (prepareTexture(dayTexture)) {
+        if (textureReady) {
             shader.setVec2("textureGeodeticOffset", dayTexture->getGeodeticOffset() * TO_RADS_COEFF);
             shader.setVec2("textureGridSize", dayTexture->getTextureGridSize());
 

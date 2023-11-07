@@ -38,6 +38,24 @@ public:
         return colorMap;
     }
 
+    /**
+     *
+     * @return True if a texture ready in OpenGL context was found.
+     */
+    [[nodiscard]] bool getCoarserDayTexture(std::shared_ptr<Texture> &texture) const {
+        if (coarserResources == nullptr) {
+            std::cout << mesh.size() << std::endl;
+            return false;
+        }
+        auto coarserTexture = coarserResources->getDayTexture();
+        if (coarserTexture->isPreparedInGlContext()) {
+            texture = coarserTexture;
+            return true;
+        } else {
+            return coarserResources->getCoarserDayTexture(texture);
+        }
+    }
+
     [[nodiscard]] std::shared_ptr<Texture> getHeightMapTexture() const {
         return heightMap;
     }
