@@ -5,6 +5,8 @@
 #include <glm/geometric.hpp>
 #include "ellipsoid.h"
 
+glm::vec3 REAL_RADII_METERS = glm::vec3(6378137.0, 6356752.314245, 6378137.0);
+
 Ellipsoid::Ellipsoid(glm::vec3 radii) : radii(radii) {
     radiiSquared = glm::vec3(radii.x * radii.x,
                              radii.y * radii.y,
@@ -98,6 +100,10 @@ glm::vec3 Ellipsoid::getRadiiSquared() const {
 
 [[nodiscard]] glm::vec3 Ellipsoid::getGeocentricPosition() const {
     return glm::vec3(0.f);
+}
+
+float Ellipsoid::getRealityScaleFactor() const {
+    return REAL_RADII_METERS[0] / radii[0];
 }
 
 

@@ -6,6 +6,8 @@
 #include <glm/geometric.hpp>
 #include <vector>
 
+extern glm::vec3 REAL_RADII_METERS;
+
 class Ellipsoid {
 public:
     Ellipsoid(double x, double y, double z);
@@ -42,9 +44,12 @@ public:
 
     glm::vec3 getGeocentricPosition() const;
 
+    float getRealityScaleFactor() const;
+
     static Ellipsoid &wgs84() {
         // Equatorial radius (m), Equatorial radius (m), Polar radius (m)
-        static Ellipsoid ellipsoid(6378137.0, 6378137.0, 6356752.314245);
+        auto radii = REAL_RADII_METERS;
+        static Ellipsoid ellipsoid(radii);
         return ellipsoid;
     }
 
@@ -54,8 +59,8 @@ public:
     }
 
     static Ellipsoid &unitSphereWithCorrectRatio() {
-        auto radii = glm::normalize(glm::vec3(6378137.0, 6356752.314245, 6378137.0));
-        static Ellipsoid ellipsoid(radii[0], radii[1], radii[2]);
+        auto radii = glm::normalize(REAL_RADII_METERS);
+        static Ellipsoid ellipsoid(radii);
         return ellipsoid;
     }
 

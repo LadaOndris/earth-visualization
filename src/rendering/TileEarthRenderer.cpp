@@ -196,6 +196,10 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         }
     }
     auto geodeticCameraPosition = ellipsoid.convertGeocentricToGeodetic(camera.getPosition());
+    auto surfacePoint = ellipsoid.projectGeocentricPointOntoSurface(camera.getPosition());
+    auto distanceFromSurface = glm::length(camera.getPosition() - surfacePoint);
+    auto realityScaleFactor = ellipsoid.getRealityScaleFactor();
+    geodeticCameraPosition[2] = realityScaleFactor * distanceFromSurface;
 
     renderingStats.loadedTextures = resourceManager.getNumLoadedTextures();
     renderingStats.cameraPosition = geodeticCameraPosition;

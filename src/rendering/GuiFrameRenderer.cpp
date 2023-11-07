@@ -162,6 +162,8 @@ void GuiFrameRenderer::createStatisticsWindow(t_window_definition window) {
     ImGui::Spacing();
     ImGui::Text("Latitude: %.3f°", renderingStatistics.cameraPosition[1] * TO_DEGS_COEFF);
     ImGui::Spacing();
+    ImGui::Text("Altitude: %.2f km", renderingStatistics.cameraPosition[2] / 1000);
+    ImGui::Spacing();
 
     ImGui::End();
     float windowHeight = 100;
