@@ -6,12 +6,11 @@
 #define EARTH_VISUALIZATION_TILERESOURCES_H
 
 #include "../textures/Texture.h"
+#include "../vertex.h"
 #include <utility>
 #include <vector>
 #include <glm/vec3.hpp>
 #include <memory>
-
-typedef std::vector<glm::vec3> Mesh_t;
 
 class TileResources {
 private:

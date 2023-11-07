@@ -266,6 +266,8 @@ void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers,
 
     float lastFrameTime = static_cast<float>(glfwGetTime());
     bool simulationRunningLastFrame = false;
+    // Initialize the Sun position
+    solarSimulator.updateSunPosition(0, static_cast<float>(guiRenderer->getRenderingOptions().simulationSpeed));
 
     while (!glfwWindowShouldClose(window)) {
         RenderingOptions options = guiRenderer->getRenderingOptions();

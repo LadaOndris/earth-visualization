@@ -23,7 +23,7 @@ private:
     unsigned int VAO;
     unsigned int VBO;
 
-    std::vector<float> sunVertices;
+    std::vector<t_vertex> sunVertices;
 
     glm::vec3 sunLocation;
 
@@ -43,6 +43,10 @@ public:
     void render(float currentTime, t_window_definition window, RenderingOptions options) override;
 
     void destroy() override;
+
+    [[nodiscard]] glm::mat4 getProjectionMatrix(t_window_definition window) const;
+
+    [[nodiscard]] glm::mat4 getModelMatrix() const;
 };
 
 

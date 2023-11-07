@@ -44,7 +44,7 @@ public:
 
     // Function to calculate the Sun's position
     void updateSunPosition(float deltaTime, float simulationSpeed) {
-        assert(deltaTime > 0);
+        assert(deltaTime >= 0);
         updateSimulationTime(deltaTime, simulationSpeed);
         float earthRotationAngle = calculateEarthRotationAngle(simulationTime);
         float earthOrbitAngle = calculateEarthOrbitAngle(simulationTime);
