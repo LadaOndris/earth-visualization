@@ -69,7 +69,7 @@ private:
 
     [[nodiscard]] float calculateEarthRotationAngle(const std::tm &datetime) const {
         float seconds = datetime.tm_hour * 3600 + datetime.tm_min * 60 + datetime.tm_sec;
-        float rotationDegs = seconds * earthRotationSpeed;
+        float rotationDegs = seconds * earthRotationSpeed + 250;
         float rotationYears = std::floor(rotationDegs / 360);
         float rotationRads = glm::radians(rotationDegs - rotationYears * 360);
         return rotationRads;
@@ -91,7 +91,7 @@ private:
         glm::mat4 earthRotationMatrix = glm::rotate(glm::mat4(1.0f), earthRotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
         glm::mat4 orbitMatrix = glm::rotate(glm::mat4(1.0f), earthOrbitAngle, glm::vec3(0.0f, 1.0f, 0.0f));
 
-        return earthRotationMatrix * orbitMatrix * inclinationMatrix;
+        return earthRotationMatrix * /*orbitMatrix **/ inclinationMatrix;
     }
 
     [[nodiscard]] double calcCurrentInlination() const {
