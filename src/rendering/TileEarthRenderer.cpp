@@ -188,7 +188,8 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         shader.setFloat("uTileLatitudeWidth", tile.getLatitudeWidth());
 
         double distanceToCamera = glm::length(camera.getPosition() - tile.getGeocentricPosition());
-        std::shared_ptr<TileResources> resources = tile.getResources(screenSpaceWidth, distanceToCamera, fov);
+        std::shared_ptr<TileResources> resources = tile.getResources(
+                screenSpaceWidth, distanceToCamera, camera);
         Mesh_t mesh = resources->getMesh();
 
         std::shared_ptr<Texture> dayTexture;

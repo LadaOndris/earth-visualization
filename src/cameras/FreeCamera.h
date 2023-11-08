@@ -34,7 +34,7 @@ public:
     explicit FreeCamera(float cameraSpeed, glm::vec3 cameraPos, float pitch = 0.f,
                         float fov = 45.0f) :
             cameraSpeed(cameraSpeed), cameraPos(cameraPos), pitch(pitch),
-            Camera(fov) {
+            Camera(cameraPos, glm::vec3(0, 0, 0), fov) {
         assert(pitch <= 90 && pitch >= -90);
         updateDirection();
     }

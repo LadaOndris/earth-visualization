@@ -15,6 +15,7 @@
 #include <array>
 #include "../ellipsoid.h"
 #include "../textures/Texture.h"
+#include "../cameras/Camera.h"
 
 class TileResources;
 
@@ -47,6 +48,7 @@ private:
         return screenSpaceError;
     }
 
+    [[nodiscard]] double getViewingAngle(const Camera &camera) const;
 
 public:
     explicit Tile(double latitude, double longitude, double latitudeWidth, double longitudeWidth)
@@ -71,7 +73,7 @@ public:
      * - view angle of the camera (theta)
      */
     std::shared_ptr<TileResources> getResources(
-            double screenSpaceWidth, double distanceToCamera, double cameraViewAngle);
+            double screenSpaceWidth, double distanceToCamera, const Camera &camera);
 
     std::shared_ptr<TileResources> getResourcesByLevel(int level);
 

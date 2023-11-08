@@ -7,17 +7,28 @@
 
 
 std::shared_ptr<TileResources> Tile::getResources(
-        double screenSpaceWidth, double distanceToCamera, double cameraViewAngle) {
-    // Determine the appropriate level of detail (LOD) based on the screen-space error.
+        double screenSpaceWidth, double distanceToCamera, const Camera &camera) {
+    static double maxAngle = 0;
 
+//    double viewingAngle = getViewingAngle(camera);
+//    double viewingAngleNormalized = std::fabs(viewingAngle / 3.14159265 * 2);
+//    viewingAngleNormalized = std::min(viewingAngleNormalized / 0.4, 1.);
+//    double viewingCoeff = std::pow(1 - viewingAngleNormalized, 2); // -std::log(viewingAngleNormalized + 0.001);
+//    maxAngle = std::max(maxAngle, viewingAngleNormalized);
+//    std::cout << maxAngle << std::endl;
+
+    // Determine the appropriate level of detail (LOD) based on the screen-space error.
     int level;
     for (level = lodResources.size() - 1; level >= 0; level--) {
         auto &lod = lodResources[level];
         // Define the geometric error simply as the inverse of the number of triangles in a tile.
+        // times a coefficient depending on the viewing angle.
+
         auto geometricError = 1.0 / lod->getMesh().size();
+
         double screenSpaceError = computeScreenSpaceError(screenSpaceWidth, distanceToCamera,
-                                                          cameraViewAngle, geometricError);
-        if (screenSpaceError < 5.0) {
+                                                          camera.getFov(), geometricError);
+        if (screenSpaceError < 10.0) {
             break;
         }
         // std::cout << "[" << level << "] screen space error: " << screenSpaceError << std::endl;
@@ -27,6 +38,19 @@ std::shared_ptr<TileResources> Tile::getResources(
     level = std::min(level, static_cast<int>(lodResources.size() - 1));
     //return lodResources[lodResources.size() - 1];
     return lodResources[level];
+}
+
+/**
+ * Returns the angle between the camera viewing vector and the position of the the tile.
+ * @return Angle in radians.
+ */
+double Tile::getViewingAngle(const Camera &camera) const {
+    glm::vec3 cameraGeocentricPos = camera.getPosition();
+    auto tilePos = getGeocentricPosition();
+    auto toTile = glm::normalize(tilePos - cameraGeocentricPos);
+    auto toTarget = glm::normalize(camera.getTarget() - cameraGeocentricPos);
+    double angle = std::acos(glm::dot(toTile, toTarget));
+    return angle;
 }
 
 std::shared_ptr<TileResources> Tile::getResourcesByLevel(int level) {
@@ -123,7 +147,7 @@ void Tile::addResources(const std::shared_ptr<TileResources> &resources, int lev
     }
     // No corner is inside frustum and
     // no edge of the tile intersets the frustum.
-    return  false;
+    return false;
 }
 
 [[nodiscard]] unsigned char Tile::sumOfBits(unsigned char var) const {

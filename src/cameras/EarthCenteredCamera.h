@@ -15,7 +15,6 @@ class EarthCenteredCamera : public Camera {
 
 private:
     Ellipsoid &ellipsoid;
-    glm::vec3 target;
     glm::vec3 up;
     float sensitivityFactor = 0.09f;
 
@@ -48,9 +47,7 @@ private:
 public:
     EarthCenteredCamera(Ellipsoid &ellipsoid, glm::vec3 position, glm::vec3 target, glm::vec3 up,
                         float fov = 45.0f, float zoomSpeedFactor = 1.0f) :
-            ellipsoid(ellipsoid), Camera(fov) {
-        this->position = position;
-        this->target = target;
+            ellipsoid(ellipsoid), Camera(position, target, fov) {
         this->up = up;
     }
 
