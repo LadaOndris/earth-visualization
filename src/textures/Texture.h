@@ -19,6 +19,7 @@ private:
     std::string path;
     std::vector<unsigned char> data;
     Resolution resolution; // Resolution in pixels
+    int channels;
     glm::vec2 geodeticOffset; // Offset of this texture on the ellipsoid
     glm::vec2 geodeticSize; // Width in longitude and latitude
     glm::vec2 textureGridSize;
@@ -37,11 +38,16 @@ public:
               resolution(width, width),
               geodeticOffset(geodeticOffset),
               geodeticSize(geodeticSize),
-              textureGridSize(textureGridSize) {
+              textureGridSize(textureGridSize),
+              channels(0) {
     }
 
     void setData(std::vector<unsigned char> dataOther) {
         data = std::move(dataOther);
+    }
+
+    void setChannels(int channelsValue) {
+        channels = channelsValue;
     }
 
     void loadIntoGL() {
@@ -50,6 +56,13 @@ public:
 
         auto width = resolution.getWidth();
         auto height = resolution.getHeight();
+
+        int dataFormat = GL_RGB;
+        int storageFormat = GL_RGB8;
+        if (channels == 1) {
+            dataFormat = GL_RED;
+            storageFormat = GL_R8;
+        }
 
         glCreateTextures(GL_TEXTURE_2D, 1, &textureId);
 
@@ -65,8 +78,8 @@ public:
         glTextureParameteri(textureId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glTextureStorage2D(textureId, 1, GL_RGB8, width, height);
-        glTextureSubImage2D(textureId, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data.data());
+        glTextureStorage2D(textureId, 1, storageFormat, width, height);
+        glTextureSubImage2D(textureId, 0, 0, 0, width, height, dataFormat, GL_UNSIGNED_BYTE, data.data());
         glGenerateTextureMipmap(textureId);
 
         // Check for OpenGL errors after texture data loading

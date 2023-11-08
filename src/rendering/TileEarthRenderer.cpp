@@ -99,6 +99,7 @@ void TileEarthRenderer::updateTexturesWithData(const std::vector<TextureLoadResu
 
             // Copy the data from the TextureLoadResult to the texture instance.
             texture->setData(result.data);
+            texture->setChannels(result.channels);
 
             // Remove the registration from the HashMap
             requestMap.erase(it);
@@ -142,9 +143,11 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     shader.use();
     shader.setInt("dayTextureSampler", 0); // Texture Unit 0
     shader.setInt("nightTextureSampler", 1); // Texture Unit 1
+    shader.setInt("heightMapSampler", 2); // Texture Unit 2
     shader.setBool("useDayTexture", options.isTextureEnabled);
     shader.setBool("isNightEnabled", options.isNightEnabled);
     shader.setBool("displayGrid", options.isGridEnabled);
+    shader.setBool("isTerrainEnabled", options.isTerrainEnabled);
 
     shader.setFloat("gridResolution", 0.05);
     shader.setFloat("gridLineWidth", 2);
@@ -153,6 +156,11 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     float blendDuration = 0.3f;
     shader.setFloat("blendDuration", blendDuration);
     shader.setFloat("blendDurationScale", 1 / (2 * blendDuration));
+
+    // Height map settings
+    double ellipsoidScaleFactor = ellipsoid.getRealityScaleFactor();
+    double displacementFactor = 25. / ellipsoidScaleFactor * options.heightFactor;
+    shader.setFloat("heightDisplacementFactor", static_cast<float>(displacementFactor));
 
     // Set up model, view, and projection matrix
     glm::mat4 viewProjection = setupMatrices(currentTime, window);
@@ -168,7 +176,6 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     renderingStats.numTiles = tiles.size();
 
     double screenSpaceWidth = window.width;
-    double fov = camera.getFov();
 
     for (Tile &tile: tiles) {
         // Frustum culling
@@ -194,11 +201,13 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
 
         std::shared_ptr<Texture> dayTexture;
         std::shared_ptr<Texture> nightTexture;
+        std::shared_ptr<Texture> heightMap;
         bool dayTextureReady = getOrPrepareTexture(resources, tile, TextureType::Day, dayTexture);
         bool nightTextureReady = getOrPrepareTexture(resources, tile, TextureType::Night, nightTexture);
+        bool heightMapReady = getOrPrepareTexture(resources, tile, TextureType::HeightMap, heightMap);
 
         // Draw only if the necessary resources are ready
-        if (dayTextureReady && nightTextureReady) {
+        if (dayTextureReady && nightTextureReady && heightMapReady) {
             // Set up day texture
             shader.setVec2("dayTextureGeodeticOffset", dayTexture->getGeodeticOffset() * TO_RADS_COEFF);
             shader.setVec2("dayTextureGridSize", dayTexture->getTextureGridSize());
@@ -208,6 +217,11 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
             shader.setVec2("nightTextureGeodeticOffset", nightTexture->getGeodeticOffset() * TO_RADS_COEFF);
             shader.setVec2("nightTextureGridSize", nightTexture->getTextureGridSize());
             glBindTextureUnit(1, nightTexture->getTextureId());
+
+            // Set up height map
+            shader.setVec2("heightMapGeodeticOffset", heightMap->getGeodeticOffset() * TO_RADS_COEFF);
+            shader.setVec2("heightMapGridSize", heightMap->getTextureGridSize());
+            glBindTextureUnit(2, heightMap->getTextureId());
 
             // Set VAO: we need the correct buffer? Is there one or more?
             glBindVertexArray(resources->meshVAO);
