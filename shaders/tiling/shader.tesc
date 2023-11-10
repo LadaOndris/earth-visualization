@@ -6,7 +6,7 @@ in vec3 geocentricFragPos[];
 
 out vec3 VertexPos[];
 
-float tesselationFactorOuter = 64.0;
+float tesselationFactorOuter = 1.0;
 float tesselationFactorInner = 64.0;
 
 uniform sampler2D heightMapSampler;
