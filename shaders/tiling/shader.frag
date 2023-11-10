@@ -1,5 +1,4 @@
-#version 330 core
-in vec3 vertexColor;
+#version 400 core
 in vec3 geocentricFragPos;
 
 out vec4 FragColor;

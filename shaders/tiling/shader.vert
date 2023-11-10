@@ -1,9 +1,8 @@
-#version 330 core
+#version 400 core
 // Offset of the vertex within the tile in longitude and latitude
 // in the [0, 1] range.
 layout (location = 0) in vec3 aPos;
 
-out vec3 vertexColor;
 out vec3 geocentricFragPos;
 
 uniform mat4 model;
@@ -102,6 +101,4 @@ void main()
     gl_Position = projection * view * model * vec4(geocentricCoordinates, 1.0);
     //geocentricFragPos = vec3(model * vec4(geocentricCoordinates, 1.0));
     geocentricFragPos = geocentricCoordinates;
-
-    vertexColor = vec3(1.0f, 0.5f, 0.2f);
 }

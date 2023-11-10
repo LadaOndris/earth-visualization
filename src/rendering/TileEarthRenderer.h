@@ -12,7 +12,7 @@
 #include "../cameras/Camera.h"
 #include "../ellipsoid.h"
 #include "../tiling/TileContainer.h"
-#include "shader.h"
+#include "program.h"
 #include "../vertex.h"
 #include "RendererSubscriber.h"
 #include "../resources/ResourceFetcher.h"
@@ -28,7 +28,7 @@ private:
     ResourceFetcher &resourceFetcher;
     ResourceManager &resourceManager;
     const LightSource &lightSource;
-    Shader shader;
+    Program &program;
     std::vector<std::shared_ptr<RendererSubscriber>> subscribers;
     std::unordered_map<std::string, std::shared_ptr<Texture>> requestMap;
 
@@ -55,11 +55,12 @@ public:
                                Camera &camera,
                                LightSource &lightSource,
                                ResourceFetcher &resourceFetcher,
-                               ResourceManager &resourceManager)
+                               ResourceManager &resourceManager,
+                               Program &program)
             : tileContainer(tileContainer), camera(camera), ellipsoid(ellipsoid),
               lightSource(lightSource), resourceFetcher(resourceFetcher),
               resourceManager(resourceManager),
-              shader("shaders/tiling/shader.vert", "shaders/tiling/shader.frag") {
+              program(program) {
     }
 
     void render(float currentTime, t_window_definition window, RenderingOptions options) override;

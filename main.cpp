@@ -6,12 +6,11 @@
 #include "include/glad/glad.h"
 #include <GLFW/glfw3.h>
 
-#include "include/shader.h"
+#include "include/program.h"
 #include "src/cameras/FreeCamera.h"
 #include "src/ellipsoid.h"
 #include "src/tesselation/SubdivisionSphereTesselator.h"
 #include "src/vertex.h"
-#include "src/rendering/EarthRenderer.h"
 #include "src/window_definition.h"
 #include "src/rendering/SunRenderer.h"
 #include "src/rendering/GuiFrameRenderer.h"
@@ -282,8 +281,7 @@ void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers,
             }
 
             lastFrameTime = currentFrameTime;
-        }
-        else {
+        } else {
             simulationRunningLastFrame = false;
         }
 
@@ -356,17 +354,36 @@ void mainAppThread(std::promise<int> &&returnCodePromise) {
     auto guiRenderer =
             std::make_shared<GuiFrameRenderer>(options, solarSimulator);
 
+    Program tileEarthRendererProgram;
+    tileEarthRendererProgram.addShader(
+            std::make_unique<Shader>("shaders/tiling/shader.vert", ShaderType::Vertex)
+    );
+    tileEarthRendererProgram.addShader(
+            std::make_unique<Shader>("shaders/tiling/shader.tesc", ShaderType::TesselationControl)
+    );
+    tileEarthRendererProgram.addShader(
+            std::make_unique<Shader>("shaders/tiling/shader.tese", ShaderType::TessellationEvaluation)
+    );
+    tileEarthRendererProgram.addShader(
+            std::make_unique<Shader>("shaders/tiling/shader.frag", ShaderType::Fragment)
+    );
     auto tileEarthRenderer =
             std::make_shared<TileEarthRenderer>(
                     tileContainer, ellipsoid, camera, solarSimulator,
-                    resourceFetcher, resourceManager
+                    resourceFetcher, resourceManager, tileEarthRendererProgram
             );
     tileEarthRenderer->addSubscriber(guiRenderer);
     renderers.push_back(tileEarthRenderer);
 
-
+    Program sunRendererProgram;
+    sunRendererProgram.addShader(
+            std::make_unique<Shader>("shaders/sun/shader.vert", ShaderType::Vertex)
+    );
+    sunRendererProgram.addShader(
+            std::make_unique<Shader>("shaders/sun/shader.frag", ShaderType::Fragment)
+    );
     auto sunRenderer =
-            std::make_shared<SunRenderer>(camera, solarSimulator, sunRadius);
+            std::make_shared<SunRenderer>(camera, solarSimulator, sunRadius, sunRendererProgram);
 
     renderers.push_back(sunRenderer);
     renderers.push_back(guiRenderer);

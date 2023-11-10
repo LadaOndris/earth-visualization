@@ -9,7 +9,7 @@ bool TileEarthRenderer::initialize() {
         tile.updateGeocentricPosition(ellipsoid);
     }
 
-    bool isShaderProgramBuilt = shader.build();
+    bool isShaderProgramBuilt = program.build();
     if (!isShaderProgramBuilt) {
         return false;
     }
@@ -140,34 +140,34 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     auto newlyLoadedTexturesData = resourceFetcher.retrieveLoadedResources();
     updateTexturesWithData(newlyLoadedTexturesData);
 
-    shader.use();
-    shader.setInt("dayTextureSampler", 0); // Texture Unit 0
-    shader.setInt("nightTextureSampler", 1); // Texture Unit 1
-    shader.setInt("heightMapSampler", 2); // Texture Unit 2
-    shader.setBool("useDayTexture", options.isTextureEnabled);
-    shader.setBool("isNightEnabled", options.isNightEnabled);
-    shader.setBool("displayGrid", options.isGridEnabled);
-    shader.setBool("isTerrainEnabled", options.isTerrainEnabled);
+    program.use();
+    program.setInt("dayTextureSampler", 0); // Texture Unit 0
+    program.setInt("nightTextureSampler", 1); // Texture Unit 1
+    program.setInt("heightMapSampler", 2); // Texture Unit 2
+    program.setBool("useDayTexture", options.isTextureEnabled);
+    program.setBool("isNightEnabled", options.isNightEnabled);
+    program.setBool("displayGrid", options.isGridEnabled);
+    program.setBool("isTerrainEnabled", options.isTerrainEnabled);
 
-    shader.setFloat("gridResolution", 0.05);
-    shader.setFloat("gridLineWidth", 2);
+    program.setFloat("gridResolution", 0.05);
+    program.setFloat("gridLineWidth", 2);
 
     // Day/night blending
     float blendDuration = 0.3f;
-    shader.setFloat("blendDuration", blendDuration);
-    shader.setFloat("blendDurationScale", 1 / (2 * blendDuration));
+    program.setFloat("blendDuration", blendDuration);
+    program.setFloat("blendDurationScale", 1 / (2 * blendDuration));
 
     // Height map settings
     double ellipsoidScaleFactor = ellipsoid.getRealityScaleFactor();
     double displacementFactor = 25. / ellipsoidScaleFactor * options.heightFactor;
-    shader.setFloat("heightDisplacementFactor", static_cast<float>(displacementFactor));
+    program.setFloat("heightDisplacementFactor", static_cast<float>(displacementFactor));
 
     // Set up model, view, and projection matrix
     glm::mat4 viewProjection = setupMatrices(currentTime, window);
-    // Set ellipsoid parameters for the vertex shader
-    shader.setVec3("ellipsoidRadiiSquared", ellipsoid.getRadiiSquared());
-    shader.setVec3("ellipsoidOneOverRadiiSquared", ellipsoid.getOneOverRadiiSquared());
-    shader.setVec3("lightPos", lightSource.getLightPosition());
+    // Set ellipsoid parameters for the vertex program
+    program.setVec3("ellipsoidRadiiSquared", ellipsoid.getRadiiSquared());
+    program.setVec3("ellipsoidOneOverRadiiSquared", ellipsoid.getOneOverRadiiSquared());
+    program.setVec3("lightPos", lightSource.getLightPosition());
 
     auto tiles = tileContainer.getTiles();
     auto cameraPosition = camera.getPosition();
@@ -189,10 +189,10 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
             continue;
         }
 
-        shader.setFloat("uTileLongitudeOffset", tile.getLongitude());
-        shader.setFloat("uTileLatitudeOffset", tile.getLatitude());
-        shader.setFloat("uTileLongitudeWidth", tile.getLongitudeWidth());
-        shader.setFloat("uTileLatitudeWidth", tile.getLatitudeWidth());
+        program.setFloat("uTileLongitudeOffset", tile.getLongitude());
+        program.setFloat("uTileLatitudeOffset", tile.getLatitude());
+        program.setFloat("uTileLongitudeWidth", tile.getLongitudeWidth());
+        program.setFloat("uTileLatitudeWidth", tile.getLatitudeWidth());
 
         double distanceToCamera = glm::length(camera.getPosition() - tile.getGeocentricPosition());
         std::shared_ptr<TileResources> resources = tile.getResources(
@@ -209,18 +209,18 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         // Draw only if the necessary resources are ready
         if (dayTextureReady && nightTextureReady && heightMapReady) {
             // Set up day texture
-            shader.setVec2("dayTextureGeodeticOffset", dayTexture->getGeodeticOffset() * TO_RADS_COEFF);
-            shader.setVec2("dayTextureGridSize", dayTexture->getTextureGridSize());
+            program.setVec2("dayTextureGeodeticOffset", dayTexture->getGeodeticOffset() * TO_RADS_COEFF);
+            program.setVec2("dayTextureGridSize", dayTexture->getTextureGridSize());
             glBindTextureUnit(0, dayTexture->getTextureId());
 
             // Set up night texture
-            shader.setVec2("nightTextureGeodeticOffset", nightTexture->getGeodeticOffset() * TO_RADS_COEFF);
-            shader.setVec2("nightTextureGridSize", nightTexture->getTextureGridSize());
+            program.setVec2("nightTextureGeodeticOffset", nightTexture->getGeodeticOffset() * TO_RADS_COEFF);
+            program.setVec2("nightTextureGridSize", nightTexture->getTextureGridSize());
             glBindTextureUnit(1, nightTexture->getTextureId());
 
             // Set up height map
-            shader.setVec2("heightMapGeodeticOffset", heightMap->getGeodeticOffset() * TO_RADS_COEFF);
-            shader.setVec2("heightMapGridSize", heightMap->getTextureGridSize());
+            program.setVec2("heightMapGeodeticOffset", heightMap->getGeodeticOffset() * TO_RADS_COEFF);
+            program.setVec2("heightMapGridSize", heightMap->getTextureGridSize());
             glBindTextureUnit(2, heightMap->getTextureId());
 
             // Set VAO: we need the correct buffer? Is there one or more?
@@ -231,7 +231,7 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
             } else {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
-            glDrawArrays(GL_TRIANGLES, 0, mesh.size());
+            glDrawArrays(GL_PATCHES, 0, mesh.size());
         }
     }
 
@@ -272,9 +272,9 @@ glm::mat4 TileEarthRenderer::setupMatrices(float currentTime, t_window_definitio
     //float inclinationAngle = glm::radians(23.5f); // Convert degrees to radians
     //modelMatrix = glm::rotate(modelMatrix, inclinationAngle, glm::vec3(1.0f, 0.0f, 0.0f));
 
-    shader.setMat4("projection", projectionMatrix);
-    shader.setMat4("view", viewMatrix);
-    shader.setMat4("model", modelMatrix);
+    program.setMat4("projection", projectionMatrix);
+    program.setMat4("view", viewMatrix);
+    program.setMat4("model", modelMatrix);
 
     glm::mat4 viewProjection = projectionMatrix * viewMatrix;
     return viewProjection;

@@ -8,7 +8,7 @@
 #include <cmath>
 
 bool SunRenderer::initialize() {
-    bool isShaderProgramBuilt = shader.build();
+    bool isShaderProgramBuilt = program.build();
     if (!isShaderProgramBuilt) {
         return false;
     }
@@ -54,13 +54,13 @@ void SunRenderer::setupVertexArrays() {
 void SunRenderer::render(float currentTime, t_window_definition window, RenderingOptions options) {
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
-        std::cerr << "[SunRenderer] OpenGL error before shader.use: " << error << std::endl;
+        std::cerr << "[SunRenderer] OpenGL error before program.use: " << error << std::endl;
     }
-    shader.use();
+    program.use();
 
     error = glGetError();
     if (error != GL_NO_ERROR) {
-        std::cerr << "[SunRenderer] OpenGL error after shader.use: " << error << std::endl;
+        std::cerr << "[SunRenderer] OpenGL error after program.use: " << error << std::endl;
     }
 
     glBindVertexArray(VAO);
@@ -70,10 +70,10 @@ void SunRenderer::render(float currentTime, t_window_definition window, Renderin
         std::cerr << "[SunRenderer] OpenGL error after setting VAO: " << error << std::endl;
     }
 
-    // shader.setVec3("sunLocation", sunLocation);
-    shader.setMat4("model", getModelMatrix());
-    shader.setMat4("projection", getProjectionMatrix(window));
-    shader.setMat4("view", camera.getViewMatrix());
+    // program.setVec3("sunLocation", sunLocation);
+    program.setMat4("model", getModelMatrix());
+    program.setMat4("projection", getProjectionMatrix(window));
+    program.setMat4("view", camera.getViewMatrix());
 
     if (options.isWireframeEnabled) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

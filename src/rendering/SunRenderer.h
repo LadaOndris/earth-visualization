@@ -8,7 +8,7 @@
 
 #include <vector>
 #include "Renderer.h"
-#include "shader.h"
+#include "program.h"
 #include "../cameras/FreeCamera.h"
 #include "../vertex.h"
 #include "../simulation/LightSource.h"
@@ -18,7 +18,7 @@ private:
     int numSegments = 36;
     Camera &camera;
     const LightSource &lightSource;
-    Shader shader;
+    Program &program;
     float sunRadius;
     unsigned int VAO;
     unsigned int VBO;
@@ -33,8 +33,9 @@ private:
 
 
 public:
-    explicit SunRenderer(Camera &camera, const LightSource &lightSource, float sunRadius)
-            : shader("shaders/sun/shader.vert", "shaders/sun/shader.frag"),
+    explicit SunRenderer(Camera &camera, const LightSource &lightSource, float sunRadius,
+                         Program &program)
+            : program(program),
               camera(camera), lightSource(lightSource), sunRadius(sunRadius) {
     }
 
