@@ -2,10 +2,15 @@
 
 layout (triangles) in;
 
-in vec3 VertexPos[];
+in TC_OUT {
+    vec3 geocentricFragPos;
+    vec3 surfaceNormal;
+} te_in[];
 
-out vec3 geocentricFragPos;
-out vec3 normal;
+out TE_OUT {
+    vec3 geocentricFragPos;
+    vec3 surfaceNormal;
+} te_out;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -83,7 +88,15 @@ void main()
     float v = gl_TessCoord.y;
     float w = gl_TessCoord.z;
 
-    vec3 geocentricCoordinates = VertexPos[0] * u + VertexPos[1] * v + VertexPos[2] * w;
+    vec3 geocentricCoordinates =
+        te_in[0].geocentricFragPos * u +
+        te_in[1].geocentricFragPos * v +
+        te_in[2].geocentricFragPos * w;
+
+    vec3 surfaceNormal =
+        te_in[0].surfaceNormal * u +
+        te_in[1].surfaceNormal * v +
+        te_in[2].surfaceNormal * w;
 
     vec2 heightMapTextureCoords = getHeightMapTextureCoords(geocentricCoordinates);
 
@@ -92,8 +105,9 @@ void main()
         geocentricCoordinates *= heightDisplacement;
     }
 
-    geocentricFragPos = geocentricCoordinates;
-    normal = computeNormalCentralDifference(heightMapTextureCoords, heightMapSampler);
+    te_out.geocentricFragPos = geocentricCoordinates;
+    te_out.surfaceNormal = surfaceNormal;
+    //te_out.s = computeNormalCentralDifference(heightMapTextureCoords, heightMapSampler);
 
     gl_Position = projection * view * model * vec4(geocentricCoordinates, 1.0);
 }

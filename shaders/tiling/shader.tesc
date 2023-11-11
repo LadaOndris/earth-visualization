@@ -2,9 +2,15 @@
 
 layout (vertices=3) out;
 
-in vec3 geocentricFragPos[];
+in VS_OUT {
+    vec3 geocentricFragPos;
+    vec3 surfaceNormal;
+} tc_in[];
 
-out vec3 VertexPos[];
+out TC_OUT {
+    vec3 geocentricFragPos;
+    vec3 surfaceNormal;
+} tc_out[];
 
 float tesselationFactorOuter = 1.0;
 float tesselationFactorInner = 64.0;
@@ -53,12 +59,15 @@ float getRawHeightDisplacement(vec3 geocentricCoordinates) {
 
 void main()
 {
-    vec3 centroidPos = (geocentricFragPos[0] + geocentricFragPos[1] + geocentricFragPos[2]) / 3.0;
+    vec3 centroidPos =
+        (tc_in[0].geocentricFragPos +
+         tc_in[1].geocentricFragPos +
+         tc_in[2].geocentricFragPos) / 3.0;
 
     float centroidHeight = getRawHeightDisplacement(centroidPos);
-    float vertexHeight1 = getRawHeightDisplacement(geocentricFragPos[0]);
-    float vertexHeight2 = getRawHeightDisplacement(geocentricFragPos[1]);
-    float vertexHeight3 = getRawHeightDisplacement(geocentricFragPos[2]);
+    float vertexHeight1 = getRawHeightDisplacement(tc_in[0].geocentricFragPos);
+    float vertexHeight2 = getRawHeightDisplacement(tc_in[1].geocentricFragPos);
+    float vertexHeight3 = getRawHeightDisplacement(tc_in[2].geocentricFragPos);
 
     float maxHeight = max(max(centroidHeight, vertexHeight1), max(vertexHeight2, vertexHeight3));
     float minHeight = min(min(centroidHeight, vertexHeight1), min(vertexHeight2, vertexHeight3));
@@ -76,5 +85,7 @@ void main()
     }
 
     gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
-    VertexPos[gl_InvocationID] = geocentricFragPos[gl_InvocationID];
+    // Copy input to output
+    tc_out[gl_InvocationID].geocentricFragPos = tc_in[gl_InvocationID].geocentricFragPos;
+    tc_out[gl_InvocationID].surfaceNormal = tc_in[gl_InvocationID].surfaceNormal;
 }

@@ -18,6 +18,8 @@ enum ShaderType {
     Fragment
 };
 
+const char *shaderTypeToString(ShaderType e);
+
 class Shader {
 private:
     const char *sourcePath;
@@ -32,7 +34,8 @@ private:
         glGetShaderiv(id, GL_COMPILE_STATUS, &success);
         if (!success) {
             glGetShaderInfoLog(id, 512, nullptr, infoLog);
-            std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+            std::cout << "ERROR::SHADER::" << shaderTypeToString(type) << "::COMPILATION_FAILED\n" << infoLog
+                      << std::endl;
             return true;
         }
         return false;
@@ -91,8 +94,8 @@ public:
         throw std::runtime_error("Unssuported shader type");
     }
 
-    [[nodiscard]] unsigned int getId() {
-        return  id;
+    [[nodiscard]] unsigned int getId() const {
+        return id;
     }
 
     void destroy() {

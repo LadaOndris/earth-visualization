@@ -1,7 +1,10 @@
 #version 400 core
 
-in vec3 geocentricFragPos;
-in vec3 normal;
+
+in TE_OUT {
+    vec3 geocentricFragPos;
+    vec3 surfaceNormal;
+} fs_in;
 
 out vec4 FragColor;
 
@@ -22,7 +25,6 @@ uniform float blendDurationScale;
 
 // Ellipsoid definition
 uniform vec3 ellipsoidRadiiSquared;
-uniform vec3 ellipsoidOneOverRadiiSquared;
 
 // Grid definition
 uniform float gridResolution;
@@ -39,12 +41,6 @@ const float oneOverTwoPi = 1.0 / (2.0 * PI);
 const float oneOverPi = 1.0 / PI;
 const float eps = 0.001;
 
-
-vec3 convertGeocentricToGeocentricSurfaceNormal(vec3 point)
-{
-    vec3 normal = point * ellipsoidOneOverRadiiSquared;
-    return normalize(normal);
-}
 
 float computeDiffuseLight(vec3 normal, vec3 position)
 {
@@ -163,9 +159,8 @@ void main()
         return;
     }
 
-    vec3 normal = convertGeocentricToGeocentricSurfaceNormal(geocentricFragPos);
-    float diffuseIntensity = computeDiffuseLight(normal, geocentricFragPos);
-    vec2 globalTextureCoordinates = computeTextureCoordinates(normal);
+    float diffuseIntensity = computeDiffuseLight(fs_in.surfaceNormal, fs_in.geocentricFragPos);
+    vec2 globalTextureCoordinates = computeTextureCoordinates(fs_in.surfaceNormal);
 
     // Global coords (of the tile) should always be larger than the
     // offset of the texture for the tile.
@@ -184,7 +179,7 @@ void main()
     else {
         if (isNightEnabled) {
 
-            FragColor = blendDayAndNight(globalTextureCoordinates, normal, diffuseIntensity);
+            FragColor = blendDayAndNight(globalTextureCoordinates, fs_in.surfaceNormal, diffuseIntensity);
         }
         else {
             FragColor = computeDayColor(globalTextureCoordinates, 1.0);

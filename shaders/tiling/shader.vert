@@ -3,7 +3,10 @@
 // in the [0, 1] range.
 layout (location = 0) in vec3 aPos;
 
-out vec3 geocentricFragPos;
+out VS_OUT {
+    vec3 geocentricFragPos;
+    vec3 surfaceNormal;
+} vs_out;
 
 uniform vec3 ellipsoidRadiiSquared;
 
@@ -11,6 +14,14 @@ uniform float uTileLongitudeOffset;
 uniform float uTileLatitudeOffset;
 uniform float uTileLongitudeWidth;
 uniform float uTileLatitudeWidth;
+
+uniform vec3 ellipsoidOneOverRadiiSquared;
+
+vec3 convertGeocentricToGeocentricSurfaceNormal(vec3 point)
+{
+    vec3 normal = point * ellipsoidOneOverRadiiSquared;
+    return normalize(normal);
+}
 
 vec3 convertGeographicToGeodeticSurfaceNormal(vec3 geographic) {
     float longitude = geographic.x;
@@ -48,7 +59,9 @@ void main()
     vec3 geographicCoordinates = vec3(longitude, latitude, 0.0);
 
     vec3 geocentricCoordinates = convertGeodeticToGeocentric(geographicCoordinates);
+    vec3 surfaceNormal = convertGeocentricToGeocentricSurfaceNormal(geocentricCoordinates);
 
     gl_Position = vec4(geocentricCoordinates, 1.0);
-    geocentricFragPos = geocentricCoordinates;
+    vs_out.geocentricFragPos = geocentricCoordinates;
+    vs_out.surfaceNormal = surfaceNormal;
 }
