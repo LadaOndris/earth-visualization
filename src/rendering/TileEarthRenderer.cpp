@@ -148,6 +148,7 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     program.setBool("isNightEnabled", options.isNightEnabled);
     program.setBool("displayGrid", options.isGridEnabled);
     program.setBool("isTerrainEnabled", options.isTerrainEnabled);
+    program.setBool("isTerrainShadingEnabled", options.isTerrainShadingEnabled);
 
     program.setFloat("gridResolution", 0.05);
     program.setFloat("gridLineWidth", 2);
@@ -161,6 +162,7 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     double ellipsoidScaleFactor = ellipsoid.getRealityScaleFactor();
     double displacementFactor = 25. / ellipsoidScaleFactor * options.heightFactor;
     program.setFloat("heightDisplacementFactor", static_cast<float>(displacementFactor));
+    program.setInt("heightScale", options.heightFactor);
 
     // Set up model, view, and projection matrix
     glm::mat4 viewProjection = setupMatrices(currentTime, window);

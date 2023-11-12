@@ -48,7 +48,6 @@ vec3 convertGeodeticToGeocentric(vec3 geodetic) {
     return rSurface + (n * height);
 }
 
-
 void main()
 {
     float longitude = uTileLongitudeOffset + aPos.x * uTileLongitudeWidth;

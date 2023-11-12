@@ -65,6 +65,8 @@ void GuiFrameRenderer::createFeaturesWindow(t_window_definition window) {
     ImGui::Spacing();
     ImGui::Checkbox("Terrain", &renderingOptions.isTerrainEnabled);
     ImGui::Spacing();
+    ImGui::Checkbox("Terrain shading", &renderingOptions.isTerrainShadingEnabled);
+    ImGui::Spacing();
     ImGui::Checkbox("Grid", &renderingOptions.isGridEnabled);
     ImGui::Spacing();
     auto sliderFlags = ImGuiSliderFlags_None;
@@ -72,7 +74,7 @@ void GuiFrameRenderer::createFeaturesWindow(t_window_definition window) {
     ImGui::Spacing();
 
     ImGui::End();
-    float windowHeight = 180;
+    float windowHeight = 210;
     updateTopPadding(windowHeight);
 }
 

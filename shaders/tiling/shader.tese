@@ -64,24 +64,6 @@ float getHeightDisplacement(vec2 tileTextureCoordinates) {
     return displacementFactor;
 }
 
-vec3 computeNormalCentralDifference(vec2 position, sampler2D heightMap) {
-    float upperLeft = texture(heightMap, position.xy + vec2(-1.0, 1.0)).r;
-    float upperCenter = texture(heightMap, position.xy + vec2(0.0, 1.0)).r;
-    float upperRight = texture(heightMap, position.xy + vec2(1.0, 1.0)).r;
-    float left = texture(heightMap, position.xy + vec2(-1.0, 0.0)).r;
-    float right = texture(heightMap, position.xy + vec2(1.0, 0.0)).r;
-    float lowerLeft = texture(heightMap, position.xy + vec2(-1.0, -1.0)).r;
-    float lowerCenter = texture(heightMap, position.xy + vec2(0.0, -1.0)).r;
-    float lowerRight = texture(heightMap, position.xy + vec2(1.0, -1.0)).r;
-
-    float x = upperRight + (2.0 * right) + lowerRight -
-    upperLeft - (2.0 * left) - lowerLeft;
-    float y = lowerLeft + (2.0 * lowerCenter) + lowerRight -
-    upperLeft - (2.0 * upperCenter) - upperRight;
-
-    return normalize(vec3(-x, y, 1.0));
-}
-
 void main()
 {
     float u = gl_TessCoord.x;
@@ -89,25 +71,23 @@ void main()
     float w = gl_TessCoord.z;
 
     vec3 geocentricCoordinates =
-        te_in[0].geocentricFragPos * u +
-        te_in[1].geocentricFragPos * v +
-        te_in[2].geocentricFragPos * w;
+    te_in[0].geocentricFragPos * u +
+    te_in[1].geocentricFragPos * v +
+    te_in[2].geocentricFragPos * w;
 
     vec3 surfaceNormal =
-        te_in[0].surfaceNormal * u +
-        te_in[1].surfaceNormal * v +
-        te_in[2].surfaceNormal * w;
-
-    vec2 heightMapTextureCoords = getHeightMapTextureCoords(geocentricCoordinates);
+    te_in[0].surfaceNormal * u +
+    te_in[1].surfaceNormal * v +
+    te_in[2].surfaceNormal * w;
 
     if (isTerrainEnabled) {
+        vec2 heightMapTextureCoords = getHeightMapTextureCoords(geocentricCoordinates);
         float heightDisplacement = getHeightDisplacement(heightMapTextureCoords);
         geocentricCoordinates *= heightDisplacement;
     }
 
     te_out.geocentricFragPos = geocentricCoordinates;
     te_out.surfaceNormal = surfaceNormal;
-    //te_out.s = computeNormalCentralDifference(heightMapTextureCoords, heightMapSampler);
 
     gl_Position = projection * view * model * vec4(geocentricCoordinates, 1.0);
 }

@@ -12,6 +12,7 @@ struct RenderingOptions {
     bool isTextureEnabled = true;
     bool isNightEnabled = true;
     bool isTerrainEnabled = false;
+    bool isTerrainShadingEnabled = true;
     bool isGridEnabled = false;
     int simulationSpeed = 1;
     int heightFactor = 1;
