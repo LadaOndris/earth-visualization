@@ -3,7 +3,10 @@
 #define EARTH_VISUALIZATION_ELLIPSOID_H
 
 #include <glm/vec3.hpp>
+#include <glm/geometric.hpp>
 #include <vector>
+
+extern glm::vec3 REAL_RADII_METERS;
 
 class Ellipsoid {
 public:
@@ -13,35 +16,51 @@ public:
 
     glm::vec3 getRadii() const;
 
+    glm::vec3 getRadiiSquared() const;
+
     glm::vec3 getOneOverRadiiSquared() const;
 
-    glm::vec3 geodeticSurfaceNormalFromWGS84(glm::vec3 point);
-
     /**
-     *
-     * @param geodetic Tuple (longitude, latitude, height)
+     * Computes the geodetic surface normal given a point on the surface of the ellipsoid.
+     * @param vec Point on the surface of the ellipsoid.
      * @return
      */
-    glm::vec3 geodeticSurfaceNormalFromGeodetic(glm::vec3 geodetic);
+    glm::vec3 convertGeocentricToGeocentricSurfaceNormal(glm::vec3 point) const;
 
-    glm::vec3 convertGeographicToWGS84(glm::vec3 geodetic);
+    /**
+     * Converts a geocentric poitn (X, Y, Z) to a point geodetic point (longitude, latitude, 0).
+     */
+    glm::vec3 convertGeocentricToGeodetic(glm::vec3 point) const;
 
-    glm::vec3 convertWGS84ToGeographic(glm::vec3 point);
+    std::vector<glm::vec3> projectGeodeticCoordsOntoSurface(const std::vector<glm::vec3> &geodeticCoords) const;
 
-    std::vector<glm::vec3> projectPointsOntoSurface(std::vector<glm::vec3> points);
+    glm::vec3 projectGeocentricPointOntoSurface(glm::vec3 geocentricPoint) const;
 
-    glm::vec3 projectPointOntoSurface(glm::vec3 point);
+    glm::vec3 convertGeographicToGeodeticSurfaceNormal(glm::vec3 geographic) const;
+
+    glm::vec3 convertGeodeticToGeocentric(glm::vec3 geodetic) const;
 
     bool isPointOnTheOutside(glm::vec3);
 
+    glm::vec3 getGeocentricPosition() const;
+
+    float getRealityScaleFactor() const;
+
     static Ellipsoid &wgs84() {
         // Equatorial radius (m), Equatorial radius (m), Polar radius (m)
-        static Ellipsoid ellipsoid(6378137.0, 6378137.0, 6356752.314245);
+        auto radii = REAL_RADII_METERS;
+        static Ellipsoid ellipsoid(radii);
         return ellipsoid;
     }
 
     static Ellipsoid &unitSphere() {
         static Ellipsoid ellipsoid(1.0, 1.0, 1.0);
+        return ellipsoid;
+    }
+
+    static Ellipsoid &unitSphereWithCorrectRatio() {
+        auto radii = glm::normalize(REAL_RADII_METERS);
+        static Ellipsoid ellipsoid(radii);
         return ellipsoid;
     }
 

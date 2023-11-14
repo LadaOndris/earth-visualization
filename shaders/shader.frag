@@ -15,7 +15,7 @@ uniform float blendDurationScale;
 // Definition of the ellipsoid
 uniform vec3 oneOverRadiiSquared;
 
-vec3 geodeticSurfaceNormalFromWGS84(vec3 point)
+vec3 convertGeocentricToGeocentricSurfaceNormal(vec3 point)
 {
     vec3 normal = point * oneOverRadiiSquared;
     return normalize(normal);
@@ -64,7 +64,7 @@ vec2 computeTextureCoordinates(vec3 normal)
 void main()
 {
     // Compute on GPU per fragment to avoid interpolation of normals if computed per vertex
-    vec3 normal = geodeticSurfaceNormalFromWGS84(FragPos);
+    vec3 normal = convertGeocentricToGeocentricSurfaceNormal(FragPos);
     float diffuseIntensity = computeDiffuseLight(normal, FragPos);
     vec2 textureCoordinates = computeTextureCoordinates(normal);
 

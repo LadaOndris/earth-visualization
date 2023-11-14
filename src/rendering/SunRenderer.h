@@ -8,36 +8,46 @@
 
 #include <vector>
 #include "Renderer.h"
-#include "shader.h"
+#include "program.h"
 #include "../cameras/FreeCamera.h"
 #include "../vertex.h"
+#include "../simulation/LightSource.h"
 
 class SunRenderer : public Renderer {
 private:
+    int numSegments = 36;
     Camera &camera;
-    Shader shader;
-    glm::vec3 lightPosition;
+    const LightSource &lightSource;
+    Program &program;
     float sunRadius;
     unsigned int VAO;
     unsigned int VBO;
-    unsigned int EBO;
 
-    std::vector<float> sunVertices;
-    const static unsigned int sunIndices[];
+    std::vector<t_vertex> sunVertices;
 
     glm::vec3 sunLocation;
-
-public:
-    SunRenderer(Camera &camera, glm::vec3 lightPosition, float sunRadius)
-            : shader("shaders/sun/shader.vs", "shaders/sun/shader.fs"),
-              camera(camera), lightPosition(lightPosition), sunRadius(sunRadius) {
-    }
 
     void constructVertices();
 
     void setupVertexArrays();
 
-    void render(float currentTime, t_window_definition window) override;
+
+public:
+    explicit SunRenderer(Camera &camera, const LightSource &lightSource, float sunRadius,
+                         Program &program)
+            : program(program),
+              camera(camera), lightSource(lightSource), sunRadius(sunRadius) {
+    }
+
+    bool initialize() override;
+
+    void render(float currentTime, t_window_definition window, RenderingOptions options) override;
+
+    void destroy() override;
+
+    [[nodiscard]] glm::mat4 getProjectionMatrix(t_window_definition window) const;
+
+    [[nodiscard]] glm::mat4 getModelMatrix() const;
 };
 
 

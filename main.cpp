@@ -6,16 +6,18 @@
 #include "include/glad/glad.h"
 #include <GLFW/glfw3.h>
 
-#include "include/shader.h"
+#include "include/program.h"
 #include "src/cameras/FreeCamera.h"
 #include "src/ellipsoid.h"
 #include "src/tesselation/SubdivisionSphereTesselator.h"
 #include "src/vertex.h"
-#include "src/rendering/EarthRenderer.h"
 #include "src/window_definition.h"
 #include "src/rendering/SunRenderer.h"
 #include "src/rendering/GuiFrameRenderer.h"
 #include "src/cameras/EarthCenteredCamera.h"
+#include "src/tiling/TileContainer.h"
+#include "src/rendering/TileEarthRenderer.h"
+#include "src/simulation/SolarSimulator.h"
 
 #include <glm/vec3.hpp> // glm::vec3
 #include <glm/vec4.hpp> // glm::vec4
@@ -30,6 +32,7 @@
 #include <chrono>
 #include <array>
 #include <algorithm>
+#include <future>
 
 t_window_definition windowDefinition;
 float lastX = 400, lastY = 300;
@@ -38,7 +41,7 @@ bool lbutton_down = false;
 GLFWwindow *window = nullptr;
 
 
-Ellipsoid ellipsoid = Ellipsoid::unitSphere();
+Ellipsoid ellipsoid = Ellipsoid::unitSphereWithCorrectRatio();
 auto radii = ellipsoid.getRadii();
 // From the side of the Earth
 //Camera camera(5.0f, glm::vec3(-radii.x * 5, 0, 0),
@@ -49,7 +52,7 @@ auto radii = ellipsoid.getRadii();
 EarthCenteredCamera camera(ellipsoid,
                            glm::vec3(-radii.x * 5, 0, 0),
                            glm::vec3(0, 0, 0),
-                           glm::vec3(0, 1, 0));
+                           glm::vec3(0, -1, 0));
 
 void error_callback(int error, const char *description) {
     fprintf(stderr, "Error: %s\n", description);
@@ -244,22 +247,49 @@ std::string formatTime(const std::chrono::system_clock::time_point &timePoint) {
     return buffer;
 }
 
+bool initializeRenderers(std::vector<std::shared_ptr<Renderer>> renderers) {
+    for (const auto &renderer: renderers) {
+        bool initializationResult = renderer->initialize();
+        if (!initializationResult) {
+            return false;
+        }
+    }
+    return true;
+}
 
-void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers) {
+void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers,
+                    const std::shared_ptr<GuiFrameRenderer> &guiRenderer,
+                    SolarSimulator &solarSimulator) {
     glViewport(0, 0, windowDefinition.width, windowDefinition.height);
     glEnable(GL_DEPTH_TEST);
-    float lastFrame = 0.0f; // Time of last frame
+
+    float lastFrameTime = static_cast<float>(glfwGetTime());
+    bool simulationRunningLastFrame = false;
+    // Initialize the Sun position
+    solarSimulator.updateSunPosition(0, static_cast<float>(guiRenderer->getRenderingOptions().simulationSpeed));
 
     while (!glfwWindowShouldClose(window)) {
-        auto currentFrame = static_cast<float>(glfwGetTime());
-        float deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+        RenderingOptions options = guiRenderer->getRenderingOptions();
+        auto currentFrameTime = static_cast<float>(glfwGetTime());
 
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        if (options.isSimulationRunning) {
+            if (simulationRunningLastFrame) {
+                float additionalFrameTime = currentFrameTime - lastFrameTime;
+                solarSimulator.updateSunPosition(additionalFrameTime, static_cast<float>(options.simulationSpeed));
+            } else {
+                simulationRunningLastFrame = true;
+            }
+
+            lastFrameTime = currentFrameTime;
+        } else {
+            simulationRunningLastFrame = false;
+        }
+
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         for (const auto &renderer: renderers) {
-            renderer->render(currentFrame, windowDefinition);
+            renderer->render(currentFrameTime, windowDefinition, options);
         }
 
         glfwSwapBuffers(window);
@@ -267,7 +297,11 @@ void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers) {
     }
 }
 
-void cleanup() {
+void cleanup(const std::vector<std::shared_ptr<Renderer>> &renderers) {
+    for (const auto &renderer: renderers) {
+        renderer->destroy();
+    }
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
@@ -276,10 +310,15 @@ void cleanup() {
     glfwTerminate();
 }
 
-int main() {
-    std::cout << "Starting the application..." << std::endl;
+void resourceLoaderThreadStart() {
+    ResourceLoader loader;
+    loader.start();
+}
+
+void mainAppThread(std::promise<int> &&returnCodePromise) {
     if (!initializeGlfw() || !initializeGlad() || !initializeImgui()) {
-        return EXIT_FAILURE;
+        returnCodePromise.set_value(EXIT_FAILURE);
+        return;
     }
 
     auto sunVsEarthRadiusFactor = 109.168105; // Sun_radius / Earth_radius
@@ -287,35 +326,100 @@ int main() {
     auto sunDistanceMeters = 149597870700.f;
     auto earthRadiusMeters = 6378000.f;
     auto sunDistance = sunDistanceMeters / earthRadiusMeters * radii.x;
-    auto lightPosition = glm::vec3(0.0f, 0.0f, sunDistance);
-
-    SubdivisionSphereTesselator subdivisionSurfaces;
-    auto earthRenderer =
-            std::make_shared<EarthRenderer>(ellipsoid, camera, lightPosition);
-    earthRenderer->constructVertices(subdivisionSurfaces);
-    earthRenderer->setupVertexArrays();
-    //earthRenderer->loadTextures("2_no_clouds_16k.jpg", "5_night_16k.jpg");
-    earthRenderer->loadTextures("2_no_clouds_8k.jpg", "5_night_8k.jpg");
-
-
-    auto sunRenderer =
-            std::make_shared<SunRenderer>(camera, lightPosition, sunRadius);
-    sunRenderer->constructVertices();
-    sunRenderer->setupVertexArrays();
-
-    bool simulationIsRunning = false;
-    auto guiRenderer =
-            std::make_shared<GuiFrameRenderer>(simulationIsRunning);
-
+    //auto lightPosition = glm::vec3(0.0f, -sunDistance, sunDistance);
+    SolarSimulator solarSimulator(sunDistance);
 
     std::vector<std::shared_ptr<Renderer>> renderers;
-    renderers.push_back(earthRenderer);
+
+    SubdivisionSphereTesselator subdivisionSurfaces;
+
+    TileMeshTesselator tileMeshTesselator;
+    TextureAtlas dayMapAtlas;
+    TextureAtlas nightMapAtlas;
+    TextureAtlas heightMapAtlas;
+    TileContainer tileContainer(tileMeshTesselator, dayMapAtlas,
+                                nightMapAtlas, heightMapAtlas, ellipsoid);
+
+    ResourceFetcher resourceFetcher;
+    ResourceManager resourceManager(1000);
+
+    dayMapAtlas.registerAvailableTextures("textures/daymaps");
+    nightMapAtlas.registerAvailableTextures("textures/nightmaps");
+    heightMapAtlas.registerAvailableTextures("textures/heightmaps");
+    tileContainer.setupTiles();
+
+    RenderingOptions options = {
+            .isSimulationRunning = false
+    };
+    auto guiRenderer =
+            std::make_shared<GuiFrameRenderer>(options, solarSimulator);
+
+    Program tileEarthRendererProgram;
+    tileEarthRendererProgram.addShader(
+            std::make_unique<Shader>("shaders/tiling/shader.vert", ShaderType::Vertex)
+    );
+    tileEarthRendererProgram.addShader(
+            std::make_unique<Shader>("shaders/tiling/shader.tesc", ShaderType::TesselationControl)
+    );
+    tileEarthRendererProgram.addShader(
+            std::make_unique<Shader>("shaders/tiling/shader.tese", ShaderType::TessellationEvaluation)
+    );
+    tileEarthRendererProgram.addShader(
+            std::make_unique<Shader>("shaders/tiling/shader.frag", ShaderType::Fragment)
+    );
+    auto tileEarthRenderer =
+            std::make_shared<TileEarthRenderer>(
+                    tileContainer, ellipsoid, camera, solarSimulator,
+                    resourceFetcher, resourceManager, tileEarthRendererProgram
+            );
+    tileEarthRenderer->addSubscriber(guiRenderer);
+    renderers.push_back(tileEarthRenderer);
+
+    Program sunRendererProgram;
+    sunRendererProgram.addShader(
+            std::make_unique<Shader>("shaders/sun/shader.vert", ShaderType::Vertex)
+    );
+    sunRendererProgram.addShader(
+            std::make_unique<Shader>("shaders/sun/shader.frag", ShaderType::Fragment)
+    );
+    auto sunRenderer =
+            std::make_shared<SunRenderer>(camera, solarSimulator, sunRadius, sunRendererProgram);
+
     renderers.push_back(sunRenderer);
     renderers.push_back(guiRenderer);
 
-    startRendering(renderers);
-    cleanup();
+    bool result = initializeRenderers(renderers);
+    if (!result) {
+        cleanup(renderers);
+        returnCodePromise.set_value(EXIT_FAILURE);
+        return;
+    }
 
-    exit(EXIT_SUCCESS);
+    startRendering(renderers, guiRenderer, solarSimulator);
+    cleanup(renderers);
+
+    returnCodePromise.set_value(EXIT_SUCCESS);
 }
+
+int main() {
+    std::cout << "Starting the application..." << std::endl;
+    std::cout << "Starting application thread: " << std::this_thread::get_id() << std::endl;
+
+    std::thread loaderThread(resourceLoaderThreadStart);
+
+    std::promise<int> p;
+    auto futureReturnCode = p.get_future();
+    std::thread mainThread(mainAppThread, std::move(p));
+
+    mainThread.join();
+    int returnCode = futureReturnCode.get();
+
+    // Stop loader thread
+    stopThread = true;
+    cv.notify_all();
+    loaderThread.join();
+
+    return returnCode;
+}
+
 

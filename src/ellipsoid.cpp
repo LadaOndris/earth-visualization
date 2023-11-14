@@ -5,6 +5,8 @@
 #include <glm/geometric.hpp>
 #include "ellipsoid.h"
 
+glm::vec3 REAL_RADII_METERS = glm::vec3(6378137.0, 6356752.314245, 6378137.0);
+
 Ellipsoid::Ellipsoid(glm::vec3 radii) : radii(radii) {
     radiiSquared = glm::vec3(radii.x * radii.x,
                              radii.y * radii.y,
@@ -24,66 +26,64 @@ glm::vec3 Ellipsoid::getOneOverRadiiSquared() const {
     return oneOverRadiiSquared;
 }
 
-/**
- * Computes the geodetic surface normal given a point on the surface of the ellipsoid.
- * @param vec Point on the surface of the ellipsoid.
- * @return
- */
-glm::vec3 Ellipsoid::geodeticSurfaceNormalFromWGS84(glm::vec3 point) {
-    auto normal = point * oneOverRadiiSquared;
-    return glm::normalize(normal);
-}
-
-glm::vec3 Ellipsoid::geodeticSurfaceNormalFromGeodetic(glm::vec3 geodetic) {
-    double longitude = geodetic.x;
-    double latitude = geodetic.y;
-
-    double cosLatitude = cos(latitude);
-    auto normal = glm::vec3(cosLatitude * cos(longitude),
-                            cosLatitude * sin(longitude),
-                            sin(latitude));
-    return normal;
-}
-
-glm::vec3 Ellipsoid::convertGeographicToWGS84(glm::vec3 geodetic) {
-    double longitude = geodetic.x;
-    double latitude = geodetic.y;
-    float height = geodetic.z;
-
-    auto n = geodeticSurfaceNormalFromGeodetic(geodetic);
-    auto k = radiiSquared * n;
-    float gamma = std::sqrt(k.x * n.x + k.y * n.y + k.z * n.z);
-    // Point on the surface determined as determined by the normal.
-    auto rSurface = k / gamma;
-
-    return rSurface + (n * height);
-}
-
-glm::vec3 Ellipsoid::convertWGS84ToGeographic(glm::vec3 point) {
-    auto normal = geodeticSurfaceNormalFromWGS84(point);
-    auto geodetic = glm::vec3(std::atan2(normal.y, normal.x),
-                              std::asin(normal.z / glm::length(normal)),
-                              0);
-    return geodetic;
-}
-
-std::vector<glm::vec3> Ellipsoid::projectPointsOntoSurface(std::vector<glm::vec3> points) {
-    // Project points from unit sphere to the custom ellipsoid
+std::vector<glm::vec3> Ellipsoid::projectGeodeticCoordsOntoSurface(const std::vector<glm::vec3> &geodeticCoords) const {
+    // Project geodeticCoords from unit sphere to the custom ellipsoid
     std::vector<glm::vec3> projectedPoints;
-    for (const auto &point: points) {
-        auto projectedPoint = projectPointOntoSurface(point);
+    for (const auto &point: geodeticCoords) {
+        auto projectedPoint = convertGeodeticToGeocentric(point);
         // Add the projected point to the result
         projectedPoints.push_back(projectedPoint);
     }
     return projectedPoints;
 }
 
-glm::vec3 Ellipsoid::projectPointOntoSurface(glm::vec3 point) {
+
+glm::vec3 Ellipsoid::convertGeographicToGeodeticSurfaceNormal(glm::vec3 geographic) const {
+    float longitude = geographic.x;
+    float latitude = geographic.y;
+
+    float cosLatitude = std::cos(latitude);
+    glm::vec3 normal = glm::vec3(
+            cosLatitude * std::cos(longitude),
+            std::sin(latitude),
+            cosLatitude * std::sin(longitude));
+
+    return normal;
+}
+
+glm::vec3 Ellipsoid::convertGeodeticToGeocentric(glm::vec3 geodetic) const {
+    float height = geodetic.z;
+
+    glm::vec3 n = convertGeographicToGeodeticSurfaceNormal(geodetic);
+    glm::vec3 k = radiiSquared * n;
+    float gamma = std::sqrt(k.x * n.x + k.y * n.y + k.z * n.z);
+    // Point on the surface determined as determined by the normal.
+    glm::vec3 rSurface = k / gamma;
+
+    return rSurface + (n * height);
+}
+
+
+glm::vec3 Ellipsoid::projectGeocentricPointOntoSurface(glm::vec3 geocentricPoint) const {
     // Convert from unit sphere to geodetic coordinates on the unit sphere
-    glm::vec3 geodeticOnUnitSphere = convertWGS84ToGeographic(point);
+    glm::vec3 geodeticOnUnitSphere = convertGeocentricToGeodetic(geocentricPoint);
     // Convert from geodetic coordinates on unit sphere to WGS84 coordinates on the custom ellipsoid
-    glm::vec3 projectedPoint = convertGeographicToWGS84(geodeticOnUnitSphere);
+    glm::vec3 projectedPoint = convertGeodeticToGeocentric(geodeticOnUnitSphere);
     return projectedPoint;
+}
+
+
+glm::vec3 Ellipsoid::convertGeocentricToGeodetic(glm::vec3 point) const {
+    auto normal = convertGeocentricToGeocentricSurfaceNormal(point);
+    auto geodetic = glm::vec3(std::atan2(normal.z, normal.x),
+                              std::asin(normal.y / glm::length(normal)),
+                              0);
+    return geodetic;
+}
+
+glm::vec3 Ellipsoid::convertGeocentricToGeocentricSurfaceNormal(glm::vec3 point) const {
+    auto normal = point * oneOverRadiiSquared;
+    return glm::normalize(normal);
 }
 
 
@@ -92,6 +92,18 @@ bool Ellipsoid::isPointOnTheOutside(glm::vec3 point) {
     auto components = pointSquared * oneOverRadiiSquared;
     float result = components.x + components.y + components.z;
     return result > 1;
+}
+
+glm::vec3 Ellipsoid::getRadiiSquared() const {
+    return radiiSquared;
+}
+
+[[nodiscard]] glm::vec3 Ellipsoid::getGeocentricPosition() const {
+    return glm::vec3(0.f);
+}
+
+float Ellipsoid::getRealityScaleFactor() const {
+    return REAL_RADII_METERS[0] / radii[0];
 }
 
 
