@@ -12,7 +12,7 @@ out TC_OUT {
     vec3 surfaceNormal;
 } tc_out[];
 
-float tesselationFactorOuter = 1.0;
+float tesselationFactorOuter = 64.0;
 float tesselationFactorInner = 64.0;
 
 uniform sampler2D heightMapSampler;
@@ -69,19 +69,21 @@ void main()
     float vertexHeight2 = getRawHeightDisplacement(tc_in[1].geocentricFragPos);
     float vertexHeight3 = getRawHeightDisplacement(tc_in[2].geocentricFragPos);
 
+    float slopeFactorEdge0 = abs(vertexHeight1 - vertexHeight2);
+    float slopeFactorEdge1 = abs(vertexHeight1 - vertexHeight3);
+    float slopeFactorEdge2 = abs(vertexHeight2 - vertexHeight3);
+
     float maxHeight = max(max(centroidHeight, vertexHeight1), max(vertexHeight2, vertexHeight3));
     float minHeight = min(min(centroidHeight, vertexHeight1), min(vertexHeight2, vertexHeight3));
     float slopeFactor = (maxHeight - minHeight);
 
     if (gl_InvocationID == 0) {
-        float outerFactor = max(1, tesselationFactorOuter * slopeFactor);
-        gl_TessLevelOuter[0] = outerFactor;
-        gl_TessLevelOuter[1] = outerFactor;
-        gl_TessLevelOuter[2] = outerFactor;
+        gl_TessLevelOuter[0] = max(1, tesselationFactorOuter * slopeFactorEdge2);
+        gl_TessLevelOuter[1] = max(1, tesselationFactorOuter * slopeFactorEdge1);
+        gl_TessLevelOuter[2] = max(1, tesselationFactorOuter * slopeFactorEdge0);
 
         float innerFactor = max(1, tesselationFactorInner * slopeFactor);
         gl_TessLevelInner[0] = innerFactor;
-        gl_TessLevelInner[1] = innerFactor;
     }
 
     gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
