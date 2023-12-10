@@ -8,6 +8,11 @@
 
 extern glm::vec3 REAL_RADII_METERS;
 
+/**
+ * The implementation of the Ellipsoid class is based on the implementation
+ * provided in the book:
+ * "P. Cozzi, K. Ring, 3D Engine Design for Virtual Globes. A. K. Peters, Ltd., 2011."
+ */
 class Ellipsoid {
 public:
     Ellipsoid(double x, double y, double z);

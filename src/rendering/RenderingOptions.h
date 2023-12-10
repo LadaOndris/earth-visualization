@@ -14,8 +14,9 @@ struct RenderingOptions {
     bool isTerrainEnabled = false;
     bool isTerrainShadingEnabled = true;
     bool isGridEnabled = false;
+    bool isCullingEnabled = true;
     int simulationSpeed = 1;
-    int heightFactor = 1;
+    int heightFactor = 1000;
 };
 
 

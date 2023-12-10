@@ -76,6 +76,9 @@ public:
         glTextureParameteri(textureId, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTextureParameteri(textureId, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTextureParameteri(textureId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        // Anisotropic filtering improves the appearance of textures
+        // viewed at oblique angles, rather than straight-on.
+        glTextureParameterf(textureId, GL_TEXTURE_MAX_ANISOTROPY, 4);
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glTextureStorage2D(textureId, 1, storageFormat, width, height);

@@ -175,6 +175,8 @@ bool initializeGlfw() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    // Multi-sampling
+    glfwWindowHint(GLFW_SAMPLES, 4);
 
     window = glfwCreateWindow(windowDefinition.width, windowDefinition.height, "Earth Viewer", NULL, NULL);
     if (!window) {
@@ -262,6 +264,7 @@ void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers,
                     SolarSimulator &solarSimulator) {
     glViewport(0, 0, windowDefinition.width, windowDefinition.height);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_MULTISAMPLE);
 
     float lastFrameTime = static_cast<float>(glfwGetTime());
     bool simulationRunningLastFrame = false;

@@ -180,15 +180,17 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     double screenSpaceWidth = window.width;
 
     for (Tile &tile: tiles) {
-        // Frustum culling
-        if (!tile.isInViewFrustum(viewProjection)) {
-            renderingStats.frustumCulledTiles++;
-            continue;
-        }
-        // Backface culling
-        if (!tile.isFacingCamera(cameraPosition)) {
-            renderingStats.backfacedCulledTiles++;
-            continue;
+        if (options.isCullingEnabled) {
+            // Frustum culling
+            if (!tile.isInViewFrustum(viewProjection)) {
+                renderingStats.frustumCulledTiles++;
+                continue;
+            }
+            // Backface culling
+            if (!tile.isFacingCamera(cameraPosition)) {
+                renderingStats.backfacedCulledTiles++;
+                continue;
+            }
         }
 
         program.setFloat("uTileLongitudeOffset", tile.getLongitude());

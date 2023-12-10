@@ -232,7 +232,7 @@ void main()
                 mat3 tbn = construct_tbn_matrix(normal, fs_in.geocentricFragPos, globalTextureCoordinates);
                 vec2 heightMapTextureCoords = calcTileHeightTextureCoordinates(globalTextureCoordinates);
                 vec2 gradient = computeNormalSobelFilter(heightMapTextureCoords, heightMapSampler);
-                vec3 geometryNormal = normalize(vec3(gradient * heightScale / 20, 1.0));
+                vec3 geometryNormal = normalize(vec3(gradient * heightScale, 1.0));
                 vec3 normal = tbn * geometryNormal;
 
                 float diffuseIntensity = computeDiffuseLight(normal, fs_in.geocentricFragPos);

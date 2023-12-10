@@ -69,12 +69,14 @@ void GuiFrameRenderer::createFeaturesWindow(t_window_definition window) {
     ImGui::Spacing();
     ImGui::Checkbox("Grid", &renderingOptions.isGridEnabled);
     ImGui::Spacing();
+    ImGui::Checkbox("Culling", &renderingOptions.isCullingEnabled);
+    ImGui::Spacing();
     auto sliderFlags = ImGuiSliderFlags_None;
     ImGui::SliderInt("Height factor", &renderingOptions.heightFactor, 1, 10000, "%d", sliderFlags);
     ImGui::Spacing();
 
     ImGui::End();
-    float windowHeight = 210;
+    float windowHeight = 230;
     updateTopPadding(windowHeight);
 }
 
