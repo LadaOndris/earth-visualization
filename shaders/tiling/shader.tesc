@@ -15,6 +15,10 @@ out TC_OUT {
 float tesselationFactorOuter = 64.0;
 float tesselationFactorInner = 64.0;
 
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
 uniform sampler2D heightMapSampler;
 uniform vec2 heightMapGeodeticOffset; // In radians
 uniform vec2 heightMapGridSize;
@@ -78,11 +82,22 @@ void main()
     float slopeFactor = (maxHeight - minHeight);
 
     if (gl_InvocationID == 0) {
-        gl_TessLevelOuter[0] = max(1, tesselationFactorOuter * slopeFactorEdge2);
-        gl_TessLevelOuter[1] = max(1, tesselationFactorOuter * slopeFactorEdge1);
-        gl_TessLevelOuter[2] = max(1, tesselationFactorOuter * slopeFactorEdge0);
+        // Calculate the screen space size of the triangle
+        vec4 point1 = projection * view * model * vec4(tc_in[0].geocentricFragPos, 1);
+        vec4 point2 = projection * view * model * vec4(tc_in[1].geocentricFragPos, 1);
 
-        float innerFactor = max(1, tesselationFactorInner * slopeFactor);
+        vec2 screenTriangleSize = abs(point1.xy / point1.w - point2.xy / point2.w);
+        float screenSpaceSize = max(screenTriangleSize.x, screenTriangleSize.y);
+
+        // Set a minimum screen space size threshold to avoid excessive tessellation
+        float minScreenSpaceSize = 0.04; // Adjust this value as needed
+        float maxTesselationFactor = screenSpaceSize / minScreenSpaceSize;
+
+        gl_TessLevelOuter[0] = max(maxTesselationFactor, min(tesselationFactorOuter * slopeFactorEdge2, maxTesselationFactor));
+        gl_TessLevelOuter[1] = max(maxTesselationFactor, min(tesselationFactorOuter * slopeFactorEdge1, maxTesselationFactor));
+        gl_TessLevelOuter[2] = max(maxTesselationFactor, min(tesselationFactorOuter * slopeFactorEdge0, maxTesselationFactor));
+
+        float innerFactor = max(maxTesselationFactor, min(tesselationFactorInner * slopeFactor, maxTesselationFactor));
         gl_TessLevelInner[0] = innerFactor;
     }
 
