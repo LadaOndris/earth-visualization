@@ -23,24 +23,24 @@ struct Character {
     float textureOffsetX; // x offset of glyph in texture coordinates
 };
 
+struct VertexData {
+    GLfloat x;
+    GLfloat y;
+    GLfloat s;
+    GLfloat t;
+};
+
 struct TextInstanceData {
     float x;
     float y;
     float z;
 };
 
-//struct character_info {
-//    float ax; // advance.x
-//    float ay; // advance.y
-//
-//    float bw; // bitmap.width;
-//    float bh; // bitmap.rows;
-//
-//    float bl; // bitmap_left;
-//    float bt; // bitmap_top;
-//
-//    float tx; // x offset of glyph in texture coordinates
-//};
+struct Text {
+    std::string content;
+    glm::vec3 position;
+};
+
 
 class CityNamesRenderer : public Renderer {
 private:
@@ -56,7 +56,13 @@ private:
 
     bool prepareBuffers();
 
-    void renderText(const char *text, float x, float y, float sx, float sy, glm::vec3 color);
+    void renderText(const Text &text, float sx, float sy, glm::vec3 color);
+
+    void renderTexts(const std::vector<Text> &texts, float sx, float sy, glm::vec3 color);
+
+    void renderTextsInstanced(const std::vector<Text> &texts, float sx, float sy, glm::vec3 color);
+
+    int setVertexDataForText(const Text &text, float sx, float sy, VertexData *vertexData);
 
     glm::mat4 constructPerspectiveProjectionMatrix(
             const Camera &camera, const Ellipsoid &ellipsoid, const t_window_definition &window);

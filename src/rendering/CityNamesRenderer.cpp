@@ -125,7 +125,10 @@ bool CityNamesRenderer::initialize() {
 }
 
 void CityNamesRenderer::destroy() {
-
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &instanceVBO);
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteTextures(1, &textureId);
 }
 
 
@@ -165,7 +168,10 @@ void CityNamesRenderer::render(float currentTime, t_window_definition window,
 
     glBindVertexArray(VAO);
 
-    renderText("Hello World!", 25.0f, 25.0f, 1.0f, 1.0f, glm::vec3(0.78f, 1.0f, 1.0f));
+
+    auto pointOnSurface = ellipsoid.projectGeocentricPointOntoSurface(
+            glm::vec3(0.0, 0.0, 0.1));
+    renderText((Text) {"Hello World!", pointOnSurface}, 1.0f, 1.0f, glm::vec3(0.78f, 1.0f, 1.0f));
 
     // unbind
     glBindVertexArray(0);
@@ -174,26 +180,53 @@ void CityNamesRenderer::render(float currentTime, t_window_definition window,
     glEnable(GL_DEPTH_TEST);
 }
 
-void CityNamesRenderer::renderText(const char *text, float x, float y,
-                                   float sx, float sy, glm::vec3 color) {
-    /**
-     * This function is based on: https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_02
-     *
-     */
+
+void CityNamesRenderer::renderTextsInstanced(const std::vector<Text> &texts, float sx, float sy, glm::vec3 color) {
+    size_t totalTextLength = 0;
+    for (const auto &text: texts) {
+        totalTextLength += text.content.length();
+    }
+
+    VertexData vertexData[6 * totalTextLength];
+    TextInstanceData instanceData[texts.size()];
+
+    // Fill vertex and instance data
+    int vertexDataOffset = 0;
+    for (int i = 0; i < texts.size(); i++) {
+        auto text = texts[i];
+        instanceData[i] = {text.position.x, text.position.y, text.position.z};
+        int numVertices = setVertexDataForText(text, sx, sy, &vertexData[vertexDataOffset]);
+        assert(numVertices == 6);
+        vertexDataOffset += numVertices;
+    }
+
     program.setVec3("textColor", color);
 
-    struct point {
-        GLfloat x;
-        GLfloat y;
-        GLfloat s;
-        GLfloat t;
-    } coords[6 * std::strlen(text)];
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_DYNAMIC_DRAW);
 
-    TextInstanceData positions[1];
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(instanceData), instanceData, GL_DYNAMIC_DRAW);
 
+    // TODO figure out how to use instancing with a different number of verties per instance
+    //glDrawArraysInstanced(GL_TRIANGLES, 0, 6, texts.);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void CityNamesRenderer::renderTexts(const std::vector<Text> &texts, float sx, float sy, glm::vec3 color) {
+    for (const auto &text: texts) {
+        renderText(text, sx, sy, color);
+    }
+}
+
+int CityNamesRenderer::setVertexDataForText(const Text &text, float sx, float sy,
+                                            VertexData *vertexData) {
     int n = 0;
+    float x = 0;
+    float y = 0;
 
-    for (const char *p = text; *p; p++) {
+    for (const char *p = text.content.c_str(); *p; p++) {
         float x2 = x + characters[*p].bearing[0] * sx;
         float y2 = -y - characters[*p].bearing[1] * sy;
         float w = characters[*p].size[0] * sx;
@@ -207,35 +240,48 @@ void CityNamesRenderer::renderText(const char *text, float x, float y,
         if (!w || !h)
             continue;
 
-        coords[n++] = (point) {x2, -y2,
-                               characters[*p].textureOffsetX, 0};
-        coords[n++] = (point) {x2 + w, -y2,
-                               characters[*p].textureOffsetX + characters[*p].size[0] / atlasWidth, 0};
-        coords[n++] = (point) {x2, -y2 - h,
-                               characters[*p].textureOffsetX,
-                               characters[*p].size[1] / atlasHeight};
-        coords[n++] = (point) {x2 + w, -y2,
-                               characters[*p].textureOffsetX + characters[*p].size[0] / atlasWidth, 0};
-        coords[n++] = (point) {x2, -y2 - h,
-                               characters[*p].textureOffsetX, characters[*p].size[1] / atlasHeight};
-        coords[n++] = (point) {x2 + w, -y2 - h,
-                               characters[*p].textureOffsetX + characters[*p].size[0] / atlasWidth,
-                               characters[*p].size[1] / atlasHeight};
+        vertexData[n++] = (VertexData) {x2, -y2,
+                                        characters[*p].textureOffsetX, 0};
+        vertexData[n++] = (VertexData) {x2 + w, -y2,
+                                        characters[*p].textureOffsetX + characters[*p].size[0] / atlasWidth, 0};
+        vertexData[n++] = (VertexData) {x2, -y2 - h,
+                                        characters[*p].textureOffsetX,
+                                        characters[*p].size[1] / atlasHeight};
+        vertexData[n++] = (VertexData) {x2 + w, -y2,
+                                        characters[*p].textureOffsetX + characters[*p].size[0] / atlasWidth, 0};
+        vertexData[n++] = (VertexData) {x2, -y2 - h,
+                                        characters[*p].textureOffsetX, characters[*p].size[1] / atlasHeight};
+        vertexData[n++] = (VertexData) {x2 + w, -y2 - h,
+                                        characters[*p].textureOffsetX + characters[*p].size[0] / atlasWidth,
+                                        characters[*p].size[1] / atlasHeight};
     }
-    auto pointOnSurface = ellipsoid.projectGeocentricPointOntoSurface(
-            glm::vec3(0.0, 0.0, 0.1));
-    positions[0] = {pointOnSurface[0], pointOnSurface[1], pointOnSurface[2]};
+    return n;
+}
+
+void CityNamesRenderer::renderText(const Text &text, float sx, float sy, glm::vec3 color) {
+    /**
+     * This function is based on: https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_02
+     *
+     */
+    program.setVec3("textColor", color);
+
+    VertexData vertexData[6 * text.content.length()];
+    int n = setVertexDataForText(text, sx, sy, vertexData);
+
+    TextInstanceData positions[1];
+    positions[0] = {text.position.x, text.position.y, text.position.z};
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(coords), coords, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_DYNAMIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_DYNAMIC_DRAW);
 
-    glDrawArrays(GL_TRIANGLES, 0, n);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, n, 1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
+
 
 CityNamesRenderer::CityNamesRenderer(Program &program, Camera &camera, Ellipsoid &ellipsoid)
         : program(program), camera(camera), ellipsoid(ellipsoid) {
