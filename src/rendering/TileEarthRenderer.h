@@ -42,6 +42,9 @@ private:
 
     glm::mat4 setupMatrices(float currentTime, t_window_definition window);
 
+    glm::mat4 constructPerspectiveProjectionMatrix(
+            const Camera &camera, const Ellipsoid &ellipsoid, const t_window_definition &window);
+
     void updateTexturesWithData(const std::vector<TextureLoadResult> &results);
 
     bool getOrPrepareTexture(

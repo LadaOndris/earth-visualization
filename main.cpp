@@ -458,7 +458,7 @@ void mainAppThread(std::promise<int> &&returnCodePromise) {
             std::make_unique<Shader>("shaders/text/shader.frag", ShaderType::Fragment)
     );
     auto cityNamesRenderer =
-            std::make_shared<CityNamesRenderer>(cityNamesRendererProgram);
+            std::make_shared<CityNamesRenderer>(cityNamesRendererProgram, camera, ellipsoid);
     renderers.push_back(cityNamesRenderer);
 
 

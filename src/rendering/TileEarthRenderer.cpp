@@ -254,20 +254,27 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     }
 }
 
-glm::mat4 TileEarthRenderer::setupMatrices(float currentTime, t_window_definition window) {
+glm::mat4 TileEarthRenderer::constructPerspectiveProjectionMatrix(
+        const Camera &camera, const Ellipsoid &ellipsoid, const t_window_definition &window) {
     // Near and far plane has to be determined from the distance to Earth
     auto closestPointOnSurface = ellipsoid.projectGeocentricPointOntoSurface(camera.getPosition());
     auto distanceToSurface = glm::length(camera.getPosition() - closestPointOnSurface);
     auto distanceToEllipsoidsCenter = glm::length(camera.getPosition() - ellipsoid.getGeocentricPosition());
 
     // The near plane is set in the middle of the camera position and the surface
-    float nearPlane = static_cast<float>(distanceToSurface * 0.5);
-    float farPlane = distanceToEllipsoidsCenter;
+    auto nearPlane = static_cast<float>(distanceToSurface * 0.5);
+    auto farPlane = distanceToEllipsoidsCenter;
 
     glm::mat4 projectionMatrix;
     projectionMatrix = glm::perspective(glm::radians(camera.getFov()),
                                         (float) window.width / (float) window.height,
                                         nearPlane, farPlane);
+    return projectionMatrix;
+}
+
+
+glm::mat4 TileEarthRenderer::setupMatrices(float currentTime, t_window_definition window) {
+    glm::mat4 projectionMatrix = constructPerspectiveProjectionMatrix(camera, ellipsoid, window);
     glm::mat4 viewMatrix = camera.getViewMatrix();
 
     // Do not rotate the model matrix to represent the Earth's inclination.

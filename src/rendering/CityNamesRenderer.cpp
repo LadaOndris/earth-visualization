@@ -33,7 +33,7 @@ bool CityNamesRenderer::prepareTextureAtlas() {
                         "be opened or read, or that it is broken.");
         return false;
     }
-    FT_Set_Pixel_Sizes(face, 0, 48);
+    FT_Set_Pixel_Sizes(face, 0, 24);
 
     FT_GlyphSlot g = face->glyph;
     unsigned int w = 0;
@@ -98,13 +98,20 @@ bool CityNamesRenderer::prepareBuffers() {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
+    // Glyph information
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 12 * 6 * 4, nullptr, GL_DYNAMIC_DRAW);
-
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+
+    // Text 3D position
+    glGenBuffers(1, &instanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(TextInstanceData) * 1, nullptr, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+    glVertexAttribDivisor(1, 1); // Data is per instance
 
     // Unbind
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -121,33 +128,58 @@ void CityNamesRenderer::destroy() {
 
 }
 
+
+glm::mat4 CityNamesRenderer::constructPerspectiveProjectionMatrix(
+        const Camera &camera, const Ellipsoid &ellipsoid, const t_window_definition &window) {
+    // Near and far plane has to be determined from the distance to Earth
+    auto closestPointOnSurface = ellipsoid.projectGeocentricPointOntoSurface(camera.getPosition());
+    auto distanceToSurface = glm::length(camera.getPosition() - closestPointOnSurface);
+    auto distanceToEllipsoidsCenter = glm::length(camera.getPosition() - ellipsoid.getGeocentricPosition());
+
+    // The near plane is set in the middle of the camera position and the surface
+    auto nearPlane = static_cast<float>(distanceToSurface * 0.5);
+    auto farPlane = distanceToEllipsoidsCenter;
+
+    glm::mat4 projectionMatrix;
+    projectionMatrix = glm::perspective(glm::radians(camera.getFov()),
+                                        (float) window.width / (float) window.height,
+                                        nearPlane, farPlane);
+    return projectionMatrix;
+}
+
 void CityNamesRenderer::render(float currentTime, t_window_definition window,
                                RenderingOptions options) {
     program.use();
 
+    glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glm::mat4 projection = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f);
-    program.setMat4("projection", projection);
+    glm::mat4 projectionMatrix = constructPerspectiveProjectionMatrix(camera, ellipsoid, window);
+    program.setMat4("projection", projectionMatrix);
+    glm::mat4 viewMatrix = camera.getViewMatrix();
+    program.setMat4("view", viewMatrix);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureId);
 
     glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-    renderText("Hello World!", 25.0f, 25.0f, 1.0f, 0.8f, glm::vec3(0.5, 0.8f, 0.2f));
+    renderText("Hello World!", 25.0f, 25.0f, 1.0f, 1.0f, glm::vec3(0.78f, 1.0f, 1.0f));
 
     // unbind
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
     glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
 }
 
 void CityNamesRenderer::renderText(const char *text, float x, float y,
                                    float sx, float sy, glm::vec3 color) {
+    /**
+     * This function is based on: https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_02
+     *
+     */
     program.setVec3("textColor", color);
 
     struct point {
@@ -156,6 +188,8 @@ void CityNamesRenderer::renderText(const char *text, float x, float y,
         GLfloat s;
         GLfloat t;
     } coords[6 * std::strlen(text)];
+
+    TextInstanceData positions[1];
 
     int n = 0;
 
@@ -188,11 +222,22 @@ void CityNamesRenderer::renderText(const char *text, float x, float y,
                                characters[*p].textureOffsetX + characters[*p].size[0] / atlasWidth,
                                characters[*p].size[1] / atlasHeight};
     }
+    auto pointOnSurface = ellipsoid.projectGeocentricPointOntoSurface(
+            glm::vec3(0.0, 0.0, 0.1));
+    positions[0] = {pointOnSurface[0], pointOnSurface[1], pointOnSurface[2]};
 
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(coords), coords);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(coords), coords, GL_DYNAMIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_DYNAMIC_DRAW);
+
     glDrawArrays(GL_TRIANGLES, 0, n);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-CityNamesRenderer::CityNamesRenderer(Program &program) : program(program) {
+CityNamesRenderer::CityNamesRenderer(Program &program, Camera &camera, Ellipsoid &ellipsoid)
+        : program(program), camera(camera), ellipsoid(ellipsoid) {
 
 }

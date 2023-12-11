@@ -10,6 +10,8 @@
 #include "RenderingOptions.h"
 #include "../include/glad/glad.h"
 #include "program.h"
+#include "../cameras/Camera.h"
+#include "../ellipsoid.h"
 #include <glm/vec3.hpp>
 #include <glm/detail/type_vec2.hpp>
 
@@ -21,6 +23,11 @@ struct Character {
     float textureOffsetX; // x offset of glyph in texture coordinates
 };
 
+struct TextInstanceData {
+    float x;
+    float y;
+    float z;
+};
 
 //struct character_info {
 //    float ax; // advance.x
@@ -41,7 +48,9 @@ private:
     GLuint textureId;
     float atlasWidth, atlasHeight;
     Program &program;
-    unsigned int VAO, VBO;
+    unsigned int VAO, VBO, instanceVBO;
+    Camera &camera;
+    Ellipsoid &ellipsoid;
 
     bool prepareTextureAtlas();
 
@@ -49,8 +58,11 @@ private:
 
     void renderText(const char *text, float x, float y, float sx, float sy, glm::vec3 color);
 
+    glm::mat4 constructPerspectiveProjectionMatrix(
+            const Camera &camera, const Ellipsoid &ellipsoid, const t_window_definition &window);
+
 public:
-    explicit CityNamesRenderer(Program &program);
+    explicit CityNamesRenderer(Program &program, Camera &camera, Ellipsoid &ellipsoid);
 
     bool initialize() override;
 
