@@ -101,7 +101,7 @@ bool CityNamesRenderer::prepareBuffers() {
     // Glyph information
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 12 * 6 * 4, nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 20 * 6 * 4, nullptr, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
 
@@ -110,7 +110,7 @@ bool CityNamesRenderer::prepareBuffers() {
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(TextInstanceData) * 1, nullptr, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
     glVertexAttribDivisor(1, 1); // Data is per instance
 
     // Unbind
@@ -121,6 +121,9 @@ bool CityNamesRenderer::prepareBuffers() {
 }
 
 bool CityNamesRenderer::initialize() {
+    WorldCitiesReader reader("data/world_cities/worldcities.csv");
+    worldCities = reader.readData();
+
     return program.build() && prepareBuffers() && prepareTextureAtlas();
 }
 
@@ -162,18 +165,16 @@ void CityNamesRenderer::render(float currentTime, t_window_definition window,
     program.setMat4("projection", projectionMatrix);
     glm::mat4 viewMatrix = camera.getViewMatrix();
     program.setMat4("view", viewMatrix);
+    program.setVec3("ellipsoidRadiiSquared", ellipsoid.getRadiiSquared());
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureId);
 
     glBindVertexArray(VAO);
 
+    std::vector<Text> subvector(worldCities.begin() + 500, worldCities.begin() + 1500);
+    renderTexts(subvector, 1.0f, 1.0f, glm::vec3(0.9f, 0.9f, 1.0f));
 
-    auto pointOnSurface = ellipsoid.projectGeocentricPointOntoSurface(
-            glm::vec3(0.0, 0.0, 0.1));
-    renderText((Text) {"Hello World!", pointOnSurface}, 1.0f, 1.0f, glm::vec3(0.78f, 1.0f, 1.0f));
-
-    // unbind
     glBindVertexArray(0);
 
     glDisable(GL_BLEND);
@@ -194,7 +195,7 @@ void CityNamesRenderer::renderTextsInstanced(const std::vector<Text> &texts, flo
     int vertexDataOffset = 0;
     for (int i = 0; i < texts.size(); i++) {
         auto text = texts[i];
-        instanceData[i] = {text.position.x, text.position.y, text.position.z};
+        instanceData[i] = {text.geodeticPosition.x, text.geodeticPosition.y};
         int numVertices = setVertexDataForText(text, sx, sy, &vertexData[vertexDataOffset]);
         assert(numVertices == 6);
         vertexDataOffset += numVertices;
@@ -269,7 +270,7 @@ void CityNamesRenderer::renderText(const Text &text, float sx, float sy, glm::ve
     int n = setVertexDataForText(text, sx, sy, vertexData);
 
     TextInstanceData positions[1];
-    positions[0] = {text.position.x, text.position.y, text.position.z};
+    positions[0] = {text.geodeticPosition[0], text.geodeticPosition[1]};
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_DYNAMIC_DRAW);

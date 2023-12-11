@@ -12,6 +12,7 @@
 #include "program.h"
 #include "../cameras/Camera.h"
 #include "../ellipsoid.h"
+#include "../WorldCitiesReader.h"
 #include <glm/vec3.hpp>
 #include <glm/detail/type_vec2.hpp>
 
@@ -31,14 +32,8 @@ struct VertexData {
 };
 
 struct TextInstanceData {
-    float x;
-    float y;
-    float z;
-};
-
-struct Text {
-    std::string content;
-    glm::vec3 position;
+    float latitude;
+    float longitude;
 };
 
 
@@ -51,6 +46,7 @@ private:
     unsigned int VAO, VBO, instanceVBO;
     Camera &camera;
     Ellipsoid &ellipsoid;
+    std::vector<Text> worldCities;
 
     bool prepareTextureAtlas();
 
