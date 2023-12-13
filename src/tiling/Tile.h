@@ -16,6 +16,7 @@
 #include "../ellipsoid.h"
 #include "../textures/Texture.h"
 #include "../cameras/Camera.h"
+#include "../Frustum.h"
 
 class TileResources;
 
@@ -91,7 +92,7 @@ public:
      * @param viewProjectionMatrix
      * @return
      */
-    [[nodiscard]] bool isInViewFrustum(const glm::mat4 &viewProjectionMatrix) const;
+    [[nodiscard]] bool isInViewFrustum(const Frustum &frustum) const;
 
     [[nodiscard]] unsigned char sumOfBits(unsigned char var) const;
 

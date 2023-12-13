@@ -459,6 +459,7 @@ void mainAppThread(std::promise<int> &&returnCodePromise) {
     );
     auto cityNamesRenderer =
             std::make_shared<CityNamesRenderer>(cityNamesRendererProgram, camera, ellipsoid);
+    tileEarthRenderer->addSubscriber(cityNamesRenderer);
     renderers.push_back(cityNamesRenderer);
 
 

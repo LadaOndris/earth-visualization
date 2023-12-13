@@ -19,7 +19,7 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 file(GLOB_RECURSE HEADERS "src/*.h")
 
 # Executable
-add_executable(earth_visualization main.cpp ${SOURCES} ${SOURCES_C} ${HEADERS} src/WorldCitiesReader.cpp)
+add_executable(earth_visualization main.cpp ${SOURCES} ${SOURCES_C} ${HEADERS} src/WorldCitiesReader.cpp src/Frustum.h src/Frustum.cpp src/utils.h)
 target_link_libraries(earth_visualization
         ${OPENGL_gl_LIBRARY} glfw glm imgui
         ${FREETYPE_LIBRARIES})

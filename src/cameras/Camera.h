@@ -36,6 +36,7 @@ public:
     [[nodiscard]] glm::vec3 getTarget() const {
         return target;
     }
+
 };
 
 #endif //EARTH_VISUALIZATION_CAMERA_H

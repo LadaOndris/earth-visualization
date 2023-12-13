@@ -8,6 +8,7 @@
 #include "CityNamesRenderer.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include "../utils.h"
 
 bool CityNamesRenderer::prepareTextureAtlas() {
     FT_Library library;   /* handle to library     */
@@ -33,7 +34,7 @@ bool CityNamesRenderer::prepareTextureAtlas() {
                         "be opened or read, or that it is broken.");
         return false;
     }
-    FT_Set_Pixel_Sizes(face, 0, 24);
+    FT_Set_Pixel_Sizes(face, 0, 28);
 
     FT_GlyphSlot g = face->glyph;
     unsigned int w = 0;
@@ -123,6 +124,10 @@ bool CityNamesRenderer::prepareBuffers() {
 bool CityNamesRenderer::initialize() {
     WorldCitiesReader reader("data/world_cities/worldcities.csv");
     worldCities = reader.readData();
+    for (auto &city: worldCities) {
+        // The coordinate system in this application is reversed.
+        city.latitude *= -1;
+    }
 
     return program.build() && prepareBuffers() && prepareTextureAtlas();
 }
@@ -155,6 +160,10 @@ glm::mat4 CityNamesRenderer::constructPerspectiveProjectionMatrix(
 
 void CityNamesRenderer::render(float currentTime, t_window_definition window,
                                RenderingOptions options) {
+    if (!options.isRenderingCitiesEnabled) {
+        return;
+    }
+
     program.use();
 
     glDisable(GL_DEPTH_TEST);
@@ -166,14 +175,16 @@ void CityNamesRenderer::render(float currentTime, t_window_definition window,
     glm::mat4 viewMatrix = camera.getViewMatrix();
     program.setMat4("view", viewMatrix);
     program.setVec3("ellipsoidRadiiSquared", ellipsoid.getRadiiSquared());
+    Frustum frustum(viewMatrix, projectionMatrix);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureId);
 
     glBindVertexArray(VAO);
 
-    std::vector<Text> subvector(worldCities.begin() + 500, worldCities.begin() + 1500);
-    renderTexts(subvector, 1.0f, 1.0f, glm::vec3(0.9f, 0.9f, 1.0f));
+    std::vector<City> dataToBeRendered;
+    retrieveDataToBeRendered(frustum, dataToBeRendered);
+    renderTexts(dataToBeRendered, 1.0f, 1.0f, glm::vec3(0.9f, 0.9f, 1.0f));
 
     glBindVertexArray(0);
 
@@ -181,11 +192,41 @@ void CityNamesRenderer::render(float currentTime, t_window_definition window,
     glEnable(GL_DEPTH_TEST);
 }
 
+bool CityNamesRenderer::isRenderedAreaTooBig() const {
+    double maxAllowedRange = 20;
+    double latitudeRange = rendereringStats.renderedLatitudeRange[1] -
+                           rendereringStats.renderedLatitudeRange[0];
+    double longitudeRange = rendereringStats.renderedLongitudeRange[1] -
+                            rendereringStats.renderedLongitudeRange[0];
+    return latitudeRange > maxAllowedRange || longitudeRange > maxAllowedRange;
+}
 
-void CityNamesRenderer::renderTextsInstanced(const std::vector<Text> &texts, float sx, float sy, glm::vec3 color) {
+void CityNamesRenderer::retrieveDataToBeRendered(const Frustum &frustum, std::vector<City> &out) const {
+    float altitudeKm = rendereringStats.cameraPosition[2] / 1000;
+    double expectedMinimalPopulation = 2. * std::sqrt(2) * std::pow(altitudeKm, 3 / 2.f);
+
+    for (auto const &city: worldCities) {
+        if (city.population > expectedMinimalPopulation) {
+            glm::vec3 geodeticPosition(city.longitude, city.latitude, 0);
+            geodeticPosition = utils::convertToRads(geodeticPosition);
+
+            auto geocentricPosition = ellipsoid.convertGeodeticToGeocentric(geodeticPosition);
+            bool facesCamera = ellipsoid.isPointFacingCamera(camera.getPosition(), geocentricPosition);
+
+            if (facesCamera) {
+                if (!frustum.isPointOutside(geocentricPosition)) {
+                    out.push_back(city);
+                }
+            }
+        }
+    }
+}
+
+
+void CityNamesRenderer::renderTextsInstanced(const std::vector<City> &texts, float sx, float sy, glm::vec3 color) {
     size_t totalTextLength = 0;
     for (const auto &text: texts) {
-        totalTextLength += text.content.length();
+        totalTextLength += text.name.length();
     }
 
     VertexData vertexData[6 * totalTextLength];
@@ -195,7 +236,7 @@ void CityNamesRenderer::renderTextsInstanced(const std::vector<Text> &texts, flo
     int vertexDataOffset = 0;
     for (int i = 0; i < texts.size(); i++) {
         auto text = texts[i];
-        instanceData[i] = {text.geodeticPosition.x, text.geodeticPosition.y};
+        instanceData[i] = {text.latitude, text.longitude};
         int numVertices = setVertexDataForText(text, sx, sy, &vertexData[vertexDataOffset]);
         assert(numVertices == 6);
         vertexDataOffset += numVertices;
@@ -215,19 +256,19 @@ void CityNamesRenderer::renderTextsInstanced(const std::vector<Text> &texts, flo
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void CityNamesRenderer::renderTexts(const std::vector<Text> &texts, float sx, float sy, glm::vec3 color) {
+void CityNamesRenderer::renderTexts(const std::vector<City> &texts, float sx, float sy, glm::vec3 color) {
     for (const auto &text: texts) {
         renderText(text, sx, sy, color);
     }
 }
 
-int CityNamesRenderer::setVertexDataForText(const Text &text, float sx, float sy,
+int CityNamesRenderer::setVertexDataForText(const City &text, float sx, float sy,
                                             VertexData *vertexData) {
     int n = 0;
     float x = 0;
     float y = 0;
 
-    for (const char *p = text.content.c_str(); *p; p++) {
+    for (const char *p = text.name.c_str(); *p; p++) {
         float x2 = x + characters[*p].bearing[0] * sx;
         float y2 = -y - characters[*p].bearing[1] * sy;
         float w = characters[*p].size[0] * sx;
@@ -259,18 +300,18 @@ int CityNamesRenderer::setVertexDataForText(const Text &text, float sx, float sy
     return n;
 }
 
-void CityNamesRenderer::renderText(const Text &text, float sx, float sy, glm::vec3 color) {
+void CityNamesRenderer::renderText(const City &text, float sx, float sy, glm::vec3 color) {
     /**
      * This function is based on: https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_02
      *
      */
     program.setVec3("textColor", color);
 
-    VertexData vertexData[6 * text.content.length()];
+    VertexData vertexData[6 * text.name.length()];
     int n = setVertexDataForText(text, sx, sy, vertexData);
 
     TextInstanceData positions[1];
-    positions[0] = {text.geodeticPosition[0], text.geodeticPosition[1]};
+    positions[0] = {text.latitude, text.longitude};
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_DYNAMIC_DRAW);
@@ -287,4 +328,8 @@ void CityNamesRenderer::renderText(const Text &text, float sx, float sy, glm::ve
 CityNamesRenderer::CityNamesRenderer(Program &program, Camera &camera, Ellipsoid &ellipsoid)
         : program(program), camera(camera), ellipsoid(ellipsoid) {
 
+}
+
+void CityNamesRenderer::notify(RenderingStatistics renderingStatistics) {
+    rendereringStats = renderingStatistics;
 }
