@@ -184,7 +184,7 @@ void CityNamesRenderer::render(float currentTime, t_window_definition window,
 
     std::vector<City> dataToBeRendered;
     retrieveDataToBeRendered(frustum, dataToBeRendered);
-    renderTexts(dataToBeRendered, 1.0f, 1.0f, glm::vec3(0.9f, 0.9f, 1.0f));
+    renderTexts(dataToBeRendered, 1.0f, 1.0f, glm::vec3(0.1, 0.1, 0.1));
 
     glBindVertexArray(0);
 
