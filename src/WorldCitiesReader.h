@@ -12,20 +12,20 @@
 
 #include <glm/glm.hpp>
 
-struct Text {
-    std::string content;
-    glm::vec2 geodeticPosition; // Latitude, longitude
+struct City {
+    std::string name;
+    float latitude;
+    float longitude;
+    int population;
 };
 
 class WorldCitiesReader {
 public:
     explicit WorldCitiesReader(std::string filename) : filename(std::move(filename)) {}
 
-    std::vector<Text> readData();
+    std::vector<City> readData();
 
 private:
-    Text parseLine(const std::string &line);
-
     std::string filename;
 };
 
