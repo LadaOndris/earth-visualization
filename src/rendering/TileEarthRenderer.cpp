@@ -258,6 +258,7 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     auto distanceFromSurface = glm::length(camera.getPosition() - surfacePoint);
     auto realityScaleFactor = ellipsoid.getRealityScaleFactor();
     geodeticCameraPosition[2] = realityScaleFactor * distanceFromSurface;
+    geodeticCameraPosition[1] *= -1; // Invert latitude (application uses a reversed latitude)
 
     renderingStats.loadedTextures = resourceManager.getNumLoadedTextures();
     renderingStats.cameraPosition = geodeticCameraPosition;
