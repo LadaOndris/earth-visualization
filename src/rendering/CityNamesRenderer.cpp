@@ -22,7 +22,7 @@ bool CityNamesRenderer::prepareTextureAtlas() {
     }
     // Load font
     error = FT_New_Face(library,
-                        "data/fonts/verdana.ttf",
+                        "data/fonts/Tahoma Regular font.ttf",
                         0,
                         &face);
     if (error == FT_Err_Unknown_File_Format) {
@@ -34,7 +34,7 @@ bool CityNamesRenderer::prepareTextureAtlas() {
                         "be opened or read, or that it is broken.");
         return false;
     }
-    FT_Set_Pixel_Sizes(face, 0, 28);
+    FT_Set_Pixel_Sizes(face, 0, 46);
 
     FT_GlyphSlot g = face->glyph;
     unsigned int w = 0;
@@ -184,7 +184,10 @@ void CityNamesRenderer::render(float currentTime, t_window_definition window,
 
     std::vector<City> dataToBeRendered;
     retrieveDataToBeRendered(frustum, dataToBeRendered);
-    renderTexts(dataToBeRendered, 1.0f, 1.0f, glm::vec3(0.1, 0.1, 0.1));
+
+    float sx = 640.f / window.width;
+    float sy = 480.f / window.height * 1.2f;
+    renderTexts(dataToBeRendered, sx, sy, glm::vec3(0.1, 0.1, 0.1));
 
     glBindVertexArray(0);
 
