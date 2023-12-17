@@ -66,6 +66,7 @@ private:
     glm::vec3 sunPosition = glm::vec3(0.f);
     glm::mat4 transformationMatrix = glm::mat4(1.f);
     std::tm simulationTime = {};
+    float simulationTimeMillis = 0.f; // The std::tm structure doesn't support milliseconds. Store it separately.
 
     [[nodiscard]] float calculateEarthRotationAngle(const std::tm &datetime) const {
         float seconds = datetime.tm_hour * 3600 + datetime.tm_min * 60 + datetime.tm_sec;
@@ -87,7 +88,8 @@ private:
         auto currentInclinationAngle = static_cast<float>(calcCurrentInlination());
 
         // Apply an additional rotation to account for the Earth's axial tilt (inclination).
-        glm::mat4 inclinationMatrix = glm::rotate(glm::mat4(1.0f), currentInclinationAngle, glm::vec3(1.0f, 0.0f, 0.0f));
+        glm::mat4 inclinationMatrix = glm::rotate(glm::mat4(1.0f), currentInclinationAngle,
+                                                  glm::vec3(1.0f, 0.0f, 0.0f));
         glm::mat4 earthRotationMatrix = glm::rotate(glm::mat4(1.0f), earthRotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
         glm::mat4 orbitMatrix = glm::rotate(glm::mat4(1.0f), earthOrbitAngle, glm::vec3(0.0f, 1.0f, 0.0f));
 
@@ -140,9 +142,16 @@ private:
         float secsInSimDay = secsInRealDay / simulationSpeed;
 
         float simulationSecs = secsInRealDay * simPassedTimeSecs / secsInSimDay;
+        float simulatiomMs = simulationSecs * 1000;
 
         // Add seconds and milliseconds to the starting time
-        simulationTime.tm_sec += static_cast<int>(simulationSecs);
+        simulationTimeMillis += simulatiomMs;
+
+        if (simulationTimeMillis >= 1000) {
+            int secondsToAdd = static_cast<int>(simulationTimeMillis / 1000);
+            simulationTime.tm_sec += secondsToAdd;
+            simulationTimeMillis -= static_cast<float>(secondsToAdd) * 1000;
+        }
 
         // Normalize the time struct, taking care of overflow
         mktime(&simulationTime);
