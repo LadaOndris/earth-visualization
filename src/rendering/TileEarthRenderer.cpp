@@ -1,7 +1,9 @@
 
 #include "TileEarthRenderer.h"
 #include "RendererSubscriber.h"
+#include "../utils.h"
 #include <unistd.h>
+#include <algorithm>
 
 bool TileEarthRenderer::initialize() {
     // Configure tiles to use the current ellipsoid
@@ -165,7 +167,7 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     program.setInt("heightScale", options.heightFactor);
 
     // Set up model, view, and projection matrix
-    glm::mat4 viewProjection = setupMatrices(currentTime, window);
+    Frustum frustum = setupMatrices(currentTime, window);
     // Set ellipsoid parameters for the vertex program
     program.setVec3("ellipsoidRadiiSquared", ellipsoid.getRadiiSquared());
     program.setVec3("ellipsoidOneOverRadiiSquared", ellipsoid.getOneOverRadiiSquared());
@@ -178,11 +180,17 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     renderingStats.numTiles = tiles.size();
 
     double screenSpaceWidth = window.width;
+    double minLatitude = std::numeric_limits<double>::infinity();
+    double minLongitude = std::numeric_limits<double>::infinity();
+    double maxLatitude = -std::numeric_limits<double>::infinity();
+    double maxLongitude = -std::numeric_limits<double>::infinity();
+
+    std::vector<Tile> renderedTiles;
 
     for (Tile &tile: tiles) {
         if (options.isCullingEnabled) {
             // Frustum culling
-            if (!tile.isInViewFrustum(viewProjection)) {
+            if (!tile.isInViewFrustum(frustum)) {
                 renderingStats.frustumCulledTiles++;
                 continue;
             }
@@ -192,6 +200,11 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
                 continue;
             }
         }
+        renderedTiles.push_back(tile);
+        minLongitude = std::min(tile.getLongitude(), minLongitude);
+        minLatitude = std::min(tile.getLatitude(), minLatitude);
+        maxLongitude = std::max(tile.getLongitude() + tile.getLongitudeWidth(), maxLongitude);
+        maxLatitude = std::max(tile.getLatitude() + tile.getLatitudeWidth(), maxLatitude);
 
         program.setFloat("uTileLongitudeOffset", tile.getLongitude());
         program.setFloat("uTileLatitudeOffset", tile.getLatitude());
@@ -213,17 +226,17 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         // Draw only if the necessary resources are ready
         if (dayTextureReady && nightTextureReady && heightMapReady) {
             // Set up day texture
-            program.setVec2("dayTextureGeodeticOffset", dayTexture->getGeodeticOffset() * TO_RADS_COEFF);
+            program.setVec2("dayTextureGeodeticOffset", utils::convertToRads(dayTexture->getGeodeticOffset()));
             program.setVec2("dayTextureGridSize", dayTexture->getTextureGridSize());
             glBindTextureUnit(0, dayTexture->getTextureId());
 
             // Set up night texture
-            program.setVec2("nightTextureGeodeticOffset", nightTexture->getGeodeticOffset() * TO_RADS_COEFF);
+            program.setVec2("nightTextureGeodeticOffset", utils::convertToRads(nightTexture->getGeodeticOffset()));
             program.setVec2("nightTextureGridSize", nightTexture->getTextureGridSize());
             glBindTextureUnit(1, nightTexture->getTextureId());
 
             // Set up height map
-            program.setVec2("heightMapGeodeticOffset", heightMap->getGeodeticOffset() * TO_RADS_COEFF);
+            program.setVec2("heightMapGeodeticOffset", utils::convertToRads(heightMap->getGeodeticOffset()));
             program.setVec2("heightMapGridSize", heightMap->getTextureGridSize());
             glBindTextureUnit(2, heightMap->getTextureId());
 
@@ -248,26 +261,35 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
 
     renderingStats.loadedTextures = resourceManager.getNumLoadedTextures();
     renderingStats.cameraPosition = geodeticCameraPosition;
+    renderingStats.renderedLatitudeRange = glm::vec2(minLatitude, maxLatitude);
+    renderingStats.renderedLongitudeRange = glm::vec2(minLongitude, maxLongitude);
 
     for (auto &subscriber: subscribers) {
         subscriber->notify(renderingStats);
     }
 }
 
-glm::mat4 TileEarthRenderer::setupMatrices(float currentTime, t_window_definition window) {
+glm::mat4 TileEarthRenderer::constructPerspectiveProjectionMatrix(
+        const Camera &camera, const Ellipsoid &ellipsoid, const t_window_definition &window) {
     // Near and far plane has to be determined from the distance to Earth
     auto closestPointOnSurface = ellipsoid.projectGeocentricPointOntoSurface(camera.getPosition());
     auto distanceToSurface = glm::length(camera.getPosition() - closestPointOnSurface);
     auto distanceToEllipsoidsCenter = glm::length(camera.getPosition() - ellipsoid.getGeocentricPosition());
 
     // The near plane is set in the middle of the camera position and the surface
-    float nearPlane = static_cast<float>(distanceToSurface * 0.5);
-    float farPlane = distanceToEllipsoidsCenter;
+    auto nearPlane = static_cast<float>(distanceToSurface * 0.5);
+    auto farPlane = distanceToEllipsoidsCenter;
 
     glm::mat4 projectionMatrix;
     projectionMatrix = glm::perspective(glm::radians(camera.getFov()),
                                         (float) window.width / (float) window.height,
                                         nearPlane, farPlane);
+    return projectionMatrix;
+}
+
+
+Frustum TileEarthRenderer::setupMatrices(float currentTime, t_window_definition window) {
+    glm::mat4 projectionMatrix = constructPerspectiveProjectionMatrix(camera, ellipsoid, window);
     glm::mat4 viewMatrix = camera.getViewMatrix();
 
     // Do not rotate the model matrix to represent the Earth's inclination.
@@ -280,8 +302,7 @@ glm::mat4 TileEarthRenderer::setupMatrices(float currentTime, t_window_definitio
     program.setMat4("view", viewMatrix);
     program.setMat4("model", modelMatrix);
 
-    glm::mat4 viewProjection = projectionMatrix * viewMatrix;
-    return viewProjection;
+    return Frustum(viewMatrix, projectionMatrix);
 }
 
 void TileEarthRenderer::destroy() {

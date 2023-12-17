@@ -18,6 +18,7 @@
 #include "src/tiling/TileContainer.h"
 #include "src/rendering/TileEarthRenderer.h"
 #include "src/simulation/SolarSimulator.h"
+#include "src/rendering/CityNamesRenderer.h"
 
 #include <glm/vec3.hpp> // glm::vec3
 #include <glm/vec4.hpp> // glm::vec4
@@ -318,11 +319,82 @@ void resourceLoaderThreadStart() {
     loader.start();
 }
 
+
+/**
+ * From:
+ * https://github.com/yuzu-emu/yuzu/blob/875568bb3e34725578f7fa3661c8bad89f23a173/src/video_core/renderer_opengl/renderer_opengl.cpp#L82
+ */
+const char *getSource(GLenum source) {
+    switch (source) {
+        case GL_DEBUG_SOURCE_API:
+            return "API";
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+            return "WINDOW_SYSTEM";
+        case GL_DEBUG_SOURCE_SHADER_COMPILER:
+            return "SHADER_COMPILER";
+        case GL_DEBUG_SOURCE_THIRD_PARTY:
+            return "THIRD_PARTY";
+        case GL_DEBUG_SOURCE_APPLICATION:
+            return "APPLICATION";
+        case GL_DEBUG_SOURCE_OTHER:
+            return "OTHER";
+        default:
+            return "Unknown source";
+    }
+}
+
+/**
+ * From:
+ * https://github.com/yuzu-emu/yuzu/blob/875568bb3e34725578f7fa3661c8bad89f23a173/src/video_core/renderer_opengl/renderer_opengl.cpp#L102
+ */
+const char *getType(GLenum type) {
+    switch (type) {
+        case GL_DEBUG_TYPE_ERROR:
+            return "ERROR";
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+            return "DEPRECATED_BEHAVIOR";
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+            return "UNDEFINED_BEHAVIOR";
+        case GL_DEBUG_TYPE_PORTABILITY:
+            return "PORTABILITY";
+        case GL_DEBUG_TYPE_PERFORMANCE:
+            return "PERFORMANCE";
+        case GL_DEBUG_TYPE_OTHER:
+            return "OTHER";
+        case GL_DEBUG_TYPE_MARKER:
+            return "MARKER";
+        default:
+            return "Unknown type";
+    }
+}
+
+/**
+ * From:
+ * https://github.com/yuzu-emu/yuzu/blob/875568bb3e34725578f7fa3661c8bad89f23a173/src/video_core/renderer_opengl/renderer_opengl.cpp#L102
+ */
+void APIENTRY processErrorMessageCallback(
+        GLenum source,
+        GLenum type,
+        GLuint id,
+        GLenum severity,
+        GLsizei length,
+        const GLchar *message,
+        const void *userParam
+) {
+    const char format[] = "%s %s %u: %s";
+    const char *const str_source = getSource(source);
+    const char *const str_type = getType(type);
+
+    fprintf(stderr, format, str_source, str_type, id, message);
+}
+
+
 void mainAppThread(std::promise<int> &&returnCodePromise) {
     if (!initializeGlfw() || !initializeGlad() || !initializeImgui()) {
         returnCodePromise.set_value(EXIT_FAILURE);
         return;
     }
+    glDebugMessageCallback(processErrorMessageCallback, nullptr);
 
     auto sunVsEarthRadiusFactor = 109.168105; // Sun_radius / Earth_radius
     auto sunRadius = sunVsEarthRadiusFactor * radii.x;
@@ -377,6 +449,19 @@ void mainAppThread(std::promise<int> &&returnCodePromise) {
             );
     tileEarthRenderer->addSubscriber(guiRenderer);
     renderers.push_back(tileEarthRenderer);
+
+    Program cityNamesRendererProgram;
+    cityNamesRendererProgram.addShader(
+            std::make_unique<Shader>("shaders/text/shader.vert", ShaderType::Vertex)
+    );
+    cityNamesRendererProgram.addShader(
+            std::make_unique<Shader>("shaders/text/shader.frag", ShaderType::Fragment)
+    );
+    auto cityNamesRenderer =
+            std::make_shared<CityNamesRenderer>(cityNamesRendererProgram, camera, ellipsoid);
+    tileEarthRenderer->addSubscriber(cityNamesRenderer);
+    renderers.push_back(cityNamesRenderer);
+
 
     Program sunRendererProgram;
     sunRendererProgram.addShader(

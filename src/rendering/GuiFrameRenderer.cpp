@@ -69,6 +69,8 @@ void GuiFrameRenderer::createFeaturesWindow(t_window_definition window) {
     ImGui::Spacing();
     ImGui::Checkbox("Grid", &renderingOptions.isGridEnabled);
     ImGui::Spacing();
+    ImGui::Checkbox("Cities", &renderingOptions.isRenderingCitiesEnabled);
+    ImGui::Spacing();
     ImGui::Checkbox("Culling", &renderingOptions.isCullingEnabled);
     ImGui::Spacing();
     auto sliderFlags = ImGuiSliderFlags_None;
@@ -76,7 +78,7 @@ void GuiFrameRenderer::createFeaturesWindow(t_window_definition window) {
     ImGui::Spacing();
 
     ImGui::End();
-    float windowHeight = 230;
+    float windowHeight = 280;
     updateTopPadding(windowHeight);
 }
 

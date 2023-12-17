@@ -106,5 +106,13 @@ float Ellipsoid::getRealityScaleFactor() const {
     return REAL_RADII_METERS[0] / radii[0];
 }
 
+bool Ellipsoid::isPointFacingCamera(glm::vec3 cameraPosition, glm::vec3 geocentricPosition) const {
+    auto normal = convertGeocentricToGeocentricSurfaceNormal(geocentricPosition);
+    glm::vec3 toCamera = glm::normalize(cameraPosition - geocentricPosition);
+    float dotProduct = glm::dot(normal, toCamera);
+    bool facesCamera = dotProduct > 0.0;
+    return facesCamera;
+}
+
 
 

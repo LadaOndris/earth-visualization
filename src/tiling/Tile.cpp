@@ -4,6 +4,7 @@
 
 #include "Tile.h"
 #include "TileResources.h"
+#include "../utils.h"
 
 
 std::shared_ptr<TileResources> Tile::getResources(
@@ -96,35 +97,17 @@ void Tile::addResources(const std::shared_ptr<TileResources> &resources, int lev
     lodResources.push_back(resources);
 }
 
-[[nodiscard]] bool Tile::isInViewFrustum(const glm::mat4 &viewProjectionMatrix) const {
-    // Extract the frustum planes from the viewProjectionMatrix.
-    // https://www8.cs.umu.se/kurser/5DV051/HT12/lab/plane_extraction.pdf
-    int numPlanes = 6;
-    glm::vec4 planes[numPlanes];
 
-    for (int i = 0; i < 4; i++) {
-        planes[0][i] = viewProjectionMatrix[i][3] + viewProjectionMatrix[i][0];  // Left
-        planes[1][i] = viewProjectionMatrix[i][3] - viewProjectionMatrix[i][0];  // Right
-        planes[2][i] = viewProjectionMatrix[i][3] + viewProjectionMatrix[i][1];  // Bottom
-        planes[3][i] = viewProjectionMatrix[i][3] - viewProjectionMatrix[i][1];  // Top
-        planes[4][i] = viewProjectionMatrix[i][3] + viewProjectionMatrix[i][2];  // Near
-        planes[5][i] = viewProjectionMatrix[i][3] - viewProjectionMatrix[i][2];  // Far
-    }
+[[nodiscard]] bool Tile::isInViewFrustum(const Frustum &frustum) const {
 
     unsigned int cornersOutsideFrustum = 0;
     auto tileCorners = getGeocentricTileCorners();
 
     for (int cornerIndex = 0; cornerIndex < tileCorners.size(); cornerIndex++) {
         auto tileCorner = tileCorners[cornerIndex];
-        // Check if the tile's inside all frustum planes.
-        for (int planeIndex = 0; planeIndex < numPlanes; planeIndex++) {
-            auto plane = planes[planeIndex];
-            float signedDistance = glm::dot(plane, glm::vec4(tileCorner, 1.0));
 
-            // If the signed distance is less than the negative radius, the sphere is completely outside the frustum.
-            if (signedDistance < 0) {
-                cornersOutsideFrustum |= (1 << cornerIndex);
-            }
+        if (frustum.isPointOutside(tileCorner)) {
+            cornersOutsideFrustum |= (1 << cornerIndex);
         }
     }
 
@@ -133,16 +116,10 @@ void Tile::addResources(const std::shared_ptr<TileResources> &resources, int lev
     }
 
     // Check for intersection between tile edges and frustum planes
-    auto tileEdges = getEdges(); // Implement a function to get tile edges.
+    auto tileEdges = getEdges();
     for (const auto &edge: tileEdges) {
-        for (int planeIndex = 0; planeIndex < numPlanes; planeIndex++) {
-            auto plane = planes[planeIndex];
-            float d1 = glm::dot(plane, glm::vec4(edge.first, 1.0));
-            float d2 = glm::dot(plane, glm::vec4(edge.second, 1.0));
-
-            if ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) {
-                return true;
-            }
+        if (frustum.intersectsEdge(edge)) {
+            return true;
         }
     }
     // No corner is inside frustum and
@@ -174,14 +151,13 @@ void Tile::addResources(const std::shared_ptr<TileResources> &resources, int lev
  * onto the surface of the ellipsoid.
  */
 void Tile::updateGeocentricPosition(Ellipsoid &ellipsoid) {
-    auto toRadsCoeff = static_cast<float>(M_PI / 180.0);
     double longitudeCentre = longitude + longitudeWidth / 2.0;
     double latitudeCentre = latitude + latitudeWidth / 2.0;
 
-    auto upperLeftCorner = glm::vec3(longitude, latitude, 0) * toRadsCoeff;
-    auto upperRightCorner = glm::vec3(longitude + longitudeWidth, latitude, 0) * toRadsCoeff;
-    auto lowerLeftCorner = glm::vec3(longitude, latitude + latitudeWidth, 0) * toRadsCoeff;
-    auto lowerRightCorner = glm::vec3(longitude + longitudeWidth, latitude + latitudeWidth, 0) * toRadsCoeff;
+    auto upperLeftCorner = utils::convertToRads(glm::vec3(longitude, latitude, 0));
+    auto upperRightCorner = utils::convertToRads(glm::vec3(longitude + longitudeWidth, latitude, 0));
+    auto lowerLeftCorner = utils::convertToRads(glm::vec3(longitude, latitude + latitudeWidth, 0));
+    auto lowerRightCorner = utils::convertToRads(glm::vec3(longitude + longitudeWidth, latitude + latitudeWidth, 0));
 
     auto geocentricUpperLeftCorner = ellipsoid.convertGeodeticToGeocentric(upperLeftCorner);
     auto geocentricUpperRightCorner = ellipsoid.convertGeodeticToGeocentric(upperRightCorner);
@@ -193,7 +169,7 @@ void Tile::updateGeocentricPosition(Ellipsoid &ellipsoid) {
                                        });
     tileWidth = glm::length(geocentricUpperRightCorner - geocentricUpperLeftCorner);
 
-    auto tileCentre = glm::vec3(longitudeCentre, latitudeCentre, 0) * toRadsCoeff;
+    auto tileCentre = utils::convertToRads(glm::vec3(longitudeCentre, latitudeCentre, 0));
     geocentricPosition = ellipsoid.convertGeodeticToGeocentric(tileCentre);
 
     normal = ellipsoid.convertGeographicToGeodeticSurfaceNormal(tileCentre);

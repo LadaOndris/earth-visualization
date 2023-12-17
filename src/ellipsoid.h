@@ -69,6 +69,8 @@ public:
         return ellipsoid;
     }
 
+    [[nodiscard]] bool isPointFacingCamera(glm::vec3 cameraPosition, glm::vec3 geocentricPosition) const;
+
 private:
     glm::vec3 radii;
     glm::vec3 radiiSquared;

@@ -21,7 +21,6 @@
 
 class TileEarthRenderer : public Renderer {
 private:
-    float TO_RADS_COEFF = static_cast<float>(M_PI / 180.0);
     TileContainer &tileContainer;
     Camera &camera;
     Ellipsoid &ellipsoid;
@@ -40,7 +39,10 @@ private:
 
     bool prepareTexture(const std::shared_ptr<Texture>& texture);
 
-    glm::mat4 setupMatrices(float currentTime, t_window_definition window);
+    Frustum setupMatrices(float currentTime, t_window_definition window);
+
+    glm::mat4 constructPerspectiveProjectionMatrix(
+            const Camera &camera, const Ellipsoid &ellipsoid, const t_window_definition &window);
 
     void updateTexturesWithData(const std::vector<TextureLoadResult> &results);
 

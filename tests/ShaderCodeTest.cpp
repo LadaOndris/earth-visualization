@@ -2,6 +2,7 @@
 #include <memory>
 #include "gtest/gtest.h"
 #include "../src/textures/TextureAtlas.h"
+#include "../src/utils.h"
 
 using namespace glm;
 
@@ -25,14 +26,12 @@ vec2 computeTextureCoordinates(vec3 normal) {
 }
 
 TEST_F(TextureAtlasFixture, CorrectlyConvertsCoordiantes) {
-    float TO_RADS_COEFF = static_cast<float>(M_PI / 180.0);
-
     Ellipsoid ellipsoid = Ellipsoid::unitSphere();
 
     // Texture will be 90 degrees in size in long and lat
     vec2 textureGridSize(4, 2);
     vec2 textureGeodeticOffset(0, 0); // Because it starts from (-180, -90)
-    textureGeodeticOffset = textureGeodeticOffset * TO_RADS_COEFF;
+    textureGeodeticOffset = utils::convertToRads(textureGeodeticOffset);
 
     vec2 aPos(0.5, 0.5); // In the middle of the tile
     float uTileLongitudeOffset = 36; // This is texture long=3
@@ -42,10 +41,8 @@ TEST_F(TextureAtlasFixture, CorrectlyConvertsCoordiantes) {
 
     float longitude = uTileLongitudeOffset + aPos.x * uTileLongitudeWidth;
     float latitude = uTileLatitudeOffset + aPos.y * uTileLatitudeWidth;
-    longitude = longitude * TO_RADS_COEFF;
-    latitude = latitude * TO_RADS_COEFF;
 
-    vec3 geographicCoordinates = vec3(longitude, latitude, 0.0);
+    vec3 geographicCoordinates = utils::convertToRads(vec3(longitude, latitude, 0.0));
 
     vec3 geocentricFragPos = ellipsoid.convertGeodeticToGeocentric(geographicCoordinates);
     vec3 normal = ellipsoid.convertGeocentricToGeocentricSurfaceNormal(geocentricFragPos);
@@ -68,14 +65,12 @@ TEST_F(TextureAtlasFixture, CorrectlyConvertsCoordiantes) {
 
 
 TEST_F(TextureAtlasFixture, CorrectlyConvertsCoordinates2) {
-    float TO_RADS_COEFF = static_cast<float>(M_PI / 180.0);
-
     Ellipsoid ellipsoid = Ellipsoid::unitSphere();
 
     // Texture will be 90 degrees in size in long and lat
     vec2 textureGridSize(4, 2);
     vec2 textureGeodeticOffset(90, 45); // It starts from (-180, -90)
-    textureGeodeticOffset = textureGeodeticOffset * TO_RADS_COEFF;
+    textureGeodeticOffset = utils::convertToRads(textureGeodeticOffset);
 
     vec2 aPos(1., 0.);
     float uTileLongitudeOffset = 90 + 36; // This is texture long=3
@@ -85,10 +80,8 @@ TEST_F(TextureAtlasFixture, CorrectlyConvertsCoordinates2) {
 
     float longitude = uTileLongitudeOffset + aPos.x * uTileLongitudeWidth;
     float latitude = uTileLatitudeOffset + aPos.y * uTileLatitudeWidth;
-    longitude = longitude * TO_RADS_COEFF;
-    latitude = latitude * TO_RADS_COEFF;
 
-    vec3 geographicCoordinates = vec3(longitude, latitude, 0.0);
+    vec3 geographicCoordinates = utils::convertToRads(vec3(longitude, latitude, 0.0));
 
     vec3 geocentricFragPos = ellipsoid.convertGeodeticToGeocentric(geographicCoordinates);
     vec3 normal = ellipsoid.convertGeocentricToGeocentricSurfaceNormal(geocentricFragPos);
