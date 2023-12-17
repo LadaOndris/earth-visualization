@@ -1,6 +1,6 @@
 #version 400 core
 
-layout (vertices=3) out;
+layout (vertices = 3) out;
 
 in VS_OUT {
     vec3 geocentricFragPos;
@@ -61,43 +61,62 @@ float getRawHeightDisplacement(vec3 geocentricCoordinates) {
     return rawDisplacement;
 }
 
+float calculateBaseTesselationFactor(vec2 ndcPoint1, vec2 ndcPoint2) {
+    vec2 screenTriangleSize = abs(ndcPoint1 - ndcPoint2);
+    float screenSpaceSize = max(screenTriangleSize.x, screenTriangleSize.y);
+
+    // Set a minimum screen space size threshold to avoid excessive tessellation
+    float minScreenSpaceSize = 0.04; // Adjust this value as needed
+    float tesselationFactor = screenSpaceSize / minScreenSpaceSize;
+    return tesselationFactor;
+}
+
 void main()
 {
     vec3 centroidPos =
-        (tc_in[0].geocentricFragPos +
-         tc_in[1].geocentricFragPos +
-         tc_in[2].geocentricFragPos) / 3.0;
+    (tc_in[0].geocentricFragPos +
+    tc_in[1].geocentricFragPos +
+    tc_in[2].geocentricFragPos) / 3.0;
+
+    float vertexHeight[3];
+    float slopeFactorEdge[3]; /* Contains slopes along edges of a triangle */
+    float baseTesselationFactor[3]; /* Default tesselation factor calculated based on screen space size */
 
     float centroidHeight = getRawHeightDisplacement(centroidPos);
-    float vertexHeight1 = getRawHeightDisplacement(tc_in[0].geocentricFragPos);
-    float vertexHeight2 = getRawHeightDisplacement(tc_in[1].geocentricFragPos);
-    float vertexHeight3 = getRawHeightDisplacement(tc_in[2].geocentricFragPos);
+    for (int i = 0; i < 3; ++i) {
+        vertexHeight[i] = getRawHeightDisplacement(tc_in[i].geocentricFragPos);
+    }
 
-    float slopeFactorEdge0 = abs(vertexHeight1 - vertexHeight2);
-    float slopeFactorEdge1 = abs(vertexHeight1 - vertexHeight3);
-    float slopeFactorEdge2 = abs(vertexHeight2 - vertexHeight3);
+    slopeFactorEdge[0] = abs(vertexHeight[0] - vertexHeight[1]);
+    slopeFactorEdge[1] = abs(vertexHeight[0] - vertexHeight[2]);
+    slopeFactorEdge[2] = abs(vertexHeight[1] - vertexHeight[2]);
 
-    float maxHeight = max(max(centroidHeight, vertexHeight1), max(vertexHeight2, vertexHeight3));
-    float minHeight = min(min(centroidHeight, vertexHeight1), min(vertexHeight2, vertexHeight3));
+    float maxHeight = max(max(centroidHeight, vertexHeight[0]), max(vertexHeight[1], vertexHeight[2]));
+    float minHeight = min(min(centroidHeight, vertexHeight[0]), min(vertexHeight[1], vertexHeight[2]));
     float slopeFactor = (maxHeight - minHeight);
 
     if (gl_InvocationID == 0) {
         // Calculate the screen space size of the triangle
-        vec4 point1 = projection * view * model * vec4(tc_in[0].geocentricFragPos, 1);
-        vec4 point2 = projection * view * model * vec4(tc_in[1].geocentricFragPos, 1);
+        vec2 ndcPoints[3];
+        for (int i = 0; i < 3; ++i) {
+            vec4 point = projection * view * model * vec4(tc_in[i].geocentricFragPos, 1);
+            ndcPoints[i] = point.xy / point.w;
+        }
 
-        vec2 screenTriangleSize = abs(point1.xy / point1.w - point2.xy / point2.w);
-        float screenSpaceSize = max(screenTriangleSize.x, screenTriangleSize.y);
+        // Tesselation factors calculated baed on screen space size
+        baseTesselationFactor[0] = calculateBaseTesselationFactor(ndcPoints[0], ndcPoints[1]);
+        baseTesselationFactor[1] = calculateBaseTesselationFactor(ndcPoints[0], ndcPoints[2]);
+        baseTesselationFactor[2] = calculateBaseTesselationFactor(ndcPoints[1], ndcPoints[2]);
 
-        // Set a minimum screen space size threshold to avoid excessive tessellation
-        float minScreenSpaceSize = 0.04; // Adjust this value as needed
-        float maxTesselationFactor = screenSpaceSize / minScreenSpaceSize;
+        int factor = 2;
+        for (int i = 0; i < 3; ++i) {
+            // Use tesselation as determined by the height map. If there is no height, use at least the baseTesselation
+            // as determined by the screen space size. Limit the tesselation factor as determined by the height
+            // to a factor of the baseTesselation.
+            gl_TessLevelOuter[i] = min(baseTesselationFactor[2 - i] * factor, max(tesselationFactorOuter * slopeFactorEdge[2 - i], baseTesselationFactor[2 - i]));
+        }
 
-        gl_TessLevelOuter[0] = max(maxTesselationFactor, min(tesselationFactorOuter * slopeFactorEdge2, maxTesselationFactor));
-        gl_TessLevelOuter[1] = max(maxTesselationFactor, min(tesselationFactorOuter * slopeFactorEdge1, maxTesselationFactor));
-        gl_TessLevelOuter[2] = max(maxTesselationFactor, min(tesselationFactorOuter * slopeFactorEdge0, maxTesselationFactor));
-
-        float innerFactor = max(maxTesselationFactor, min(tesselationFactorInner * slopeFactor, maxTesselationFactor));
+        float innerFactor = min(baseTesselationFactor[0] * factor, max(tesselationFactorInner * slopeFactor, baseTesselationFactor[0]));
         gl_TessLevelInner[0] = innerFactor;
     }
 
