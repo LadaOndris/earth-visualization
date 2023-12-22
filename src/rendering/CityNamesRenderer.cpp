@@ -267,6 +267,10 @@ void CityNamesRenderer::renderTexts(const std::vector<City> &texts, float sx, fl
 
 int CityNamesRenderer::setVertexDataForText(const City &text, float sx, float sy,
                                             VertexData *vertexData) {
+    /**
+     * This function is based on: https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_02
+     *
+     */
     int n = 0;
     float x = 0;
     float y = 0;
@@ -304,10 +308,6 @@ int CityNamesRenderer::setVertexDataForText(const City &text, float sx, float sy
 }
 
 void CityNamesRenderer::renderText(const City &text, float sx, float sy, glm::vec3 color) {
-    /**
-     * This function is based on: https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_02
-     *
-     */
     program.setVec3("textColor", color);
 
     VertexData vertexData[6 * text.name.length()];
