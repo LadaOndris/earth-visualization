@@ -1,8 +1,0 @@
-
-## Dataset
-
-Run the following commands to generate the necessary tiles:
-
-* `python3 tile_generator.py textures/5_night_16k.jpg textures/nightmaps night --max-level 5`
-* `python3 tile_generator.py textures/2_no_clouds_16k.jpg textures/daymaps day --max-level 5`
-* `
