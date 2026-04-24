@@ -17,6 +17,8 @@ public:
             : fov(fov), position(position), target(target) {
     }
 
+    virtual ~Camera() = default;
+
     virtual void onMouseDrag(double xoffset, double yoffset) = 0;
 
     virtual void onMouseMove(double xoffset, double yoffset) = 0;

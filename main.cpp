@@ -389,12 +389,15 @@ void APIENTRY processErrorMessageCallback(
 }
 
 
-void mainAppThread(std::promise<int> &&returnCodePromise) {
+void mainAppThread(std::promise<int> returnCodePromise) {
     if (!initializeGlfw() || !initializeGlad() || !initializeImgui()) {
         returnCodePromise.set_value(EXIT_FAILURE);
         return;
     }
-    glDebugMessageCallback(processErrorMessageCallback, nullptr);
+    if (glDebugMessageCallback) {
+        glDebugMessageCallback(processErrorMessageCallback, nullptr);
+        glEnable(GL_DEBUG_OUTPUT);
+    }
 
     auto sunVsEarthRadiusFactor = 109.168105; // Sun_radius / Earth_radius
     auto sunRadius = sunVsEarthRadiusFactor * radii.x;
@@ -418,9 +421,9 @@ void mainAppThread(std::promise<int> &&returnCodePromise) {
     ResourceFetcher resourceFetcher;
     ResourceManager resourceManager(1000);
 
-    dayMapAtlas.registerAvailableTextures("textures/daymaps");
-    nightMapAtlas.registerAvailableTextures("textures/nightmaps");
-    heightMapAtlas.registerAvailableTextures("textures/heightmaps");
+    dayMapAtlas.registerAvailableTextures("textures/generated/daymaps");
+    nightMapAtlas.registerAvailableTextures("textures/generated/nightmaps");
+    heightMapAtlas.registerAvailableTextures("textures/generated/heightmaps");
     tileContainer.setupTiles();
 
     RenderingOptions options = {

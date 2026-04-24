@@ -20,6 +20,8 @@ struct RenderingStatistics {
 
 class RendererSubscriber {
 public:
+    virtual ~RendererSubscriber() = default;
+
     virtual void notify(RenderingStatistics renderingStatistics) = 0;
 };
 

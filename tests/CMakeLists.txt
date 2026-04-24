@@ -1,12 +1,27 @@
 project(tests)
 
-add_subdirectory(lib)
-include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+set(TEST_TARGET_NAME earth_visualizer_tests)
 
+include(FetchContent)
+
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+)
+
+FetchContent_MakeAvailable(googletest)
 
 file(GLOB_RECURSE SOURCES "*.cpp")
-add_executable(tests_run ${SOURCES})
+set(INCLUDES ../include)
 
-target_link_libraries(tests_run earth_visualization_lib)
-target_link_libraries(tests_run gtest gtest_main)
+add_executable(${TEST_TARGET_NAME} ${SOURCES})
+
+target_include_directories(${TEST_TARGET_NAME} PRIVATE
+    ${gtest_SOURCE_DIR}/include 
+    ${gtest_SOURCE_DIR}
+    ${INCLUDES}
+)
+
+target_link_libraries(${TEST_TARGET_NAME} earth_visualization_lib)
+target_link_libraries(${TEST_TARGET_NAME} gtest gtest_main)
 

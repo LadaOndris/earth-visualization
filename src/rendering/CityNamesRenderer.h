@@ -8,7 +8,7 @@
 #include <map>
 #include "Renderer.h"
 #include "RenderingOptions.h"
-#include "../include/glad/glad.h"
+#include "glad/glad.h"
 #include "program.h"
 #include "../cameras/Camera.h"
 #include "../ellipsoid.h"

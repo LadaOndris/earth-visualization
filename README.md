@@ -41,14 +41,30 @@ It uses day and night textures. It can also highlight terrain and much more.
 1. Set up the environment with the dependencies as required by CMake (see CMakeLists.txt).
 2. Prepare the textures.
 
-Run the following commands to generate the tiled textures in multiple Levels-of-Detail:
+Run the following script to generate the tiles in multiple Levels-of-Detail:
 
-* `python3 tile_generator.py textures/5_night_16k.jpg textures/nightmaps night --max-level 5`
-* `python3 tile_generator.py textures/2_no_clouds_16k.jpg textures/daymaps day --max-level 5`
-* `
 
-3. Build and run.
+```sh
+# Prepare python environment
+python -m venv venv
+. ./venv/bin/activate
+pip install -r python-requirements.txt 
 
+# Run the script
+python3 generate_textures.py
+```
+
+The number of levels of detail can be adjusted in the config within the script.
+
+1. Build and run.
+
+```sh
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+cmake --build build
+
+./build/earth_visualization
+```
 
 ## Main features
 
