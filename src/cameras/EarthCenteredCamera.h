@@ -5,11 +5,10 @@
 #ifndef EARTH_VISUALIZATION_EARTHCENTEREDCAMERA_H
 #define EARTH_VISUALIZATION_EARTHCENTEREDCAMERA_H
 
+#include "Camera.h"
+#include "ellipsoid.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
-#include "Camera.h"
-#include "../ellipsoid.h"
 
 class EarthCenteredCamera : public Camera {
 public:

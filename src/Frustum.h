@@ -2,15 +2,10 @@
 #ifndef EARTH_VISUALIZATION_FRUSTUM_H
 #define EARTH_VISUALIZATION_FRUSTUM_H
 
-#include <memory>
-#include <vector>
 #include <cmath>
-#include <stdexcept>
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/geometric.hpp>
-#include <array>
-#include "../include/printing.h"
 
 class Frustum {
 public:

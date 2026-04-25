@@ -10,7 +10,7 @@
 #include "Renderer.h"
 #include "RenderingOptions.h"
 #include "RendererSubscriber.h"
-#include "../simulation/SolarSimulator.h"
+#include "simulation/SolarSimulator.h"
 
 class GuiFrameRenderer : public Renderer, public RendererSubscriber {
 private:

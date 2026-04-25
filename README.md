@@ -41,7 +41,7 @@ It uses day and night textures. It can also highlight terrain and much more.
 1. Set up the environment with the dependencies as required by CMake (see CMakeLists.txt).
 2. Prepare the textures.
 
-Run the following script to generate the tiles in multiple Levels-of-Detail:
+Run the following script to generate the tiles in multiple Levels of Detail:
 
 
 ```sh
@@ -61,7 +61,7 @@ The number of levels of detail can be adjusted in the config within the script.
 ```sh
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 
-cmake --build build
+cmake --build build --target earth_visualization
 
 ./build/earth_visualization
 ```

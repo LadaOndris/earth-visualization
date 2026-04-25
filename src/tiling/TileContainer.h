@@ -9,11 +9,11 @@
 #include <vector>
 #include <string>
 #include <cassert>
-#include "../tiling/TileResources.h"
-#include "../textures/Texture.h"
-#include "../textures/TextureAtlas.h"
-#include "../tesselation/TileMeshTesselator.h"
-#include "../vertex.h"
+#include "tiling/TileResources.h"
+#include "textures/Texture.h"
+#include "textures/TextureAtlas.h"
+#include "tesselation/TileMeshTesselator.h"
+#include "vertex.h"
 
 
 // Define the TileContainer class.

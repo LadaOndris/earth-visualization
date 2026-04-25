@@ -5,8 +5,8 @@
 #ifndef EARTH_VISUALIZATION_TILERESOURCES_H
 #define EARTH_VISUALIZATION_TILERESOURCES_H
 
-#include "../textures/Texture.h"
-#include "../vertex.h"
+#include "textures/Texture.h"
+#include "vertex.h"
 #include "Tile.h"
 #include <utility>
 #include <vector>

@@ -12,14 +12,13 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 file(GLOB_RECURSE SOURCES "*.cpp")
-set(INCLUDES ../include)
 
 add_executable(${TEST_TARGET_NAME} ${SOURCES})
 
 target_include_directories(${TEST_TARGET_NAME} PRIVATE
     ${gtest_SOURCE_DIR}/include 
     ${gtest_SOURCE_DIR}
-    ${INCLUDES}
+    ../src/
 )
 
 target_link_libraries(${TEST_TARGET_NAME} earth_visualization_lib)

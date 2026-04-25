@@ -13,10 +13,10 @@
 #include <glm/mat4x4.hpp> // glm::mat4
 #include <glm/geometric.hpp>
 #include <array>
-#include "../ellipsoid.h"
-#include "../textures/Texture.h"
-#include "../cameras/Camera.h"
-#include "../Frustum.h"
+#include "ellipsoid.h"
+#include "textures/Texture.h"
+#include "cameras/Camera.h"
+#include "Frustum.h"
 
 class TileResources;
 

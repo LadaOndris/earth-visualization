@@ -9,7 +9,7 @@
 #include <memory>
 #include <list>
 #include <algorithm>
-#include "../textures/Texture.h"
+#include "textures/Texture.h"
 
 class ResourceManager {
 public:

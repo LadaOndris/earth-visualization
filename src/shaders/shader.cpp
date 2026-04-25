@@ -1,5 +1,5 @@
 
-#include "../../include/shader.h"
+#include "shader.h"
 
 const char *shaderTypeToString(ShaderType e) {
     switch (e) {

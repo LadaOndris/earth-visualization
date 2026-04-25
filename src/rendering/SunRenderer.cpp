@@ -3,7 +3,7 @@
 //
 
 #include "SunRenderer.h"
-#include "../tesselation/SubdivisionSphereTesselator.h"
+#include "tesselation/SubdivisionSphereTesselator.h"
 
 #include <cmath>
 

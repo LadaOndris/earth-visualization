@@ -30,7 +30,7 @@ target_include_directories(${TARGET_NAME} PRIVATE
     ${GLFW_INCLUDE_DIRS}
     ${OPENGL_INCLUDE_DIR}
     ${FREETYPE_INCLUDE_DIRS}
-    include/
+    ${CMAKE_CURRENT_LIST_DIR}/src
 )
 
 target_link_libraries(${TARGET_NAME}
@@ -52,7 +52,7 @@ target_include_directories(${LIB_TARGET_NAME} PRIVATE
     ${GLFW_INCLUDE_DIRS}
     ${OPENGL_INCLUDE_DIR}
     ${FREETYPE_INCLUDE_DIRS}
-    include/
+    ${CMAKE_CURRENT_LIST_DIR}/src
 )
 
 target_link_libraries(${LIB_TARGET_NAME}

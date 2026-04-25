@@ -2,7 +2,7 @@
 #pragma once
 
 #include "Texture.h"
-#include "../tiling/Tile.h"
+#include "tiling/Tile.h"
 
 #include <stdexcept>
 #include <unordered_map>

@@ -12,7 +12,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <memory>
-#include "../textures/Texture.h"
+#include "textures/Texture.h"
 
 struct TextureLoadRequest {
     std::string path;

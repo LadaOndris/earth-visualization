@@ -9,15 +9,15 @@
 #include <glm/vec3.hpp>
 #include <unordered_map>
 #include "Renderer.h"
-#include "../cameras/Camera.h"
-#include "../ellipsoid.h"
-#include "../tiling/TileContainer.h"
+#include "cameras/Camera.h"
+#include "ellipsoid.h"
+#include "tiling/TileContainer.h"
 #include "program.h"
-#include "../vertex.h"
+#include "vertex.h"
 #include "RendererSubscriber.h"
-#include "../resources/ResourceFetcher.h"
-#include "../resources/ResourceManager.h"
-#include "../simulation/LightSource.h"
+#include "resources/ResourceFetcher.h"
+#include "resources/ResourceManager.h"
+#include "simulation/LightSource.h"
 
 class TileEarthRenderer : public Renderer {
 public:

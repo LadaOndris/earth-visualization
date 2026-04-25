@@ -5,7 +5,7 @@
 #ifndef EARTH_VISUALIZATION_RENDERER_H
 #define EARTH_VISUALIZATION_RENDERER_H
 
-#include "../window_definition.h"
+#include "window_definition.h"
 #include "RenderingOptions.h"
 
 class Renderer {

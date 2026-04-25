@@ -2,13 +2,13 @@
 // Created by lada on 12/10/23.
 //
 
+#include "utils.h"
 #include <algorithm>
 #include <cstring>
 #include <cstdio>
 #include "CityNamesRenderer.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
-#include "../utils.h"
 
 bool CityNamesRenderer::prepareTextureAtlas() {
     FT_Library library;   /* handle to library     */

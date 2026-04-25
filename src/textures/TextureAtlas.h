@@ -3,7 +3,7 @@
 #include "Texture.h"
 #include "TextureAtlasLevel.h"
 #include "TextureAtlasReader.h"
-#include "../tiling/Tile.h"
+#include "tiling/Tile.h"
 
 #include <vector>
 #include <filesystem>

@@ -10,7 +10,7 @@
 #include <stb_image.h>
 #include <glm/vec2.hpp>
 #include <vector>
-#include "../tiling/Resolution.h"
+#include "tiling/Resolution.h"
 #include "glad/glad.h"
 
 class Texture {

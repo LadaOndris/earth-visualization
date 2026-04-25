@@ -9,9 +9,9 @@
 #include <vector>
 #include "Renderer.h"
 #include "program.h"
-#include "../cameras/FreeCamera.h"
-#include "../vertex.h"
-#include "../simulation/LightSource.h"
+#include "cameras/FreeCamera.h"
+#include "vertex.h"
+#include "simulation/LightSource.h"
 
 class SunRenderer : public Renderer {
 public:
