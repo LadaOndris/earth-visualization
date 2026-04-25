@@ -1,6 +1,5 @@
 
 #include "TileEarthRenderer.h"
-#include "MeshBuffer.h"
 #include "RendererSubscriber.h"
 #include "utils.h"
 
@@ -24,29 +23,11 @@ TileEarthRenderer::TileEarthRenderer(TileContainer &tileContainer,
     for (Tile &tile: _tileContainer.getTiles()) {
         tile.updateGeocentricPosition(_ellipsoid);
     }
-    _program.build();
-    initVertexArraysForAllLevels(_tileContainer.getNumLevels());
+    _program.build(); // TODO: This design is problematic. Could be forgotten to be called. 
 }
 
 TileEarthRenderer::~TileEarthRenderer() {
     _resourceManager.releaseAll();
-}
-
-/**
- * Creates a vertex buffer for each level of detail (LOD).
- *
- * These vertex buffers contain the full geometry of each level.
- *
- * @param numLevels The number of level of details.
- */
-void TileEarthRenderer::initVertexArraysForAllLevels(int numLevels) {
-    for (int level = 0; level < numLevels; level++) {
-        const Mesh_t& mesh = _tileContainer.getTiles()[0].getResourcesByLevel(level)->getMesh();
-        auto buffer = std::make_shared<MeshBuffer>(convertToVertices(mesh));
-
-        for (Tile &tile: _tileContainer.getTiles())
-            tile.getResourcesByLevel(level)->setMeshBuffer(buffer);
-    }
 }
 
 bool TileEarthRenderer::prepareTexture(const std::shared_ptr<Texture> &texture) {
@@ -219,7 +200,7 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
             _program.setVec2("heightMapGridSize", heightMap->getTextureGridSize());
             glBindTextureUnit(2, heightMap->getTextureId());
 
-            glBindVertexArray(resources->vao());
+            glBindVertexArray(resources->getMeshVao());
 
             if (options.isWireframeEnabled) {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

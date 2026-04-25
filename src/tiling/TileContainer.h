@@ -51,7 +51,8 @@ private:
                 _cachedMeshes.push_back(std::make_shared<Mesh_t>(std::move(mesh)));
             }
 
-            auto tileResource = std::make_shared<TileResources>(_cachedMeshes[level], dayMap, nightMap, heightMap);
+            auto meshBuffer = std::make_shared<MeshBuffer>(*_cachedMeshes[level]);
+            auto tileResource = std::make_shared<TileResources>(dayMap, nightMap, heightMap, meshBuffer);
 
             tile.addResources(tileResource, level);
         }

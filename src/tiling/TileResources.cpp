@@ -1,7 +1,6 @@
 
 #include "TileResources.h"
-#include "rendering/MeshBuffer.h"
 
-unsigned int TileResources::vao() const {
-    return _meshBuffer->vao();
+unsigned int TileResources::getMeshVao() const {
+    return _meshBuffer->getVao();
 }

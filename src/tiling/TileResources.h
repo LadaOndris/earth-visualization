@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "rendering/MeshBuffer.h"
 #include "textures/Texture.h"
 #include "vertex.h"
 #include "Tile.h"
@@ -19,8 +20,6 @@ class MeshBuffer;
 
 class TileResources {
 private:
-    // Mesh covers always the tile only
-    std::shared_ptr<const Mesh_t> _mesh;
     // Textures may cover many tiles
     std::shared_ptr<Texture> _dayTexture;
     std::shared_ptr<Texture> _nightTexture;
@@ -31,21 +30,21 @@ public:
     std::weak_ptr<TileResources> coarserResources;
     std::vector<std::shared_ptr<TileResources>> finerResources;
 
-    explicit TileResources(std::shared_ptr<const Mesh_t> mesh, std::shared_ptr<Texture> dayTexture,
-                           std::shared_ptr<Texture> nightTexture,
-                           std::shared_ptr<Texture> heightMap) :
-            _mesh(std::move(mesh)), _dayTexture(std::move(dayTexture)),
-            _nightTexture(std::move(nightTexture)), _heightMap(std::move(heightMap)) {
+    explicit TileResources(
+        std::shared_ptr<Texture> dayTexture,
+        std::shared_ptr<Texture> nightTexture,
+        std::shared_ptr<Texture> heightMap,
+        std::shared_ptr<MeshBuffer> meshBuffer) :
+            _dayTexture(std::move(dayTexture)),
+            _nightTexture(std::move(nightTexture)), 
+            _heightMap(std::move(heightMap)),
+            _meshBuffer(std::move(meshBuffer)) {
     }
 
-    void setMeshBuffer(std::shared_ptr<MeshBuffer> buffer) {
-        _meshBuffer = std::move(buffer);
-    }
-
-    [[nodiscard]] unsigned int vao() const;
+    [[nodiscard]] unsigned int getMeshVao() const;
 
     [[nodiscard]] const Mesh_t& getMesh() const {
-        return *_mesh;
+        return _meshBuffer->getMesh();
     }
 
     [[nodiscard]] std::shared_ptr<Texture> getTexture(TextureType textureType) const {
