@@ -65,7 +65,7 @@ def generate_tiles(input_path, output_folder, output_file_name, initial_level, m
         max_x_tiles_in_original = 2 ** (level + base_level)
         max_y_tiles_in_original = 2 ** (level + base_level - 1)
 
-        level_folder = os.path.join(output_folder, f"level_{max_x_tiles_in_original}_{max_y_tiles_in_original}")
+        level_folder = os.path.join(output_folder, f"level_{level}")
         os.makedirs(level_folder, exist_ok=True)
 
         x_origin = int(max_x_tiles_in_original / x_tiles_on_base_level * base_index[0])

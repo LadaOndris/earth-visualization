@@ -1,16 +1,10 @@
-#include <iostream>
-#include <cmath>
-#include <utility>
-#include <memory>
 
 #include "include/glad/glad.h"
 #include <GLFW/glfw3.h>
 
 #include "include/program.h"
-#include "src/cameras/FreeCamera.h"
 #include "src/ellipsoid.h"
 #include "src/tesselation/SubdivisionSphereTesselator.h"
-#include "src/vertex.h"
 #include "src/window_definition.h"
 #include "src/rendering/SunRenderer.h"
 #include "src/rendering/GuiFrameRenderer.h"
@@ -30,12 +24,14 @@
 #include <imgui_stdlib.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
-#include <chrono>
-#include <array>
-#include <algorithm>
-#include <future>
 
-t_window_definition windowDefinition;
+#include <unistd.h>
+#include <thread>
+#include <iostream>
+#include <cmath>
+#include <memory>
+
+t_window_definition windowDefinition{800, 600};
 float lastX = 400, lastY = 300;
 bool firstMouseMove = true;
 bool lbutton_down = false;
@@ -173,11 +169,22 @@ bool initializeGlfw() {
         std::cout << "[INFO] GLFW initialized" << std::endl;
     }
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    // Check for display availability to prevent hanging
+    if (!getenv("DISPLAY") && !getenv("WAYLAND_DISPLAY")) {
+        std::cerr << "[ERROR] No display server detected (DISPLAY or WAYLAND_DISPLAY not set). "
+                  << "This application requires a GUI environment to run." << std::endl;
+        glfwTerminate();
+        return false;
+    }
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    // Multi-sampling
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
     glfwWindowHint(GLFW_SAMPLES, 4);
+    glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
+    glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
 
     window = glfwCreateWindow(windowDefinition.width, windowDefinition.height, "Earth Viewer", NULL, NULL);
     if (!window) {
@@ -195,6 +202,10 @@ bool initializeGlfw() {
 }
 
 bool initializeGlad() {
+    if (!window) {
+        std::cerr << "[ERROR] window is null, cannot initialize GLAD" << std::endl;
+        return false;
+    }
     glfwMakeContextCurrent(window);
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         std::cout << "[ERROR] Failed to initialize GLAD" << std::endl;
@@ -381,18 +392,25 @@ void APIENTRY processErrorMessageCallback(
         const GLchar *message,
         const void *userParam
 ) {
-    const char format[] = "%s %s %u: %s";
-    const char *const str_source = getSource(source);
-    const char *const str_type = getType(type);
+    if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) {
+        return;
+    }
 
-    fprintf(stderr, format, str_source, str_type, id, message);
+    const char *severityStr = "";
+    switch (severity) {
+        case GL_DEBUG_SEVERITY_HIGH:   severityStr = "HIGH";   break;
+        case GL_DEBUG_SEVERITY_MEDIUM: severityStr = "MEDIUM"; break;
+        case GL_DEBUG_SEVERITY_LOW:    severityStr = "LOW";    break;
+    }
+
+    fprintf(stderr, "[GL %s] %s %s %u: %s\n",
+            severityStr, getSource(source), getType(type), id, message);
 }
 
 
-void mainAppThread(std::promise<int> returnCodePromise) {
+int mainAppThread() {
     if (!initializeGlfw() || !initializeGlad() || !initializeImgui()) {
-        returnCodePromise.set_value(EXIT_FAILURE);
-        return;
+        return EXIT_FAILURE;
     }
     if (glDebugMessageCallback) {
         glDebugMessageCallback(processErrorMessageCallback, nullptr);
@@ -482,14 +500,13 @@ void mainAppThread(std::promise<int> returnCodePromise) {
     bool result = initializeRenderers(renderers);
     if (!result) {
         cleanup(renderers);
-        returnCodePromise.set_value(EXIT_FAILURE);
-        return;
+        return EXIT_FAILURE;
     }
 
     startRendering(renderers, guiRenderer, solarSimulator);
     cleanup(renderers);
 
-    returnCodePromise.set_value(EXIT_SUCCESS);
+    return EXIT_SUCCESS;
 }
 
 int main() {
@@ -498,14 +515,8 @@ int main() {
 
     std::thread loaderThread(resourceLoaderThreadStart);
 
-    std::promise<int> p;
-    auto futureReturnCode = p.get_future();
-    std::thread mainThread(mainAppThread, std::move(p));
+    int returnCode = mainAppThread();
 
-    mainThread.join();
-    int returnCode = futureReturnCode.get();
-
-    // Stop loader thread
     stopThread = true;
     cv.notify_all();
     loaderThread.join();

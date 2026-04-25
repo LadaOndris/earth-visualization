@@ -5,8 +5,9 @@ set(LIB_TARGET_NAME ${TARGET_NAME}_lib)
 
 project(${TARGET_NAME})
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(cmake/compile_options.cmake)
 include(cmake/imgui.cmake)

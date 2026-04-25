@@ -89,7 +89,7 @@ void Tile::addResources(const std::shared_ptr<TileResources> &resources, int lev
     // Cross-reference resources of neighboring LODs
     if (!lodResources.empty()) {
         auto lastResources = lodResources.back();
-        assert(lastResources->getMesh().size() > resources->getMesh().size());
+        assert(lastResources->getMesh().size() < resources->getMesh().size());
         resources->finerResources.push_back(lastResources);
         lastResources->coarserResources = resources;
     }

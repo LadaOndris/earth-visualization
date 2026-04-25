@@ -2,6 +2,7 @@ cmake-build-debug/
 build/
 .idea/
 venv/
+.cache/
 
 videos/
 imgui.ini

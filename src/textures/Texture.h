@@ -15,14 +15,17 @@
 
 class Texture {
 private:
-    bool isGlPrepared = false;
     std::string path;
-    std::vector<unsigned char> data;
     Resolution resolution; // Resolution in pixels
-    int channels;
     glm::vec2 geodeticOffset; // Offset of this texture on the ellipsoid
     glm::vec2 geodeticSize; // Width in longitude and latitude
     glm::vec2 textureGridSize;
+    int channels;
+    int xIndex;
+    int yIndex;
+
+    bool isGlPrepared = false;
+    std::vector<unsigned char> data;
 
     unsigned int textureId;
 
@@ -33,13 +36,15 @@ private:
 public:
     explicit Texture(std::string path, int width,
                      glm::vec2 geodeticOffset, glm::vec2 geodeticSize,
-                     glm::vec2 textureGridSize)
+                     glm::vec2 textureGridSize, int xIndex, int yIndex)
             : path(std::move(path)),
               resolution(width, width),
               geodeticOffset(geodeticOffset),
               geodeticSize(geodeticSize),
               textureGridSize(textureGridSize),
-              channels(0) {
+              channels(0),
+              xIndex(xIndex),
+              yIndex(yIndex) {
     }
 
     void setData(std::vector<unsigned char> dataOther) {
@@ -137,6 +142,14 @@ public:
 
     [[nodiscard]] unsigned int &getTextureId() {
         return textureId;
+    }
+
+    [[nodiscard]] int getXIndex() const {
+        return xIndex;
+    }
+
+    [[nodiscard]] int getYIndex() const {
+        return yIndex;
     }
 };
 
