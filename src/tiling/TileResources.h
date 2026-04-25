@@ -15,6 +15,8 @@ enum TextureType {
     Day, Night, HeightMap
 };
 
+class MeshBuffer;
+
 class TileResources {
 private:
     // Mesh covers always the tile only
@@ -23,8 +25,8 @@ private:
     std::shared_ptr<Texture> _dayTexture;
     std::shared_ptr<Texture> _nightTexture;
     std::shared_ptr<Texture> _heightMap;
+    std::shared_ptr<MeshBuffer> _meshBuffer;
 public:
-    unsigned int meshVAO = 0, meshVBO = 0;
     // Coarser and finer resources form a hierarchical structure of the resources.
     std::weak_ptr<TileResources> coarserResources;
     std::vector<std::shared_ptr<TileResources>> finerResources;
@@ -35,6 +37,12 @@ public:
             _mesh(std::move(mesh)), _dayTexture(std::move(dayTexture)),
             _nightTexture(std::move(nightTexture)), _heightMap(std::move(heightMap)) {
     }
+
+    void setMeshBuffer(std::shared_ptr<MeshBuffer> buffer) {
+        _meshBuffer = std::move(buffer);
+    }
+
+    [[nodiscard]] unsigned int vao() const;
 
     [[nodiscard]] Mesh_t getMesh() const {
         return _mesh;

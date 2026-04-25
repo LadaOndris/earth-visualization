@@ -7,7 +7,6 @@
 #include "resources/AsyncTextureLoader.h"
 #include "tiling/TileContainer.h"
 #include "program.h"
-#include "vertex.h"
 #include "RendererSubscriber.h"
 #include "resources/ResourceManager.h"
 #include "simulation/LightSource.h"
@@ -53,9 +52,6 @@ private:
 
 
     void initVertexArraysForAllLevels(int numLevels);
-
-    void setupVertexArray(std::vector<t_vertex> vertices,
-                          unsigned int &VAO, unsigned int &VBO);
 
     bool prepareTexture(const std::shared_ptr<Texture>& texture);
 

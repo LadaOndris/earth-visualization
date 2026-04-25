@@ -1,5 +1,6 @@
 
 #include "TileEarthRenderer.h"
+#include "MeshBuffer.h"
 #include "RendererSubscriber.h"
 #include "utils.h"
 
@@ -29,13 +30,6 @@ TileEarthRenderer::TileEarthRenderer(TileContainer &tileContainer,
 
 TileEarthRenderer::~TileEarthRenderer() {
     _resourceManager.releaseAll();
-    int numLevels = _tileContainer.getNumLevels();
-    for (int level = 0; level < numLevels; level++) {
-        Tile &tile = _tileContainer.getTiles()[0];
-        auto resources = tile.getResourcesByLevel(level);
-        glDeleteVertexArrays(1, &resources->meshVAO);
-        glDeleteBuffers(1, &resources->meshVBO);
-    }
 }
 
 /**
@@ -47,42 +41,13 @@ TileEarthRenderer::~TileEarthRenderer() {
  */
 void TileEarthRenderer::initVertexArraysForAllLevels(int numLevels) {
     for (int level = 0; level < numLevels; level++) {
-        Mesh_t fullMeshForThisLevel;
-        // Merge all tile meshes of this level together.
-        for (Tile &tile: _tileContainer.getTiles()) {
-            auto resources = tile.getResourcesByLevel(level);
+        // TODO: All tiles share the same mesh; use the first tile's mesh for this level.
+        Mesh_t mesh = _tileContainer.getTiles()[0].getResourcesByLevel(level)->getMesh();
+        auto buffer = std::make_shared<MeshBuffer>(convertToVertices(mesh));
 
-            Mesh_t mesh = resources->getMesh();
-            fullMeshForThisLevel.insert(fullMeshForThisLevel.end(), mesh.begin(), mesh.end());
-            break; // TODO: remove cycle. All tiles share the same mesh.
-        }
-
-        std::vector<t_vertex> verticesForThisLevel = convertToVertices(fullMeshForThisLevel);
-
-        unsigned int VAO, VBO;
-        setupVertexArray(verticesForThisLevel, VAO, VBO);
-
-        for (Tile &tile: _tileContainer.getTiles()) {
-            auto resources = tile.getResourcesByLevel(level);
-            resources->meshVAO = VAO;
-            resources->meshVBO = VBO;
-        }
+        for (Tile &tile: _tileContainer.getTiles())
+            tile.getResourcesByLevel(level)->setMeshBuffer(buffer);
     }
-}
-
-void TileEarthRenderer::setupVertexArray(std::vector<t_vertex> vertices,
-                                         unsigned int &VAO, unsigned int &VBO) {
-    glCreateBuffers(1, &VBO);
-
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glNamedBufferData(VBO, vertices.size() * sizeof(t_vertex), &vertices.front(), GL_STATIC_DRAW);
-
-    // Position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-    glEnableVertexAttribArray(0);
 }
 
 bool TileEarthRenderer::prepareTexture(const std::shared_ptr<Texture> &texture) {
@@ -257,8 +222,7 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
             _program.setVec2("heightMapGridSize", heightMap->getTextureGridSize());
             glBindTextureUnit(2, heightMap->getTextureId());
 
-            // Set VAO: we need the correct buffer? Is there one or more?
-            glBindVertexArray(resources->meshVAO);
+            glBindVertexArray(resources->vao());
 
             if (options.isWireframeEnabled) {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
