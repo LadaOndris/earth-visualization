@@ -83,7 +83,7 @@ bool TileEarthRenderer::prepareTexture(const std::shared_ptr<Texture> &texture) 
             TextureLoadRequest request = {
                     .path = texture->getPath()
             };
-            _resourceFetcher.request(request);
+            _textureLoader.request(request);
             // Register a request into a data structure
             // so that it can be connected to a TextureLoadResult by the path
             _requestMap[texture->getPath()] = texture;
@@ -140,7 +140,7 @@ bool TileEarthRenderer::getOrPrepareTexture(
 }
 
 void TileEarthRenderer::render(float currentTime, t_window_definition window, RenderingOptions options) {
-    auto newlyLoadedTexturesData = _resourceFetcher.retrieveLoadedResources();
+    auto newlyLoadedTexturesData = _textureLoader.getResults();
     updateTexturesWithData(newlyLoadedTexturesData);
 
     _program.use();

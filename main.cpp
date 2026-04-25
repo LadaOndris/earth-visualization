@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 
 #include "program.h"
+#include "resources/AsyncTextureLoader.h"
 #include "src/ellipsoid.h"
 #include "src/tesselation/SubdivisionSphereTesselator.h"
 #include "src/window_definition.h"
@@ -325,12 +326,6 @@ void cleanup(const std::vector<std::shared_ptr<Renderer>> &renderers) {
     glfwTerminate();
 }
 
-void resourceLoaderThreadStart() {
-    ResourceLoader loader;
-    loader.start();
-}
-
-
 /**
  * From:
  * https://github.com/yuzu-emu/yuzu/blob/875568bb3e34725578f7fa3661c8bad89f23a173/src/video_core/renderer_opengl/renderer_opengl.cpp#L82
@@ -436,7 +431,7 @@ int mainAppThread() {
     TileContainer tileContainer(tileMeshTesselator, dayMapAtlas,
                                 nightMapAtlas, heightMapAtlas, ellipsoid);
 
-    ResourceFetcher resourceFetcher;
+    AsyncTextureLoader asyncTextureLoader{};
     ResourceManager resourceManager(1000);
 
     dayMapAtlas.registerAvailableTextures("textures/generated/daymaps");
@@ -466,7 +461,7 @@ int mainAppThread() {
     auto tileEarthRenderer =
             std::make_shared<TileEarthRenderer>(
                     tileContainer, ellipsoid, camera, solarSimulator,
-                    resourceFetcher, resourceManager, tileEarthRendererProgram
+                    asyncTextureLoader, resourceManager, tileEarthRendererProgram
             );
     tileEarthRenderer->addSubscriber(guiRenderer);
     renderers.push_back(tileEarthRenderer);
@@ -513,13 +508,7 @@ int main() {
     std::cout << "Starting the application..." << std::endl;
     std::cout << "Starting application thread: " << std::this_thread::get_id() << std::endl;
 
-    std::thread loaderThread(resourceLoaderThreadStart);
-
     int returnCode = mainAppThread();
-
-    stopThread = true;
-    cv.notify_all();
-    loaderThread.join();
 
     return returnCode;
 }

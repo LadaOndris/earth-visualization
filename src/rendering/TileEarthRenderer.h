@@ -4,11 +4,11 @@
 #include "Renderer.h"
 #include "cameras/Camera.h"
 #include "ellipsoid.h"
+#include "resources/AsyncTextureLoader.h"
 #include "tiling/TileContainer.h"
 #include "program.h"
 #include "vertex.h"
 #include "RendererSubscriber.h"
-#include "resources/ResourceFetcher.h"
 #include "resources/ResourceManager.h"
 #include "simulation/LightSource.h"
 
@@ -23,14 +23,14 @@ public:
                                Ellipsoid &ellipsoid,
                                Camera &camera,
                                LightSource &lightSource,
-                               ResourceFetcher &resourceFetcher,
+                               AsyncTextureLoader &textureLoader,
                                ResourceManager &resourceManager,
                                Program &program)
             : _tileContainer(tileContainer), 
               _ellipsoid(ellipsoid),
               _camera(camera), 
               _lightSource(lightSource), 
-              _resourceFetcher(resourceFetcher),
+              _textureLoader(textureLoader),
               _resourceManager(resourceManager),
               _program(program) {
     }
@@ -52,7 +52,7 @@ private:
     Ellipsoid &_ellipsoid;
     Camera &_camera;
     const LightSource &_lightSource;
-    ResourceFetcher &_resourceFetcher;
+    AsyncTextureLoader &_textureLoader;
     ResourceManager &_resourceManager;
     Program &_program;
     std::vector<std::shared_ptr<RendererSubscriber>> _subscribers;
