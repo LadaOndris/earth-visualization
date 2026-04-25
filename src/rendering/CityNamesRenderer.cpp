@@ -148,12 +148,12 @@ glm::mat4 CityNamesRenderer::constructPerspectiveProjectionMatrix(
     auto distanceToEllipsoidsCenter = glm::length(camera.getPosition() - ellipsoid.getGeocentricPosition());
 
     // The near plane is set in the middle of the camera position and the surface
-    auto nearPlane = static_cast<float>(distanceToSurface * 0.5);
+    auto nearPlane = distanceToSurface * 0.5f;
     auto farPlane = distanceToEllipsoidsCenter;
 
     glm::mat4 projectionMatrix;
     projectionMatrix = glm::perspective(glm::radians(camera.getFov()),
-                                        (float) window.width / (float) window.height,
+                                        static_cast<float>(window.width) / static_cast<float>(window.height),
                                         nearPlane, farPlane);
     return projectionMatrix;
 }
@@ -196,17 +196,17 @@ void CityNamesRenderer::render(float currentTime, t_window_definition window,
 }
 
 bool CityNamesRenderer::isRenderedAreaTooBig() const {
-    double maxAllowedRange = 20;
-    double latitudeRange = _renderingStats.renderedLatitudeRange[1] -
+    float maxAllowedRange = 20.f;
+    float latitudeRange = _renderingStats.renderedLatitudeRange[1] -
                            _renderingStats.renderedLatitudeRange[0];
-    double longitudeRange = _renderingStats.renderedLongitudeRange[1] -
+    float longitudeRange = _renderingStats.renderedLongitudeRange[1] -
                             _renderingStats.renderedLongitudeRange[0];
     return latitudeRange > maxAllowedRange || longitudeRange > maxAllowedRange;
 }
 
 void CityNamesRenderer::retrieveDataToBeRendered(const Frustum &frustum, std::vector<City> &out) const {
     float altitudeKm = _renderingStats.cameraPosition[2] / 1000;
-    double expectedMinimalPopulation = 2. * std::sqrt(2) * std::pow(altitudeKm, 3 / 2.f);
+    double expectedMinimalPopulation = 2. * std::sqrt(2) * std::pow(altitudeKm, 3 / 2.0);
 
     for (auto const &city: _worldCities) {
         if (city.population > expectedMinimalPopulation) {

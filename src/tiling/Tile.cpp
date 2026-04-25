@@ -63,12 +63,12 @@ bool Tile::isTileWithinTexture(const std::shared_ptr<Texture> &texture) const {
     auto textureLongWidth = texture->getLongitudeWidth();
     auto textureLatWidth = texture->getLatitudeWidth();
 
-    if (this->_longitude < textureOffset[0] ||
-        this->_latitude < textureOffset[1]) {
+    if (this->_longitude < static_cast<double>(textureOffset[0]) ||
+        this->_latitude < static_cast<double>(textureOffset[1])) {
         return false;
     }
-    if (this->_longitude > textureOffset[0] + textureLongWidth ||
-        this->_latitude > textureOffset[1] + textureLatWidth) {
+    if (this->_longitude > static_cast<double>(textureOffset[0]) + textureLongWidth ||
+        this->_latitude > static_cast<double>(textureOffset[1]) + textureLatWidth) {
         return false;
     }
 
@@ -142,7 +142,7 @@ void Tile::addResources(const std::shared_ptr<TileResources> &resources, int lev
     // Calculate the dot product between the normal and the vector to the camera.
     float dotProduct = glm::dot(_normal, toCamera);
     // If the dot product is positive, the tile is facing the camera.
-    return dotProduct > 0.0;
+    return dotProduct > 0.0f;
 }
 
 /**

@@ -93,10 +93,10 @@ void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos) {
         gFirstMouseMove = false;
     }
 
-    float xoffset = xpos - gLastX;
-    float yoffset = gLastY - ypos; // reversed since y-coordinates range from bottom to top
-    gLastX = xpos;
-    gLastY = ypos;
+    float xoffset = static_cast<float>(xpos) - gLastX;
+    float yoffset = gLastY - static_cast<float>(ypos); // reversed since y-coordinates range from bottom to top
+    gLastX = static_cast<float>(xpos);
+    gLastY = static_cast<float>(ypos);
 
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
         camera.onMouseDrag(xoffset, yoffset);
@@ -417,7 +417,7 @@ int mainAppThread() {
         glEnable(GL_DEBUG_OUTPUT);
     }
 
-    auto sunVsEarthRadiusFactor = 109.168105; // Sun_radius / Earth_radius
+    auto sunVsEarthRadiusFactor = 109.168105f; // Sun_radius / Earth_radius
     auto sunRadius = sunVsEarthRadiusFactor * radii.x;
     auto sunDistanceMeters = 149597870700.f;
     auto earthRadiusMeters = 6378000.f;

@@ -20,7 +20,7 @@ private:
     int FIT_TO_CONTENT = 0;
     RenderingOptions _renderingOptions;
     RenderingStatistics renderingStatistics;
-    float TO_DEGS_COEFF = 180 / 3.14159265;
+    float TO_DEGS_COEFF = 180.0f / 3.14159265f;
     const SolarSimulator &_simulator;
 
     void createSimulationWindow(t_window_definition window);

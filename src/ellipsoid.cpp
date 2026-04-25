@@ -110,7 +110,7 @@ bool Ellipsoid::isPointFacingCamera(glm::vec3 cameraPosition, glm::vec3 geocentr
     auto normal = convertGeocentricToGeocentricSurfaceNormal(geocentricPosition);
     glm::vec3 toCamera = glm::normalize(cameraPosition - geocentricPosition);
     float dotProduct = glm::dot(normal, toCamera);
-    bool facesCamera = dotProduct > 0.0;
+    bool facesCamera = dotProduct > 0.f;
     return facesCamera;
 }
 

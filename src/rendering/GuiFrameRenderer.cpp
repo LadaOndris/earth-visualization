@@ -167,11 +167,11 @@ void GuiFrameRenderer::createStatisticsWindow(t_window_definition window) {
     ImGui::Spacing();
     ImGui::Text("\tCamera");
     ImGui::Spacing();
-    ImGui::Text("Longitude: %.3f°", renderingStatistics.cameraPosition[0] * TO_DEGS_COEFF);
+    ImGui::Text("Longitude: %.3f°", static_cast<double>(renderingStatistics.cameraPosition[0] * TO_DEGS_COEFF));
     ImGui::Spacing();
-    ImGui::Text("Latitude: %.3f°", renderingStatistics.cameraPosition[1] * TO_DEGS_COEFF);
+    ImGui::Text("Latitude: %.3f°", static_cast<double>(renderingStatistics.cameraPosition[1] * TO_DEGS_COEFF));
     ImGui::Spacing();
-    ImGui::Text("Altitude: %.2f km", renderingStatistics.cameraPosition[2] / 1000);
+    ImGui::Text("Altitude: %.2f km", static_cast<double>(renderingStatistics.cameraPosition[2]) / 1000.0);
     ImGui::Spacing();
 
     ImGui::End();

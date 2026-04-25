@@ -39,11 +39,8 @@ public:
 
     void onMouseMove(double xoffset, double yoffset) {
         const float sensitivity = 0.1f;
-        xoffset *= sensitivity;
-        yoffset *= sensitivity;
-
-        _yaw += xoffset;
-        _pitch += yoffset;
+        _yaw += static_cast<float>(xoffset) * sensitivity;
+        _pitch += static_cast<float>(yoffset) * sensitivity;
 
         if (_pitch > 89.0f)
             _pitch = 89.0f;
@@ -78,9 +75,9 @@ private:
     glm::vec3 _cameraUp = glm::vec3(0.0f, 0.0f, 0.0f); // Is updated automatically
 
     void updateDirection() {
-        _direction.x = cos(glm::radians(_yaw)) * cos(glm::radians(_pitch));
-        _direction.y = sin(glm::radians(_pitch));
-        _direction.z = sin(glm::radians(_yaw)) * cos(glm::radians(_pitch));
+        _direction.x = glm::cos(glm::radians(_yaw)) * glm::cos(glm::radians(_pitch));
+        _direction.y = glm::sin(glm::radians(_pitch));
+        _direction.z = glm::sin(glm::radians(_yaw)) * glm::cos(glm::radians(_pitch));
         _cameraFront = glm::normalize(_direction);
         // normalize the vectors, because their length gets closer to 0 the more you look
         // up or down which results in slower movement.

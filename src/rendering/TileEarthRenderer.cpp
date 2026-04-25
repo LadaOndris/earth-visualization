@@ -278,12 +278,12 @@ glm::mat4 TileEarthRenderer::constructPerspectiveProjectionMatrix(
     auto distanceToEllipsoidsCenter = glm::length(camera.getPosition() - ellipsoid.getGeocentricPosition());
 
     // The near plane is set in the middle of the camera position and the surface
-    auto nearPlane = static_cast<float>(distanceToSurface * 0.5);
+    auto nearPlane = distanceToSurface * 0.5f;
     auto farPlane = distanceToEllipsoidsCenter;
 
     glm::mat4 projectionMatrix;
     projectionMatrix = glm::perspective(glm::radians(camera.getFov()),
-                                        (float) window.width / (float) window.height,
+                                        static_cast<float>(window.width) / static_cast<float>(window.height),
                                         nearPlane, farPlane);
     return projectionMatrix;
 }
