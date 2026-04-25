@@ -6,7 +6,6 @@
 #include "TileResources.h"
 #include "utils.h"
 
-
 std::shared_ptr<TileResources> Tile::getResources(
         double screenSpaceWidth, double distanceToCamera, const Camera &camera) {
     // static double maxAngle = 0;

@@ -5,13 +5,15 @@
 #ifndef EARTH_VISUALIZATION_TEXTURE_H
 #define EARTH_VISUALIZATION_TEXTURE_H
 
-#include <iostream>
-#include <utility>
-#include <stb_image.h>
-#include <glm/vec2.hpp>
-#include <vector>
 #include "tiling/Resolution.h"
 #include "glad/glad.h"
+
+#include <stb_image.h>
+#include <glm/vec2.hpp>
+
+#include <iostream>
+#include <utility>
+#include <vector>
 
 class Texture {
 private:

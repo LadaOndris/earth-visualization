@@ -5,18 +5,20 @@
 #ifndef EARTH_VISUALIZATION_TILE_H
 #define EARTH_VISUALIZATION_TILE_H
 
-#include <memory>
-#include <vector>
-#include <cmath>
-#include <stdexcept>
-#include <glm/vec4.hpp>
-#include <glm/mat4x4.hpp> // glm::mat4
-#include <glm/geometric.hpp>
-#include <array>
 #include "ellipsoid.h"
 #include "textures/Texture.h"
 #include "cameras/Camera.h"
 #include "Frustum.h"
+
+#include <glm/vec4.hpp>
+#include <glm/mat4x4.hpp> // glm::mat4
+#include <glm/geometric.hpp>
+
+#include <memory>
+#include <vector>
+#include <cmath>
+#include <stdexcept>
+#include <array>
 
 class TileResources;
 

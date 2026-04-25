@@ -5,7 +5,6 @@
 #ifndef EARTH_VISUALIZATION_LIGHTSOURCE_H
 #define EARTH_VISUALIZATION_LIGHTSOURCE_H
 
-
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
 

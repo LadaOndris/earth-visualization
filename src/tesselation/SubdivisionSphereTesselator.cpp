@@ -2,8 +2,9 @@
 // Created by lada on 9/24/23.
 //
 
-#include <glm/geometric.hpp>
 #include "SubdivisionSphereTesselator.h"
+
+#include <glm/geometric.hpp>
 
 SubdivisionSphereTesselator::SubdivisionSphereTesselator() {
     auto p0 = glm::vec3(0.f, 0.f, 1.f);

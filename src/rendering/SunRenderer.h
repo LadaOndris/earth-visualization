@@ -6,12 +6,13 @@
 #define EARTH_VISUALIZATION_SUNRENDERER_H
 
 
-#include <vector>
 #include "Renderer.h"
 #include "program.h"
 #include "cameras/FreeCamera.h"
 #include "vertex.h"
 #include "simulation/LightSource.h"
+
+#include <vector>
 
 class SunRenderer : public Renderer {
 public:

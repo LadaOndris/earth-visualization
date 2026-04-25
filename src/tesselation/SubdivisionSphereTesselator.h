@@ -6,6 +6,7 @@
 #define EARTH_VISUALIZATION_SUBDIVISIONSPHERETESSELATOR_H
 
 #include <glm/fwd.hpp>
+
 #include <vector>
 
 class SphereTesselator {

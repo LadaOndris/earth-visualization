@@ -1,9 +1,8 @@
 //
 // Created by lada on 9/24/23.
 //
-
-#include <glm/geometric.hpp>
 #include "ellipsoid.h"
+#include <glm/geometric.hpp>
 
 glm::vec3 REAL_RADII_METERS = glm::vec3(6378137.0, 6356752.314245, 6378137.0);
 

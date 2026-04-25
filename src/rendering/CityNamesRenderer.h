@@ -4,8 +4,6 @@
 
 #ifndef EARTH_VISUALIZATION_CITYNAMESRENDERER_H
 #define EARTH_VISUALIZATION_CITYNAMESRENDERER_H
-
-#include <map>
 #include "Renderer.h"
 #include "RenderingOptions.h"
 #include "glad/glad.h"
@@ -15,8 +13,11 @@
 #include "WorldCitiesReader.h"
 #include "RendererSubscriber.h"
 #include "Frustum.h"
+
 #include <glm/vec3.hpp>
 #include <glm/detail/type_vec2.hpp>
+
+#include <map>
 
 struct Character {
     glm::vec2 size;       // Size of glyph

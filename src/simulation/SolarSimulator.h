@@ -2,14 +2,15 @@
 #ifndef EARTH_VISUALIZATION_SOLARSIMULATOR_H
 #define EARTH_VISUALIZATION_SOLARSIMULATOR_H
 
+#include "LightSource.h"
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <cmath>
 #include <ctime>
 #include <cmath>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
-#include "LightSource.h"
 
 const double DAYS_IN_YEAR = 365.25;
 

@@ -5,12 +5,12 @@
 #ifndef EARTH_VISUALIZATION_GUIFRAMERENDERER_H
 #define EARTH_VISUALIZATION_GUIFRAMERENDERER_H
 
-
-#include <string>
 #include "Renderer.h"
 #include "RenderingOptions.h"
 #include "RendererSubscriber.h"
 #include "simulation/SolarSimulator.h"
+
+#include <string>
 
 class GuiFrameRenderer : public Renderer, public RendererSubscriber {
 private:

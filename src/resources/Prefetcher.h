@@ -5,8 +5,9 @@
 #ifndef EARTH_VISUALIZATION_PREFETCHER_H
 #define EARTH_VISUALIZATION_PREFETCHER_H
 
-#include <vector>
 #include "tiling/TileResources.h"
+
+#include <vector>
 
 class Prefetcher {
 public:

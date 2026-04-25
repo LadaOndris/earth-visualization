@@ -5,10 +5,11 @@
 #ifndef EARTH_VISUALIZATION_TILEMESHTESSELATOR_H
 #define EARTH_VISUALIZATION_TILEMESHTESSELATOR_H
 
-#include <vector>
 #include "textures/Texture.h"
 #include "ellipsoid.h"
 #include "tiling/Tile.h"
+
+#include <vector>
 
 class TileMeshTesselator {
 private:

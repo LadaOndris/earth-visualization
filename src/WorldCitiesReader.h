@@ -2,15 +2,11 @@
 #ifndef EARTH_VISUALIZATION_WORLDCITIESREADER_H
 #define EARTH_VISUALIZATION_WORLDCITIESREADER_H
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
+#include <glm/glm.hpp>
+
 #include <utility>
 #include <vector>
 #include <string>
-#include <iomanip>
-
-#include <glm/glm.hpp>
 
 struct City {
     std::string name;

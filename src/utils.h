@@ -2,8 +2,9 @@
 #ifndef EARTH_VISUALIZATION_UTILS_H
 #define EARTH_VISUALIZATION_UTILS_H
 
-#include <cmath>
 #include <glm/vec3.hpp>
+
+#include <cmath>
 
 namespace utils {
 

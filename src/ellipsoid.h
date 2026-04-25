@@ -4,6 +4,7 @@
 
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
+
 #include <vector>
 
 extern glm::vec3 REAL_RADII_METERS;

@@ -5,9 +5,10 @@
 #ifndef EARTH_VISUALIZATION_PRINTING_H
 #define EARTH_VISUALIZATION_PRINTING_H
 
-#include <iostream>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include <iostream>
 
 void print_mat4(glm::mat4 matrix);
 

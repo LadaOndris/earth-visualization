@@ -1,9 +1,9 @@
-
 #include "TextureFileReader.h"
+
+#include <glm/vec2.hpp>
 
 #include <sstream>
 #include <iostream>
-#include <glm/vec2.hpp>
 
 std::optional<std::shared_ptr<Texture>> TextureFileReader::read(const fs::path &levelDirPath, const fs::path &fileName) const {
     const auto meta = parseMetadata(fileName);

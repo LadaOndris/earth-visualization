@@ -5,6 +5,8 @@
 #ifndef EARTH_VISUALIZATION_RESOURCEFETCHER_H
 #define EARTH_VISUALIZATION_RESOURCEFETCHER_H
 
+#include "textures/Texture.h"
+
 #include <iostream>
 #include <queue>
 #include <thread>
@@ -12,7 +14,6 @@
 #include <atomic>
 #include <condition_variable>
 #include <memory>
-#include "textures/Texture.h"
 
 struct TextureLoadRequest {
     std::string path;

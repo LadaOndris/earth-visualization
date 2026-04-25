@@ -2,8 +2,9 @@
 #ifndef EARTH_VISUALIZATION_VERTEX_H
 #define EARTH_VISUALIZATION_VERTEX_H
 
-#include <vector>
 #include <glm/vec3.hpp>
+
+#include <vector>
 
 typedef struct {
     float x, y, z;

@@ -5,9 +5,6 @@
 #ifndef EARTH_VISUALIZATION_TILEEARTHRENDERER_H
 #define EARTH_VISUALIZATION_TILEEARTHRENDERER_H
 
-
-#include <glm/vec3.hpp>
-#include <unordered_map>
 #include "Renderer.h"
 #include "cameras/Camera.h"
 #include "ellipsoid.h"
@@ -18,6 +15,11 @@
 #include "resources/ResourceFetcher.h"
 #include "resources/ResourceManager.h"
 #include "simulation/LightSource.h"
+
+#include <glm/vec3.hpp>
+
+#include <unordered_map>
+
 
 class TileEarthRenderer : public Renderer {
 public:

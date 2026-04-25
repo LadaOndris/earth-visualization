@@ -5,11 +5,11 @@
 #ifndef EARTH_VISUALIZATION_RESOURCEMANAGER_H
 #define EARTH_VISUALIZATION_RESOURCEMANAGER_H
 
+#include "textures/Texture.h"
 
 #include <memory>
 #include <list>
 #include <algorithm>
-#include "textures/Texture.h"
 
 class ResourceManager {
 public:

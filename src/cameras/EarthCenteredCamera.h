@@ -4,9 +4,9 @@
 
 #ifndef EARTH_VISUALIZATION_EARTHCENTEREDCAMERA_H
 #define EARTH_VISUALIZATION_EARTHCENTEREDCAMERA_H
-
 #include "Camera.h"
 #include "ellipsoid.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 

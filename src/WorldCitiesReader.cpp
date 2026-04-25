@@ -2,7 +2,6 @@
 #include "WorldCitiesReader.h"
 #include "fast-cpp-csv-parser/csv.h"
 
-
 std::vector<City> WorldCitiesReader::readData() {
     std::vector<City> data;
 
