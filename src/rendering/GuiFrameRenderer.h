@@ -18,10 +18,10 @@ private:
     float paddingBetweenWindows = 10;
     float paddingTop = paddingBetweenWindows;
     int FIT_TO_CONTENT = 0;
-    RenderingOptions renderingOptions;
+    RenderingOptions _renderingOptions;
     RenderingStatistics renderingStatistics;
     float TO_DEGS_COEFF = 180 / 3.14159265;
-    const SolarSimulator &simulator;
+    const SolarSimulator &_simulator;
 
     void createSimulationWindow(t_window_definition window);
 

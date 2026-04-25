@@ -28,13 +28,13 @@ public:
                                ResourceFetcher &resourceFetcher,
                                ResourceManager &resourceManager,
                                Program &program)
-            : tileContainer(tileContainer), 
-              ellipsoid(ellipsoid),
-              camera(camera), 
-              lightSource(lightSource), 
-              resourceFetcher(resourceFetcher),
-              resourceManager(resourceManager),
-              program(program) {
+            : _tileContainer(tileContainer), 
+              _ellipsoid(ellipsoid),
+              _camera(camera), 
+              _lightSource(lightSource), 
+              _resourceFetcher(resourceFetcher),
+              _resourceManager(resourceManager),
+              _program(program) {
     }
 
     void render(float currentTime, t_window_definition window, RenderingOptions options) override;
@@ -50,15 +50,15 @@ public:
     void addSubscriber(const std::shared_ptr<RendererSubscriber>& subscriber);
 
 private:
-    TileContainer &tileContainer;
-    Ellipsoid &ellipsoid;
-    Camera &camera;
-    const LightSource &lightSource;
-    ResourceFetcher &resourceFetcher;
-    ResourceManager &resourceManager;
-    Program &program;
-    std::vector<std::shared_ptr<RendererSubscriber>> subscribers;
-    std::unordered_map<std::string, std::shared_ptr<Texture>> requestMap;
+    TileContainer &_tileContainer;
+    Ellipsoid &_ellipsoid;
+    Camera &_camera;
+    const LightSource &_lightSource;
+    ResourceFetcher &_resourceFetcher;
+    ResourceManager &_resourceManager;
+    Program &_program;
+    std::vector<std::shared_ptr<RendererSubscriber>> _subscribers;
+    std::unordered_map<std::string, std::shared_ptr<Texture>> _requestMap;
 
 
     void initVertexArraysForAllLevels(int numLevels);

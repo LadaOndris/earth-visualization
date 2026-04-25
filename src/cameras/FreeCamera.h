@@ -54,11 +54,11 @@ public:
     }
 
     void onMouseScroll(double xoffset, double yoffset) {
-        fov -= (float) yoffset;
-        if (fov < 1.0f)
-            fov = 1.0f;
-        if (fov > 45.0f)
-            fov = 45.0f;
+        _fov -= (float) yoffset;
+        if (_fov < 1.0f)
+            _fov = 1.0f;
+        if (_fov > 45.0f)
+            _fov = 45.0f;
     }
 
     void onMouseDrag(double xoffset, double yoffset) {

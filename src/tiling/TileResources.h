@@ -20,11 +20,11 @@ enum TextureType {
 class TileResources {
 private:
     // Mesh covers always the tile only
-    Mesh_t mesh;
+    Mesh_t _mesh;
     // Textures may cover many tiles
-    std::shared_ptr<Texture> dayTexture;
-    std::shared_ptr<Texture> nightTexture;
-    std::shared_ptr<Texture> heightMap;
+    std::shared_ptr<Texture> _dayTexture;
+    std::shared_ptr<Texture> _nightTexture;
+    std::shared_ptr<Texture> _heightMap;
 public:
     unsigned int meshVAO = 0, meshVBO = 0;
     // Coarser and finer resources form a hierarchical structure of the resources.
@@ -34,24 +34,24 @@ public:
     explicit TileResources(Mesh_t mesh, std::shared_ptr<Texture> dayTexture,
                            std::shared_ptr<Texture> nightTexture,
                            std::shared_ptr<Texture> heightMap) :
-            mesh(std::move(mesh)), dayTexture(std::move(dayTexture)),
-            nightTexture(std::move(nightTexture)), heightMap(std::move(heightMap)) {
+            _mesh(std::move(mesh)), _dayTexture(std::move(dayTexture)),
+            _nightTexture(std::move(nightTexture)), _heightMap(std::move(heightMap)) {
     }
 
     [[nodiscard]] Mesh_t getMesh() const {
-        return mesh;
+        return _mesh;
     }
 
     [[nodiscard]] std::shared_ptr<Texture> getTexture(TextureType textureType) const {
         switch (textureType) {
             case TextureType::Day: {
-                return dayTexture;
+                return _dayTexture;
             }
             case TextureType::Night: {
-                return nightTexture;
+                return _nightTexture;
             }
             case TextureType::HeightMap: {
-                return heightMap;
+                return _heightMap;
             }
             default:
                 throw std::runtime_error("Invalid texture type");

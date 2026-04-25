@@ -15,61 +15,61 @@
 
 class Texture {
 private:
-    std::string path;
-    Resolution resolution; // Resolution in pixels
-    glm::vec2 geodeticOffset; // Offset of this texture on the ellipsoid
-    glm::vec2 geodeticSize; // Width in longitude and latitude
-    glm::vec2 textureGridSize;
-    int channels;
-    int xIndex;
-    int yIndex;
+    std::string _path;
+    Resolution _resolution; // Resolution in pixels
+    glm::vec2 _geodeticOffset; // Offset of this texture on the ellipsoid
+    glm::vec2 _geodeticSize; // Width in longitude and latitude
+    glm::vec2 _textureGridSize;
+    int _channels;
+    int _xIndex;
+    int _yIndex;
 
-    bool isGlPrepared = false;
-    std::vector<unsigned char> data;
+    bool _isGlPrepared = false;
+    std::vector<unsigned char> _data;
 
-    unsigned int textureId;
+    unsigned int _textureId;
 
     void freeData() {
-        data.clear();
+        _data.clear();
     }
 
 public:
     explicit Texture(std::string path, int width,
                      glm::vec2 geodeticOffset, glm::vec2 geodeticSize,
                      glm::vec2 textureGridSize, int xIndex, int yIndex)
-            : path(std::move(path)),
-              resolution(width, width),
-              geodeticOffset(geodeticOffset),
-              geodeticSize(geodeticSize),
-              textureGridSize(textureGridSize),
-              channels(0),
-              xIndex(xIndex),
-              yIndex(yIndex) {
+            : _path(std::move(path)),
+              _resolution(width, width),
+              _geodeticOffset(geodeticOffset),
+              _geodeticSize(geodeticSize),
+              _textureGridSize(textureGridSize),
+              _channels(0),
+              _xIndex(xIndex),
+              _yIndex(yIndex) {
     }
 
     void setData(std::vector<unsigned char> dataOther) {
-        data = std::move(dataOther);
+        _data = std::move(dataOther);
     }
 
     void setChannels(int channelsValue) {
-        channels = channelsValue;
+        _channels = channelsValue;
     }
 
     void loadIntoGL() {
-        assert(!data.empty());
-        assert(!isGlPrepared);
+        assert(!_data.empty());
+        assert(!_isGlPrepared);
 
-        auto width = resolution.getWidth();
-        auto height = resolution.getHeight();
+        auto width = _resolution.getWidth();
+        auto height = _resolution.getHeight();
 
         int dataFormat = GL_RGB;
         int storageFormat = GL_RGB8;
-        if (channels == 1) {
+        if (_channels == 1) {
             dataFormat = GL_RED;
             storageFormat = GL_R8;
         }
 
-        glCreateTextures(GL_TEXTURE_2D, 1, &textureId);
+        glCreateTextures(GL_TEXTURE_2D, 1, &_textureId);
 
         //Check for OpenGL errors
         GLenum error = glGetError();
@@ -77,18 +77,18 @@ public:
             std::cerr << "OpenGL error after glGenTextures: " << error << std::endl;
         }
 
-        glTextureParameteri(textureId, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTextureParameteri(textureId, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTextureParameteri(textureId, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTextureParameteri(textureId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTextureParameteri(_textureId, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(_textureId, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(_textureId, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTextureParameteri(_textureId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         // Anisotropic filtering improves the appearance of textures
         // viewed at oblique angles, rather than straight-on.
-        glTextureParameterf(textureId, GL_TEXTURE_MAX_ANISOTROPY, 4);
+        glTextureParameterf(_textureId, GL_TEXTURE_MAX_ANISOTROPY, 4);
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glTextureStorage2D(textureId, 1, storageFormat, width, height);
-        glTextureSubImage2D(textureId, 0, 0, 0, width, height, dataFormat, GL_UNSIGNED_BYTE, data.data());
-        glGenerateTextureMipmap(textureId);
+        glTextureStorage2D(_textureId, 1, storageFormat, width, height);
+        glTextureSubImage2D(_textureId, 0, 0, 0, width, height, dataFormat, GL_UNSIGNED_BYTE, _data.data());
+        glGenerateTextureMipmap(_textureId);
 
         // Check for OpenGL errors after texture data loading
         error = glGetError();
@@ -98,58 +98,58 @@ public:
 
         freeData();
 
-        isGlPrepared = true;
+        _isGlPrepared = true;
     }
 
     void unloadFromGL() {
-        if (isGlPrepared) {
-            glDeleteTextures(1, &textureId);
-            isGlPrepared = false;
+        if (_isGlPrepared) {
+            glDeleteTextures(1, &_textureId);
+            _isGlPrepared = false;
         }
     }
 
     [[nodiscard]] bool isPreparedInGlContext() const {
-        return isGlPrepared;
+        return _isGlPrepared;
     }
 
     [[nodiscard]] bool isLoaded() const {
-        return !data.empty();
+        return !_data.empty();
     }
 
     [[nodiscard]] std::string getPath() const {
-        return path;
+        return _path;
     }
 
     [[nodiscard]] Resolution getResolution() const {
-        return resolution;
+        return _resolution;
     }
 
     [[nodiscard]] double getLatitudeWidth() const {
-        return geodeticSize[1];
+        return _geodeticSize[1];
     }
 
     [[nodiscard]] double getLongitudeWidth() const {
-        return geodeticSize[0];
+        return _geodeticSize[0];
     }
 
     [[nodiscard]] glm::vec2 getGeodeticOffset() const {
-        return geodeticOffset;
+        return _geodeticOffset;
     }
 
     [[nodiscard]] glm::vec2 getTextureGridSize() const {
-        return textureGridSize;
+        return _textureGridSize;
     }
 
     [[nodiscard]] unsigned int &getTextureId() {
-        return textureId;
+        return _textureId;
     }
 
     [[nodiscard]] int getXIndex() const {
-        return xIndex;
+        return _xIndex;
     }
 
     [[nodiscard]] int getYIndex() const {
-        return yIndex;
+        return _yIndex;
     }
 };
 

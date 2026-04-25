@@ -7,15 +7,15 @@
 
 bool TileEarthRenderer::initialize() {
     // Configure tiles to use the current ellipsoid
-    for (Tile &tile: tileContainer.getTiles()) {
-        tile.updateGeocentricPosition(ellipsoid);
+    for (Tile &tile: _tileContainer.getTiles()) {
+        tile.updateGeocentricPosition(_ellipsoid);
     }
 
-    bool isShaderProgramBuilt = program.build();
+    bool isShaderProgramBuilt = _program.build();
     if (!isShaderProgramBuilt) {
         return false;
     }
-    int numLevels = tileContainer.getNumLevels();
+    int numLevels = _tileContainer.getNumLevels();
     initVertexArraysForAllLevels(numLevels);
 
     return true;
@@ -32,7 +32,7 @@ void TileEarthRenderer::initVertexArraysForAllLevels(int numLevels) {
     for (int level = 0; level < numLevels; level++) {
         Mesh_t fullMeshForThisLevel;
         // Merge all tile meshes of this level together.
-        for (Tile &tile: tileContainer.getTiles()) {
+        for (Tile &tile: _tileContainer.getTiles()) {
             auto resources = tile.getResourcesByLevel(level);
 
             Mesh_t mesh = resources->getMesh();
@@ -45,7 +45,7 @@ void TileEarthRenderer::initVertexArraysForAllLevels(int numLevels) {
         unsigned int VAO, VBO;
         setupVertexArray(verticesForThisLevel, VAO, VBO);
 
-        for (Tile &tile: tileContainer.getTiles()) {
+        for (Tile &tile: _tileContainer.getTiles()) {
             auto resources = tile.getResourcesByLevel(level);
             resources->meshVAO = VAO;
             resources->meshVBO = VBO;
@@ -72,20 +72,20 @@ bool TileEarthRenderer::prepareTexture(const std::shared_ptr<Texture> &texture) 
     if (texture->isPreparedInGlContext()) {
         // The texture is ready to use in OpenGL
         // Notify the resource manager about the current usage of textures
-        resourceManager.noteUsage(texture);
+        _resourceManager.noteUsage(texture);
         return true;
     } else {
         // Check if a request has been made for this texture
-        auto it = requestMap.find(texture->getPath());
-        if (it == requestMap.end()) {
+        auto it = _requestMap.find(texture->getPath());
+        if (it == _requestMap.end()) {
             // The texture hasn't been loaded from disk
             TextureLoadRequest request = {
                     .path = texture->getPath()
             };
-            resourceFetcher.request(request);
+            _resourceFetcher.request(request);
             // Register a request into a data structure
             // so that it can be connected to a TextureLoadResult by the path
-            requestMap[texture->getPath()] = texture;
+            _requestMap[texture->getPath()] = texture;
         }
         return false;
 
@@ -95,8 +95,8 @@ bool TileEarthRenderer::prepareTexture(const std::shared_ptr<Texture> &texture) 
 void TileEarthRenderer::updateTexturesWithData(const std::vector<TextureLoadResult> &results) {
     for (const TextureLoadResult &result: results) {
         // Get the instance of the texture from the HashMap
-        auto it = requestMap.find(result.path);
-        if (it != requestMap.end()) {
+        auto it = _requestMap.find(result.path);
+        if (it != _requestMap.end()) {
             std::shared_ptr<Texture> texture = it->second;
 
             // Copy the data from the TextureLoadResult to the texture instance.
@@ -104,13 +104,13 @@ void TileEarthRenderer::updateTexturesWithData(const std::vector<TextureLoadResu
             texture->setChannels(result.channels);
 
             // Remove the registration from the HashMap
-            requestMap.erase(it);
+            _requestMap.erase(it);
 
             assert(result.width == texture->getResolution().getWidth());
             assert(result.height == texture->getResolution().getHeight());
 
             // Now, the texture is loaded and can be prepared for OpenGL
-            resourceManager.addTextureIntoContext(texture);
+            _resourceManager.addTextureIntoContext(texture);
         }
     }
 }
@@ -139,42 +139,42 @@ bool TileEarthRenderer::getOrPrepareTexture(
 }
 
 void TileEarthRenderer::render(float currentTime, t_window_definition window, RenderingOptions options) {
-    auto newlyLoadedTexturesData = resourceFetcher.retrieveLoadedResources();
+    auto newlyLoadedTexturesData = _resourceFetcher.retrieveLoadedResources();
     updateTexturesWithData(newlyLoadedTexturesData);
 
-    program.use();
-    program.setInt("dayTextureSampler", 0); // Texture Unit 0
-    program.setInt("nightTextureSampler", 1); // Texture Unit 1
-    program.setInt("heightMapSampler", 2); // Texture Unit 2
-    program.setBool("useDayTexture", options.isTextureEnabled);
-    program.setBool("isNightEnabled", options.isNightEnabled);
-    program.setBool("displayGrid", options.isGridEnabled);
-    program.setBool("isTerrainEnabled", options.isTerrainEnabled);
-    program.setBool("isTerrainShadingEnabled", options.isTerrainShadingEnabled);
+    _program.use();
+    _program.setInt("dayTextureSampler", 0); // Texture Unit 0
+    _program.setInt("nightTextureSampler", 1); // Texture Unit 1
+    _program.setInt("heightMapSampler", 2); // Texture Unit 2
+    _program.setBool("useDayTexture", options.isTextureEnabled);
+    _program.setBool("isNightEnabled", options.isNightEnabled);
+    _program.setBool("displayGrid", options.isGridEnabled);
+    _program.setBool("isTerrainEnabled", options.isTerrainEnabled);
+    _program.setBool("isTerrainShadingEnabled", options.isTerrainShadingEnabled);
 
-    program.setFloat("gridResolution", 0.05);
-    program.setFloat("gridLineWidth", 2);
+    _program.setFloat("gridResolution", 0.05);
+    _program.setFloat("gridLineWidth", 2);
 
     // Day/night blending
     float blendDuration = 0.3f;
-    program.setFloat("blendDuration", blendDuration);
-    program.setFloat("blendDurationScale", 1 / (2 * blendDuration));
+    _program.setFloat("blendDuration", blendDuration);
+    _program.setFloat("blendDurationScale", 1 / (2 * blendDuration));
 
     // Height map settings
-    double ellipsoidScaleFactor = ellipsoid.getRealityScaleFactor();
+    double ellipsoidScaleFactor = _ellipsoid.getRealityScaleFactor();
     double displacementFactor = 25. / ellipsoidScaleFactor * options.heightFactor;
-    program.setFloat("heightDisplacementFactor", static_cast<float>(displacementFactor));
-    program.setInt("heightScale", options.heightFactor);
+    _program.setFloat("heightDisplacementFactor", static_cast<float>(displacementFactor));
+    _program.setInt("heightScale", options.heightFactor);
 
     // Set up model, view, and projection matrix
     Frustum frustum = setupMatrices(currentTime, window);
     // Set ellipsoid parameters for the vertex program
-    program.setVec3("ellipsoidRadiiSquared", ellipsoid.getRadiiSquared());
-    program.setVec3("ellipsoidOneOverRadiiSquared", ellipsoid.getOneOverRadiiSquared());
-    program.setVec3("lightPos", lightSource.getLightPosition());
+    _program.setVec3("ellipsoidRadiiSquared", _ellipsoid.getRadiiSquared());
+    _program.setVec3("ellipsoidOneOverRadiiSquared", _ellipsoid.getOneOverRadiiSquared());
+    _program.setVec3("lightPos", _lightSource.getLightPosition());
 
-    auto tiles = tileContainer.getTiles();
-    auto cameraPosition = camera.getPosition();
+    auto tiles = _tileContainer.getTiles();
+    auto cameraPosition = _camera.getPosition();
 
     RenderingStatistics renderingStats;
     renderingStats.numTiles = tiles.size();
@@ -206,14 +206,14 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         maxLongitude = std::max(tile.getLongitude() + tile.getLongitudeWidth(), maxLongitude);
         maxLatitude = std::max(tile.getLatitude() + tile.getLatitudeWidth(), maxLatitude);
 
-        program.setFloat("uTileLongitudeOffset", tile.getLongitude());
-        program.setFloat("uTileLatitudeOffset", tile.getLatitude());
-        program.setFloat("uTileLongitudeWidth", tile.getLongitudeWidth());
-        program.setFloat("uTileLatitudeWidth", tile.getLatitudeWidth());
+        _program.setFloat("uTileLongitudeOffset", tile.getLongitude());
+        _program.setFloat("uTileLatitudeOffset", tile.getLatitude());
+        _program.setFloat("uTileLongitudeWidth", tile.getLongitudeWidth());
+        _program.setFloat("uTileLatitudeWidth", tile.getLatitudeWidth());
 
-        double distanceToCamera = glm::length(camera.getPosition() - tile.getGeocentricPosition());
+        double distanceToCamera = glm::length(_camera.getPosition() - tile.getGeocentricPosition());
         std::shared_ptr<TileResources> resources = tile.getResources(
-                screenSpaceWidth, distanceToCamera, camera);
+                screenSpaceWidth, distanceToCamera, _camera);
         Mesh_t mesh = resources->getMesh();
 
         std::shared_ptr<Texture> dayTexture;
@@ -226,18 +226,18 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         // Draw only if the necessary resources are ready
         if (dayTextureReady && nightTextureReady && heightMapReady) {
             // Set up day texture
-            program.setVec2("dayTextureGeodeticOffset", utils::convertToRads(dayTexture->getGeodeticOffset()));
-            program.setVec2("dayTextureGridSize", dayTexture->getTextureGridSize());
+            _program.setVec2("dayTextureGeodeticOffset", utils::convertToRads(dayTexture->getGeodeticOffset()));
+            _program.setVec2("dayTextureGridSize", dayTexture->getTextureGridSize());
             glBindTextureUnit(0, dayTexture->getTextureId());
 
             // Set up night texture
-            program.setVec2("nightTextureGeodeticOffset", utils::convertToRads(nightTexture->getGeodeticOffset()));
-            program.setVec2("nightTextureGridSize", nightTexture->getTextureGridSize());
+            _program.setVec2("nightTextureGeodeticOffset", utils::convertToRads(nightTexture->getGeodeticOffset()));
+            _program.setVec2("nightTextureGridSize", nightTexture->getTextureGridSize());
             glBindTextureUnit(1, nightTexture->getTextureId());
 
             // Set up height map
-            program.setVec2("heightMapGeodeticOffset", utils::convertToRads(heightMap->getGeodeticOffset()));
-            program.setVec2("heightMapGridSize", heightMap->getTextureGridSize());
+            _program.setVec2("heightMapGeodeticOffset", utils::convertToRads(heightMap->getGeodeticOffset()));
+            _program.setVec2("heightMapGridSize", heightMap->getTextureGridSize());
             glBindTextureUnit(2, heightMap->getTextureId());
 
             // Set VAO: we need the correct buffer? Is there one or more?
@@ -253,19 +253,19 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
     }
 
     // TODO: refactor: extract method
-    auto geodeticCameraPosition = ellipsoid.convertGeocentricToGeodetic(camera.getPosition());
-    auto surfacePoint = ellipsoid.projectGeocentricPointOntoSurface(camera.getPosition());
-    auto distanceFromSurface = glm::length(camera.getPosition() - surfacePoint);
-    auto realityScaleFactor = ellipsoid.getRealityScaleFactor();
+    auto geodeticCameraPosition = _ellipsoid.convertGeocentricToGeodetic(_camera.getPosition());
+    auto surfacePoint = _ellipsoid.projectGeocentricPointOntoSurface(_camera.getPosition());
+    auto distanceFromSurface = glm::length(_camera.getPosition() - surfacePoint);
+    auto realityScaleFactor = _ellipsoid.getRealityScaleFactor();
     geodeticCameraPosition[2] = realityScaleFactor * distanceFromSurface;
     geodeticCameraPosition[1] *= -1; // Invert latitude (application uses a reversed latitude)
 
-    renderingStats.loadedTextures = resourceManager.getNumLoadedTextures();
+    renderingStats.loadedTextures = _resourceManager.getNumLoadedTextures();
     renderingStats.cameraPosition = geodeticCameraPosition;
     renderingStats.renderedLatitudeRange = glm::vec2(minLatitude, maxLatitude);
     renderingStats.renderedLongitudeRange = glm::vec2(minLongitude, maxLongitude);
 
-    for (auto &subscriber: subscribers) {
+    for (auto &subscriber: _subscribers) {
         subscriber->notify(renderingStats);
     }
 }
@@ -290,8 +290,8 @@ glm::mat4 TileEarthRenderer::constructPerspectiveProjectionMatrix(
 
 
 Frustum TileEarthRenderer::setupMatrices(float currentTime, t_window_definition window) {
-    glm::mat4 projectionMatrix = constructPerspectiveProjectionMatrix(camera, ellipsoid, window);
-    glm::mat4 viewMatrix = camera.getViewMatrix();
+    glm::mat4 projectionMatrix = constructPerspectiveProjectionMatrix(_camera, _ellipsoid, window);
+    glm::mat4 viewMatrix = _camera.getViewMatrix();
 
     // Do not rotate the model matrix to represent the Earth's inclination.
     // The inclination will be simulated using the position of the Sun
@@ -299,21 +299,21 @@ Frustum TileEarthRenderer::setupMatrices(float currentTime, t_window_definition 
     //float inclinationAngle = glm::radians(23.5f); // Convert degrees to radians
     //modelMatrix = glm::rotate(modelMatrix, inclinationAngle, glm::vec3(1.0f, 0.0f, 0.0f));
 
-    program.setMat4("projection", projectionMatrix);
-    program.setMat4("view", viewMatrix);
-    program.setMat4("model", modelMatrix);
+    _program.setMat4("projection", projectionMatrix);
+    _program.setMat4("view", viewMatrix);
+    _program.setMat4("model", modelMatrix);
 
     return Frustum(viewMatrix, projectionMatrix);
 }
 
 void TileEarthRenderer::destroy() {
     // Release textures
-    resourceManager.releaseAll();
+    _resourceManager.releaseAll();
 
     // Release buffers
-    int numLevels = tileContainer.getNumLevels();
+    int numLevels = _tileContainer.getNumLevels();
     for (int level = 0; level < numLevels; level++) {
-        Tile &tile = tileContainer.getTiles()[0];
+        Tile &tile = _tileContainer.getTiles()[0];
         auto resources = tile.getResourcesByLevel(level);
         glDeleteVertexArrays(1, &resources->meshVAO);
         glDeleteBuffers(1, &resources->meshVBO);
@@ -321,6 +321,6 @@ void TileEarthRenderer::destroy() {
 }
 
 void TileEarthRenderer::addSubscriber(const std::shared_ptr<RendererSubscriber> &subscriber) {
-    subscribers.push_back(subscriber);
+    _subscribers.push_back(subscriber);
 }
 

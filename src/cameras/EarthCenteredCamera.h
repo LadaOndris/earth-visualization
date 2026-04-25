@@ -15,23 +15,23 @@ class EarthCenteredCamera : public Camera {
 public:
     EarthCenteredCamera(Ellipsoid &ellipsoid, glm::vec3 position, glm::vec3 target, glm::vec3 up,
                         float fov = 45.0f, float zoomSpeedFactor = 1.0f) :
-            Camera(position, target, fov), ellipsoid(ellipsoid) {
-        this->up = up;
+            Camera(position, target, fov), _ellipsoid(ellipsoid) {
+        this->_up = up;
     }
 
     glm::mat4 getViewMatrix() const {
-        auto view = glm::lookAt(position, target, up);
+        auto view = glm::lookAt(_position, _target, _up);
         return view;
     }
 
     void onMouseScroll(double xoffset, double yoffset) {
         // Adjust the camera's position to zoom in or out
         float zoomSpeed = calcZoomSpeedFromDistance();
-        auto positionShift = static_cast<float>(yoffset) * zoomSpeed * glm::normalize(target - position);
-        auto positionCandidate = position + positionShift;
+        auto positionShift = static_cast<float>(yoffset) * zoomSpeed * glm::normalize(_target - _position);
+        auto positionCandidate = _position + positionShift;
 
-        if (ellipsoid.isPointOnTheOutside(positionCandidate)) {
-            position = positionCandidate;
+        if (_ellipsoid.isPointOnTheOutside(positionCandidate)) {
+            _position = positionCandidate;
         }
     }
 
@@ -42,14 +42,14 @@ public:
         float pitch = -static_cast<float>(yoffset) * sensitivity;
 
         // Rotate the camera's position around the target point
-        glm::vec3 toTarget = target - position;
+        glm::vec3 toTarget = _target - _position;
         glm::mat4 rotation = glm::mat4(1.0f);
-        rotation = glm::rotate(rotation, glm::radians(yaw), up);
-        rotation = glm::rotate(rotation, glm::radians(-pitch), glm::cross(toTarget, up));
+        rotation = glm::rotate(rotation, glm::radians(yaw), _up);
+        rotation = glm::rotate(rotation, glm::radians(-pitch), glm::cross(toTarget, _up));
         toTarget = glm::vec3(rotation * glm::vec4(toTarget, 0.0f));
 
         // Update the camera's position
-        position = target - toTarget;
+        _position = _target - toTarget;
     }
 
     void onMouseMove(double xoffset, double yoffset) {
@@ -57,13 +57,13 @@ public:
     }
 
 private:
-    Ellipsoid &ellipsoid;
-    glm::vec3 up;
+    Ellipsoid &_ellipsoid;
+    glm::vec3 _up;
     float sensitivityFactor = 0.09f;
 
     [[nodiscard]] float getDistanceToSurface() {
-        glm::vec3 pointOnSurface = ellipsoid.projectGeocentricPointOntoSurface(position);
-        float distance = glm::length(pointOnSurface - position);
+        glm::vec3 pointOnSurface = _ellipsoid.projectGeocentricPointOntoSurface(_position);
+        float distance = glm::length(pointOnSurface - _position);
         return distance;
     }
 
@@ -81,7 +81,7 @@ private:
 
     float calcDragSensitivityBasedOnDistance() {
         auto distance = getDistanceToSurface();
-        auto radiiLength = glm::length(ellipsoid.getRadii());
+        auto radiiLength = glm::length(_ellipsoid.getRadii());
         // Normalize the distance by the radii of the Earth.
         float sensitivity = distance / radiiLength;
         return sensitivity * sensitivityFactor;

@@ -7,7 +7,7 @@ std::vector<City> WorldCitiesReader::readData() {
     std::vector<City> data;
 
     io::CSVReader<4, io::trim_chars<' ', '\t'>, io::double_quote_escape<',', '\"'>,
-            io::throw_on_overflow, io::no_comment> in(filename);
+            io::throw_on_overflow, io::no_comment> in(_filename);
 
     in.read_header(io::ignore_extra_column, "city_ascii","lat","lng","population");
     std::string name;

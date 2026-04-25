@@ -14,32 +14,13 @@
 #include "../simulation/LightSource.h"
 
 class SunRenderer : public Renderer {
-private:
-    Program &program;
-    Camera &camera;
-    const LightSource &lightSource;
-    float sunRadius;
-    
-    int numSegments = 36;
-    unsigned int VAO;
-    unsigned int VBO;
-
-    std::vector<t_vertex> sunVertices;
-
-    glm::vec3 sunLocation;
-
-    void constructVertices();
-
-    void setupVertexArrays();
-
-
 public:
     explicit SunRenderer(Camera &camera, const LightSource &lightSource, float sunRadius,
                          Program &program)
-            : program(program),
-              camera(camera), 
-              lightSource(lightSource), 
-              sunRadius(sunRadius) {
+            : _program(program),
+              _camera(camera), 
+              _lightSource(lightSource), 
+              _sunRadius(sunRadius) {
     }
 
     bool initialize() override;
@@ -51,6 +32,24 @@ public:
     [[nodiscard]] glm::mat4 getProjectionMatrix(t_window_definition window) const;
 
     [[nodiscard]] glm::mat4 getModelMatrix() const;
+
+private:
+    Program &_program;
+    Camera &_camera;
+    const LightSource &_lightSource;
+    float _sunRadius;
+
+    int numSegments = 36;
+    unsigned int VAO;
+    unsigned int VBO;
+
+    std::vector<t_vertex> sunVertices;
+
+    glm::vec3 sunLocation;
+
+    void constructVertices();
+
+    void setupVertexArrays();
 };
 
 

@@ -8,18 +8,18 @@
 
 class Resolution {
 private:
-    int width;
-    int height;
+    int _width;
+    int _height;
 public:
-    explicit Resolution(int width, int height) : width(width), height(height) {
+    explicit Resolution(int width, int height) : _width(width), _height(height) {
     }
 
     int getWidth() const {
-        return width;
+        return _width;
     }
 
     int getHeight() const {
-        return height;
+        return _height;
     }
 };
 

@@ -9,12 +9,12 @@
 
 class Camera {
 protected:
-    float fov;
-    glm::vec3 position;
-    glm::vec3 target;
+    float _fov;
+    glm::vec3 _position;
+    glm::vec3 _target;
 public:
     explicit Camera(glm::vec3 position, glm::vec3 target, float fov = 45.0f)
-            : fov(fov), position(position), target(target) {
+            : _fov(fov), _position(position), _target(target) {
     }
 
     virtual ~Camera() = default;
@@ -28,15 +28,15 @@ public:
     [[nodiscard]] virtual glm::mat4 getViewMatrix() const = 0;
 
     [[nodiscard]] float getFov() const {
-        return fov;
+        return _fov;
     }
 
     [[nodiscard]] glm::vec3 getPosition() const {
-        return position;
+        return _position;
     }
 
     [[nodiscard]] glm::vec3 getTarget() const {
-        return target;
+        return _target;
     }
 
 };

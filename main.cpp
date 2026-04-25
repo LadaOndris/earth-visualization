@@ -31,11 +31,11 @@
 #include <cmath>
 #include <memory>
 
-t_window_definition windowDefinition{800, 600};
-float lastX = 400, lastY = 300;
-bool firstMouseMove = true;
-bool lbutton_down = false;
-GLFWwindow *window = nullptr;
+t_window_definition gWindowDefinition{800, 600};
+float gLastX = 400, gLastY = 300;
+bool gFirstMouseMove = true;
+bool gLbuttonDown = false;
+GLFWwindow *gWindow = nullptr;
 
 
 Ellipsoid ellipsoid = Ellipsoid::unitSphereWithCorrectRatio();
@@ -58,8 +58,8 @@ void error_callback(int error, const char *description) {
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     std::cout << "Window resized to " + std::to_string(width) + "/" + std::to_string(height) << std::endl;
     glViewport(0, 0, width, height);
-    windowDefinition.width = width;
-    windowDefinition.height = height;
+    gWindowDefinition.width = width;
+    gWindowDefinition.height = height;
 }
 
 static void mouse_button_callback(GLFWwindow *window, int button, int action, int mods) {
@@ -70,12 +70,12 @@ static void mouse_button_callback(GLFWwindow *window, int button, int action, in
 
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         if (GLFW_PRESS == action)
-            lbutton_down = true;
+            gLbuttonDown = true;
         else if (GLFW_RELEASE == action)
-            lbutton_down = false;
+            gLbuttonDown = false;
     }
 
-    if (lbutton_down) {
+    if (gLbuttonDown) {
 
     }
 }
@@ -86,17 +86,17 @@ void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos) {
         return;
     }
 
-    if (firstMouseMove) // initially set to true
+    if (gFirstMouseMove) // initially set to true
     {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouseMove = false;
+        gLastX = xpos;
+        gLastY = ypos;
+        gFirstMouseMove = false;
     }
 
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // reversed since y-coordinates range from bottom to top
-    lastX = xpos;
-    lastY = ypos;
+    float xoffset = xpos - gLastX;
+    float yoffset = gLastY - ypos; // reversed since y-coordinates range from bottom to top
+    gLastX = xpos;
+    gLastY = ypos;
 
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
         camera.onMouseDrag(xoffset, yoffset);
@@ -186,27 +186,27 @@ bool initializeGlfw() {
     glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
     glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
 
-    window = glfwCreateWindow(windowDefinition.width, windowDefinition.height, "Earth Viewer", NULL, NULL);
-    if (!window) {
+    gWindow = glfwCreateWindow(gWindowDefinition.width, gWindowDefinition.height, "Earth Viewer", NULL, NULL);
+    if (!gWindow) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
 
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, cursor_pos_callback);
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-    glfwSetKeyCallback(window, key_callback);
+    glfwSetFramebufferSizeCallback(gWindow, framebuffer_size_callback);
+    glfwSetCursorPosCallback(gWindow, cursor_pos_callback);
+    glfwSetMouseButtonCallback(gWindow, mouse_button_callback);
+    glfwSetScrollCallback(gWindow, scroll_callback);
+    glfwSetKeyCallback(gWindow, key_callback);
     return true;
 }
 
 bool initializeGlad() {
-    if (!window) {
+    if (!gWindow) {
         std::cerr << "[ERROR] window is null, cannot initialize GLAD" << std::endl;
         return false;
     }
-    glfwMakeContextCurrent(window);
+    glfwMakeContextCurrent(gWindow);
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         std::cout << "[ERROR] Failed to initialize GLAD" << std::endl;
         return false;
@@ -224,7 +224,7 @@ bool initializeImgui() {
 
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
-    
+
     // float highDPIscaleFactor = 1.0;
 //    io.Fonts->AddFontFromFileTTF(
 //            fontName.c_str(),
@@ -234,7 +234,7 @@ bool initializeImgui() {
 //    );
     // setImGuiStyle(highDPIscaleFactor);
 
-    if (!ImGui_ImplGlfw_InitForOpenGL(window, true)) {
+    if (!ImGui_ImplGlfw_InitForOpenGL(gWindow, true)) {
         std::cout << "[ERROR] Failed to initialize ImGui (ImGui_ImplGlfw_InitForOpenGL)" << std::endl;
         return false;
     }
@@ -274,7 +274,7 @@ bool initializeRenderers(std::vector<std::shared_ptr<Renderer>> renderers) {
 void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers,
                     const std::shared_ptr<GuiFrameRenderer> &guiRenderer,
                     SolarSimulator &solarSimulator) {
-    glViewport(0, 0, windowDefinition.width, windowDefinition.height);
+    glViewport(0, 0, gWindowDefinition.width, gWindowDefinition.height);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
 
@@ -283,7 +283,7 @@ void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers,
     // Initialize the Sun position
     solarSimulator.updateSunPosition(0, static_cast<float>(guiRenderer->getRenderingOptions().simulationSpeed));
 
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(gWindow)) {
         RenderingOptions options = guiRenderer->getRenderingOptions();
         auto currentFrameTime = static_cast<float>(glfwGetTime());
 
@@ -304,10 +304,10 @@ void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers,
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         for (const auto &renderer: renderers) {
-            renderer->render(currentFrameTime, windowDefinition, options);
+            renderer->render(currentFrameTime, gWindowDefinition, options);
         }
 
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(gWindow);
         glfwPollEvents();
     }
 }
@@ -321,7 +321,7 @@ void cleanup(const std::vector<std::shared_ptr<Renderer>> &renderers) {
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    glfwDestroyWindow(window);
+    glfwDestroyWindow(gWindow);
     glfwTerminate();
 }
 

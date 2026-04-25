@@ -21,12 +21,12 @@ struct City {
 
 class WorldCitiesReader {
 public:
-    explicit WorldCitiesReader(std::string filename) : filename(std::move(filename)) {}
+    explicit WorldCitiesReader(std::string filename) : _filename(std::move(filename)) {}
 
     std::vector<City> readData();
 
 private:
-    std::string filename;
+    std::string _filename;
 };
 
 

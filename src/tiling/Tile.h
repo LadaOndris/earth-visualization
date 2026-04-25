@@ -22,15 +22,15 @@ class TileResources;
 
 class Tile {
 private:
-    std::vector<std::shared_ptr<TileResources>> lodResources;
-    double latitude, longitude, latitudeWidth, longitudeWidth;
-    glm::vec3 geocentricPosition;
-    std::array<glm::vec3, 4> corners;
+    std::vector<std::shared_ptr<TileResources>> _lodResources;
+    double _latitude, _longitude, _latitudeWidth, _longitudeWidth;
+    glm::vec3 _geocentricPosition;
+    std::array<glm::vec3, 4> _corners;
     // Normal of the face of the tile.
-    glm::vec3 normal;
-    double tileWidth;
+    glm::vec3 _normal;
+    double _tileWidth;
 
-    int lastLevel = -1;
+    int _lastLevel = -1;
 
     /**
      * Compute the screen-space error based on the given parameters.
@@ -53,9 +53,10 @@ private:
 
 public:
     explicit Tile(double latitude, double longitude, double latitudeWidth, double longitudeWidth)
-            : latitude(latitude), longitude(longitude),
-              latitudeWidth(latitudeWidth), longitudeWidth(longitudeWidth),
-              geocentricPosition(glm::vec3(0, 0, 0)) {
+            : _latitude(latitude), _longitude(longitude),
+              _latitudeWidth(latitudeWidth), _longitudeWidth(longitudeWidth),
+              _geocentricPosition(glm::vec3(0, 0, 0)),
+              _corners{}, _normal{}, _tileWidth(0.0) {
     }
 
     /**
@@ -110,27 +111,27 @@ public:
 
 
     [[nodiscard]] double getTileRadius() const {
-        return tileWidth / 2.0;
+        return _tileWidth / 2.0;
     }
 
     [[nodiscard]] glm::vec3 getGeocentricPosition() const {
-        return geocentricPosition;
+        return _geocentricPosition;
     }
 
     [[nodiscard]] double getLatitude() const {
-        return latitude;
+        return _latitude;
     }
 
     [[nodiscard]] double getLongitude() const {
-        return longitude;
+        return _longitude;
     }
 
     [[nodiscard]] double getLatitudeWidth() const {
-        return latitudeWidth;
+        return _latitudeWidth;
     }
 
     [[nodiscard]] double getLongitudeWidth() const {
-        return longitudeWidth;
+        return _longitudeWidth;
     }
 };
 

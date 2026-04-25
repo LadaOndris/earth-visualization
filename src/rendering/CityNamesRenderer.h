@@ -40,16 +40,28 @@ struct TextInstanceData {
 
 
 class CityNamesRenderer : public Renderer, public RendererSubscriber {
+public:
+    explicit CityNamesRenderer(Program &program, Camera &camera, Ellipsoid &ellipsoid);
+
+    bool initialize() override;
+
+    void destroy() override;
+
+    void render(float currentTime, t_window_definition window, RenderingOptions options) override;
+
+    void notify(RenderingStatistics renderingStatistics) override;
+
 private:
-    std::map<char, Character> characters;
-    GLuint textureId;
-    float atlasWidth, atlasHeight;
-    Program &program;
-    unsigned int VAO, VBO, instanceVBO;
-    Camera &camera;
-    Ellipsoid &ellipsoid;
-    std::vector<City> worldCities;
-    RenderingStatistics rendereringStats;
+    std::map<char, Character> _characters;
+    GLuint _textureId;
+    float _atlasWidth;
+    float _atlasHeight;
+    Program &_program;
+    unsigned int _VAO, _VBO, _instanceVBO;
+    Camera &_camera;
+    Ellipsoid &_ellipsoid;
+    std::vector<City> _worldCities;
+    RenderingStatistics _renderingStats;
 
     bool prepareTextureAtlas();
 
@@ -70,16 +82,6 @@ private:
 
     void retrieveDataToBeRendered(const Frustum &frustum, std::vector<City> &out) const;
 
-public:
-    explicit CityNamesRenderer(Program &program, Camera &camera, Ellipsoid &ellipsoid);
-
-    bool initialize() override;
-
-    void destroy() override;
-
-    void render(float currentTime, t_window_definition window, RenderingOptions options) override;
-
-    void notify(RenderingStatistics renderingStatistics) override;
 };
 
 
