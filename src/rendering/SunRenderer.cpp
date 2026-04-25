@@ -1,6 +1,4 @@
-//
-// Created by lada on 9/27/23.
-//
+
 
 #include "SunRenderer.h"
 #include "tesselation/SubdivisionSphereTesselator.h"

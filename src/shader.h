@@ -1,6 +1,4 @@
-//
-// Created by lada on 11/10/23.
-//
+
 
 #ifndef EARTH_VISUALIZATION_SHADER_H
 #define EARTH_VISUALIZATION_SHADER_H

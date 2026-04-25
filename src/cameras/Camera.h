@@ -1,6 +1,4 @@
-//
-// Created by lada on 9/28/23.
-//
+
 
 #ifndef EARTH_VISUALIZATION_CAMERA_H
 #define EARTH_VISUALIZATION_CAMERA_H

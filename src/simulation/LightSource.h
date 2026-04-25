@@ -1,6 +1,4 @@
-//
-// Created by lada on 11/4/23.
-//
+
 
 #ifndef EARTH_VISUALIZATION_LIGHTSOURCE_H
 #define EARTH_VISUALIZATION_LIGHTSOURCE_H

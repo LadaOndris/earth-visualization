@@ -1,6 +1,4 @@
-//
-// Created by lada on 9/24/23.
-//
+
 #include "ellipsoid.h"
 #include <glm/geometric.hpp>
 

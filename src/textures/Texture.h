@@ -1,6 +1,4 @@
-//
-// Created by lada on 10/17/23.
-//
+
 
 #ifndef EARTH_VISUALIZATION_TEXTURE_H
 #define EARTH_VISUALIZATION_TEXTURE_H

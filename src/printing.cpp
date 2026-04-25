@@ -1,6 +1,4 @@
-//
-// Created by lada on 9/27/23.
-//
+
 #include "printing.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>

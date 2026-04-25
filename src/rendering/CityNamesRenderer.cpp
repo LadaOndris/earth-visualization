@@ -1,6 +1,4 @@
-//
-// Created by lada on 12/10/23.
-//
+
 #include "CityNamesRenderer.h"
 #include "utils.h"
 
