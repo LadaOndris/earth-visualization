@@ -1,8 +1,4 @@
-
-
-#ifndef EARTH_VISUALIZATION_SUNRENDERER_H
-#define EARTH_VISUALIZATION_SUNRENDERER_H
-
+#pragma once
 
 #include "Renderer.h"
 #include "program.h"
@@ -50,6 +46,3 @@ private:
 
     void setupVertexArrays();
 };
-
-
-#endif //EARTH_VISUALIZATION_SUNRENDERER_H

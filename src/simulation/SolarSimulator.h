@@ -1,6 +1,5 @@
 
-#ifndef EARTH_VISUALIZATION_SOLARSIMULATOR_H
-#define EARTH_VISUALIZATION_SOLARSIMULATOR_H
+#pragma once
 
 #include "LightSource.h"
 
@@ -157,5 +156,3 @@ private:
     }
 
 };
-
-#endif //EARTH_VISUALIZATION_SOLARSIMULATOR_H

@@ -1,7 +1,5 @@
 
-
-#ifndef EARTH_VISUALIZATION_PREFETCHER_H
-#define EARTH_VISUALIZATION_PREFETCHER_H
+#pragma once
 
 #include "tiling/TileResources.h"
 
@@ -13,7 +11,3 @@ public:
         // Implement resource prefetching logic based on the current frame's resources.
     }
 };
-
-
-
-#endif //EARTH_VISUALIZATION_PREFETCHER_H

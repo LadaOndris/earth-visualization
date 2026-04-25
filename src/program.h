@@ -1,6 +1,5 @@
 
-#ifndef SHADER_H
-#define SHADER_H
+#pragma once
 
 #include "shader.h"
 
@@ -117,5 +116,3 @@ public:
         deleteShaders();
     }
 };
-
-#endif

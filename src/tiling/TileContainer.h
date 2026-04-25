@@ -1,7 +1,5 @@
 
-
-#ifndef EARTH_VISUALIZATION_TILECONTAINER_H
-#define EARTH_VISUALIZATION_TILECONTAINER_H
+#pragma once
 
 #include "tiling/TileResources.h"
 #include "textures/Texture.h"
@@ -159,5 +157,3 @@ public:
         return _dayMapAtlas.getNumLevelsOfDetail();
     }
 };
-
-#endif //EARTH_VISUALIZATION_TILECONTAINER_H

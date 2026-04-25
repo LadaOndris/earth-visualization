@@ -1,6 +1,5 @@
 
-#ifndef EARTH_VISUALIZATION_FRUSTUM_H
-#define EARTH_VISUALIZATION_FRUSTUM_H
+#pragma once
 
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp>
@@ -20,5 +19,3 @@ private:
     static const int numPlanes = 6;
     glm::vec4 planes[numPlanes];
 };
-
-#endif //EARTH_VISUALIZATION_FRUSTUM_H

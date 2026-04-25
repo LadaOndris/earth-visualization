@@ -1,7 +1,4 @@
-
-
-#ifndef EARTH_VISUALIZATION_RENDERERSUBSCRIBER_H
-#define EARTH_VISUALIZATION_RENDERERSUBSCRIBER_H
+#pragma once
 
 #include <glm/vec3.hpp>
 #include <glm/vec2.hpp>
@@ -22,6 +19,3 @@ public:
 
     virtual void notify(RenderingStatistics renderingStatistics) = 0;
 };
-
-
-#endif //EARTH_VISUALIZATION_RENDERERSUBSCRIBER_H

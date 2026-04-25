@@ -1,7 +1,5 @@
 
-
-#ifndef EARTH_VISUALIZATION_SHADER_H
-#define EARTH_VISUALIZATION_SHADER_H
+#pragma once
 
 #include <glad/glad.h> // include glad to get all the required OpenGL headers
 
@@ -106,5 +104,3 @@ public:
         id = 0;
     }
 };
-
-#endif //EARTH_VISUALIZATION_SHADER_H

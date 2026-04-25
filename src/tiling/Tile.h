@@ -1,7 +1,5 @@
 
-
-#ifndef EARTH_VISUALIZATION_TILE_H
-#define EARTH_VISUALIZATION_TILE_H
+#pragma once
 
 #include "ellipsoid.h"
 #include "textures/Texture.h"
@@ -132,6 +130,3 @@ public:
         return _longitudeWidth;
     }
 };
-
-
-#endif //EARTH_VISUALIZATION_TILE_H

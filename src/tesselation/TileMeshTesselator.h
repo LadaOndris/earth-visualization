@@ -1,7 +1,4 @@
-
-
-#ifndef EARTH_VISUALIZATION_TILEMESHTESSELATOR_H
-#define EARTH_VISUALIZATION_TILEMESHTESSELATOR_H
+#pragma once
 
 #include "textures/Texture.h"
 #include "ellipsoid.h"
@@ -77,6 +74,3 @@ public:
         return meshVertices;
     }
 };
-
-
-#endif //EARTH_VISUALIZATION_TILEMESHTESSELATOR_H

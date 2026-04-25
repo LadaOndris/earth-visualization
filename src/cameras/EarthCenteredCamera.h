@@ -1,7 +1,6 @@
 
+#pragma once
 
-#ifndef EARTH_VISUALIZATION_EARTHCENTEREDCAMERA_H
-#define EARTH_VISUALIZATION_EARTHCENTEREDCAMERA_H
 #include "Camera.h"
 #include "ellipsoid.h"
 
@@ -84,6 +83,3 @@ private:
         return sensitivity * sensitivityFactor;
     }
 };
-
-
-#endif //EARTH_VISUALIZATION_EARTHCENTEREDCAMERA_H

@@ -1,6 +1,5 @@
 
-#ifndef EARTH_VISUALIZATION_ELLIPSOID_H
-#define EARTH_VISUALIZATION_ELLIPSOID_H
+#pragma once
 
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
@@ -77,6 +76,3 @@ private:
     glm::vec3 _radiiSquared;
     glm::vec3 _oneOverRadiiSquared;
 };
-
-
-#endif //EARTH_VISUALIZATION_ELLIPSOID_H

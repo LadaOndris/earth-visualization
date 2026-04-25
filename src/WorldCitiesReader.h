@@ -1,6 +1,5 @@
 
-#ifndef EARTH_VISUALIZATION_WORLDCITIESREADER_H
-#define EARTH_VISUALIZATION_WORLDCITIESREADER_H
+#pragma once
 
 #include <glm/glm.hpp>
 
@@ -24,6 +23,3 @@ public:
 private:
     std::string _filename;
 };
-
-
-#endif //EARTH_VISUALIZATION_WORLDCITIESREADER_H

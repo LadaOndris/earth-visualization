@@ -1,6 +1,5 @@
 
-#ifndef EARTH_VISUALIZATION_UTILS_H
-#define EARTH_VISUALIZATION_UTILS_H
+#pragma once
 
 #include <glm/vec3.hpp>
 
@@ -16,5 +15,3 @@ namespace utils {
     }
 
 }
-
-#endif //EARTH_VISUALIZATION_UTILS_H

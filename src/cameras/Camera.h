@@ -1,7 +1,5 @@
 
-
-#ifndef EARTH_VISUALIZATION_CAMERA_H
-#define EARTH_VISUALIZATION_CAMERA_H
+#pragma once
 
 #include <glm/mat4x4.hpp> // glm::mat4
 
@@ -38,5 +36,3 @@ public:
     }
 
 };
-
-#endif //EARTH_VISUALIZATION_CAMERA_H

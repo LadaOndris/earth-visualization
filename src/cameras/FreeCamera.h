@@ -1,6 +1,5 @@
 
-#ifndef EARTH_VISUALIZATION_FREECAMERA_H
-#define EARTH_VISUALIZATION_FREECAMERA_H
+#pragma once
 
 #include "printing.h"
 #include "Camera.h"
@@ -86,5 +85,3 @@ private:
     }
 
 };
-
-#endif

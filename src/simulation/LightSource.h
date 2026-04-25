@@ -1,7 +1,5 @@
 
-
-#ifndef EARTH_VISUALIZATION_LIGHTSOURCE_H
-#define EARTH_VISUALIZATION_LIGHTSOURCE_H
+#pragma once
 
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
@@ -14,6 +12,3 @@ public:
 
     [[nodiscard]] virtual glm::mat4 getTransformationMatrix() const = 0;
 };
-
-
-#endif //EARTH_VISUALIZATION_LIGHTSOURCE_H

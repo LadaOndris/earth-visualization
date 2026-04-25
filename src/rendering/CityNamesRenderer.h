@@ -1,7 +1,6 @@
 
+#pragma once
 
-#ifndef EARTH_VISUALIZATION_CITYNAMESRENDERER_H
-#define EARTH_VISUALIZATION_CITYNAMESRENDERER_H
 #include "Renderer.h"
 #include "RenderingOptions.h"
 #include "glad/glad.h"
@@ -82,6 +81,3 @@ private:
     void retrieveDataToBeRendered(const Frustum &frustum, std::vector<City> &out) const;
 
 };
-
-
-#endif //EARTH_VISUALIZATION_CITYNAMESRENDERER_H

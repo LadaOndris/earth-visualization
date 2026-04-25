@@ -1,7 +1,5 @@
 
-
-#ifndef EARTH_VISUALIZATION_GUIFRAMERENDERER_H
-#define EARTH_VISUALIZATION_GUIFRAMERENDERER_H
+#pragma once
 
 #include "Renderer.h"
 #include "RenderingOptions.h"
@@ -47,6 +45,3 @@ public:
 
     void notify(RenderingStatistics renderingStatistics) override;
 };
-
-
-#endif //EARTH_VISUALIZATION_GUIFRAMERENDERER_H

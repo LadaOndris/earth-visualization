@@ -1,7 +1,5 @@
 
-
-#ifndef EARTH_VISUALIZATION_TEXTURE_H
-#define EARTH_VISUALIZATION_TEXTURE_H
+#pragma once
 
 #include "tiling/Resolution.h"
 #include "glad/glad.h"
@@ -152,5 +150,3 @@ public:
         return _yIndex;
     }
 };
-
-#endif //EARTH_VISUALIZATION_TEXTURE_H

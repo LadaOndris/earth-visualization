@@ -1,7 +1,4 @@
-
-
-#ifndef EARTH_VISUALIZATION_RESOURCEMANAGER_H
-#define EARTH_VISUALIZATION_RESOURCEMANAGER_H
+#pragma once
 
 #include "textures/Texture.h"
 
@@ -83,6 +80,3 @@ private:
         }
     }
 };
-
-
-#endif //EARTH_VISUALIZATION_RESOURCEMANAGER_H

@@ -1,8 +1,4 @@
-
-
-#ifndef EARTH_VISUALIZATION_RESOLUTION_H
-#define EARTH_VISUALIZATION_RESOLUTION_H
-
+#pragma once
 
 class Resolution {
 private:
@@ -24,6 +20,3 @@ public:
         return (lhs._width * lhs._height) > (rhs._width * rhs._height);
     }
 };
-
-
-#endif //EARTH_VISUALIZATION_RESOLUTION_H

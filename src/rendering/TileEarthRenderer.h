@@ -1,7 +1,5 @@
 
-
-#ifndef EARTH_VISUALIZATION_TILEEARTHRENDERER_H
-#define EARTH_VISUALIZATION_TILEEARTHRENDERER_H
+#pragma once
 
 #include "Renderer.h"
 #include "cameras/Camera.h"
@@ -81,6 +79,3 @@ private:
             TextureType textureType,
             std::shared_ptr<Texture> &texture);
 };
-
-
-#endif //EARTH_VISUALIZATION_TILEEARTHRENDERER_H

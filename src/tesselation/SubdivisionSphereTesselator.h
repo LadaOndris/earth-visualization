@@ -1,7 +1,4 @@
-
-
-#ifndef EARTH_VISUALIZATION_SUBDIVISIONSPHERETESSELATOR_H
-#define EARTH_VISUALIZATION_SUBDIVISIONSPHERETESSELATOR_H
+#pragma once
 
 #include <glm/fwd.hpp>
 
@@ -23,6 +20,3 @@ public:
 private:
     std::vector<glm::vec3> vertices;
 };
-
-
-#endif //EARTH_VISUALIZATION_SUBDIVISIONSPHERETESSELATOR_H

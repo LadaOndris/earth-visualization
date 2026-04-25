@@ -1,7 +1,5 @@
 
-
-#ifndef EARTH_VISUALIZATION_RENDERER_H
-#define EARTH_VISUALIZATION_RENDERER_H
+#pragma once
 
 #include "window_definition.h"
 #include "RenderingOptions.h"
@@ -16,5 +14,3 @@ public:
 
     virtual void destroy() = 0;
 };
-
-#endif //EARTH_VISUALIZATION_RENDERER_H

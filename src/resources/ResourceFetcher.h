@@ -1,7 +1,4 @@
-
-
-#ifndef EARTH_VISUALIZATION_RESOURCEFETCHER_H
-#define EARTH_VISUALIZATION_RESOURCEFETCHER_H
+#pragma once
 
 #include "textures/Texture.h"
 
@@ -117,6 +114,3 @@ public:
         return results;
     }
 };
-
-
-#endif //EARTH_VISUALIZATION_RESOURCEFETCHER_H
