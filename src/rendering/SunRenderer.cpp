@@ -42,7 +42,7 @@ void SunRenderer::setupVertexArrays() {
                       &sunVertices.front(), GL_STATIC_DRAW);
 
     // Set vertex attributes (e.g., position)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
 
     GLenum error = glGetError();
@@ -96,7 +96,7 @@ glm::mat4 SunRenderer::getProjectionMatrix(t_window_definition window) const {
     auto minDepth = 1.f;
     auto maxDepth = sunDistance + 3 * _sunRadius;
     glm::mat4 projectionMatrix = glm::perspective(glm::radians(_camera.getFov()),
-                                                  (float) window.width / (float) window.height,
+                                                  static_cast<float>(window.width) / static_cast<float>(window.height),
                                                   minDepth, maxDepth);
     return projectionMatrix;
 }

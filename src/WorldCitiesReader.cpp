@@ -15,7 +15,7 @@ std::vector<City> WorldCitiesReader::readData() {
     float longitude;
     float population;
     while (in.read_row(name, latitude, longitude, population)) {
-        City city = {.name = name, .latitude=latitude, .longitude=longitude, .population=(int)population};
+        City city = {.name = name, .latitude=latitude, .longitude=longitude, .population=static_cast<int>(population)};
         data.push_back(city);
     }
 

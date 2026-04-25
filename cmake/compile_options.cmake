@@ -6,10 +6,7 @@ target_compile_options(project_warnings INTERFACE
     -Wall
     -Wextra
     -Wshadow
-    -Wnon-virtual-dtor
     -Wcast-align
-    # -Wold-style-cast
-    -Woverloaded-virtual
     -Wnull-dereference
     -Wformat=2
     -Wimplicit-fallthrough
@@ -18,8 +15,11 @@ target_compile_options(project_warnings INTERFACE
     -Wduplicated-cond
     -Wduplicated-branches
     -Wlogical-op
-    -Wuseless-cast
     -Wno-unused-parameter
+    $<$<COMPILE_LANGUAGE:CXX>:-Wnon-virtual-dtor>
+    $<$<COMPILE_LANGUAGE:CXX>:-Wold-style-cast>
+    $<$<COMPILE_LANGUAGE:CXX>:-Woverloaded-virtual>
+    $<$<COMPILE_LANGUAGE:CXX>:-Wuseless-cast>
 )
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")

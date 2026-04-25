@@ -51,7 +51,7 @@ public:
     }
 
     void onMouseScroll(double xoffset, double yoffset) {
-        _fov -= (float) yoffset;
+        _fov -= static_cast<float>(yoffset);
         if (_fov < 1.0f)
             _fov = 1.0f;
         if (_fov > 45.0f)

@@ -64,7 +64,7 @@ void TileEarthRenderer::setupVertexArray(std::vector<t_vertex> vertices,
     glNamedBufferData(VBO, vertices.size() * sizeof(t_vertex), &vertices.front(), GL_STATIC_DRAW);
 
     // Position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
 }
 

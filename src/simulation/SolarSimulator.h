@@ -140,10 +140,10 @@ private:
         double secsInSimDay = secsInRealDay / simulationSpeed;
 
         double simulationSecs = secsInRealDay * simPassedTimeSecs / secsInSimDay;
-        double simulatiomMs = simulationSecs * 1000;
+        double simulationMs = simulationSecs * 1000;
 
         // Add seconds and milliseconds to the starting time
-        _simulationTimeMillis += simulatiomMs;
+        _simulationTimeMillis += simulationMs;
 
         if (_simulationTimeMillis >= 1000) {
             int secondsToAdd = static_cast<int>(_simulationTimeMillis / 1000);
