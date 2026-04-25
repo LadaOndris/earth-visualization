@@ -21,6 +21,10 @@ public:
     int getHeight() const {
         return _height;
     }
+
+    friend bool operator>(const Resolution &lhs, const Resolution &rhs) {
+        return (lhs._width * lhs._height) > (rhs._width * rhs._height);
+    }
 };
 
 

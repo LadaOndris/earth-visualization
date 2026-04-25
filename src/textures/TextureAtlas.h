@@ -29,7 +29,14 @@ public:
     }
 
     Resolution getMostDetailedLevelDimensions() const {
-        return getLevelDimensions(0);
+        Resolution maxDimensions(0, 0);
+        for (const auto &level : _levels) {
+            Resolution levelDimensions(level.getXTiles(), level.getYTiles());
+            if (levelDimensions > maxDimensions) {
+                maxDimensions = levelDimensions;
+            }
+        }
+        return maxDimensions;
     }
 
     Resolution getLevelDimensions(unsigned int level) const {

@@ -19,7 +19,7 @@ std::shared_ptr<TileResources> Tile::getResources(
 
     // Determine the appropriate level of detail (LOD) based on the screen-space error.
     int level;
-    for (level = _lodResources.size() - 1; level >= 0; level--) {
+    for (level = 0; level < static_cast<int>(_lodResources.size()); level++) {
         auto &lod = _lodResources[level];
         // Define the geometric error simply as the inverse of the number of triangles in a tile.
         // times a coefficient depending on the viewing angle.
@@ -28,15 +28,19 @@ std::shared_ptr<TileResources> Tile::getResources(
 
         double screenSpaceError = computeScreenSpaceError(screenSpaceWidth, distanceToCamera,
                                                           camera.getFov(), geometricError);
-        if (screenSpaceError < 10.0) {
+
+        // std::cout << "[" << level << "] screen space error: " << screenSpaceError << std::endl;
+
+        // Does this level provide sufficient detail?
+        if (screenSpaceError < 5.0) {
             break;
         }
-        // std::cout << "[" << level << "] screen space error: " << screenSpaceError << std::endl;
     }
+
     // Avoid out-of-bounds indexing
     level = std::max(level, 0);
     level = std::min(level, static_cast<int>(_lodResources.size() - 1));
-    //return _lodResources[_lodResources.size() - 1];
+
     return _lodResources[level];
 }
 

@@ -28,7 +28,7 @@ private:
 public:
     unsigned int meshVAO = 0, meshVBO = 0;
     // Coarser and finer resources form a hierarchical structure of the resources.
-    std::shared_ptr<TileResources> coarserResources;
+    std::weak_ptr<TileResources> coarserResources;
     std::vector<std::shared_ptr<TileResources>> finerResources;
 
     explicit TileResources(Mesh_t mesh, std::shared_ptr<Texture> dayTexture,
@@ -62,15 +62,16 @@ public:
      * @return True if a texture ready in OpenGL context was found.
      */
     [[nodiscard]] bool getCoarserTexture(std::shared_ptr<Texture> &texture, TextureType textureType) const {
-        if (coarserResources == nullptr) {
+        auto coarser = coarserResources.lock();
+        if (!coarser) {
             return false;
         }
-        auto coarserTexture = coarserResources->getTexture(textureType);
+        auto coarserTexture = coarser->getTexture(textureType);
         if (coarserTexture->isPreparedInGlContext()) {
             texture = coarserTexture;
             return true;
         } else {
-            return coarserResources->getCoarserTexture(texture, textureType);
+            return coarser->getCoarserTexture(texture, textureType);
         }
     }
 
