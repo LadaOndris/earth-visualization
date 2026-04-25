@@ -5,49 +5,30 @@
 
 #include <cmath>
 
-bool SunRenderer::initialize() {
-    bool isShaderProgramBuilt = _program.build();
-    if (!isShaderProgramBuilt) {
-        return false;
-    }
+namespace 
+{
 
-    constructVertices();
-    setupVertexArrays();
-
-    return true;
-}
-
-
-void SunRenderer::constructVertices() {
+Mesh_t createMesh(float sunRadius) {
     SubdivisionSphereTesselator sphereTesselator;
     Mesh_t mesh = sphereTesselator.tessellate(4);
 
     for (auto &vertex : mesh) {
-        vertex *= _sunRadius;
+        vertex *= sunRadius;
     }
-
-    sunVertices = convertToVertices(mesh);
+    return mesh;
 }
 
-void SunRenderer::setupVertexArrays() {
-    glCreateBuffers(1, &VBO);
-
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glNamedBufferData(VBO, sunVertices.size() * sizeof(t_vertex),
-                      &sunVertices.front(), GL_STATIC_DRAW);
-
-    // Set vertex attributes (e.g., position)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-    glEnableVertexAttribArray(0);
-
-    GLenum error = glGetError();
-    if (error != GL_NO_ERROR) {
-        std::cerr << "[SunRenderer] OpenGL error after setting up vertex arrays: " << error << std::endl;
-    }
 }
+
+SunRenderer::SunRenderer(Camera &camera, const LightSource &lightSource, float sunRadius,
+                         Program program)
+        : _program(std::move(program)),
+          _camera(camera),
+          _lightSource(lightSource),
+          _sunRadius(sunRadius),
+          _meshBuffer(createMesh(sunRadius)) {
+}
+
 
 void SunRenderer::render(float currentTime, t_window_definition window, RenderingOptions options) {
     GLenum error = glGetError();
@@ -61,14 +42,13 @@ void SunRenderer::render(float currentTime, t_window_definition window, Renderin
         std::cerr << "[SunRenderer] OpenGL error after program.use: " << error << std::endl;
     }
 
-    glBindVertexArray(VAO);
+    glBindVertexArray(_meshBuffer.getVao());
 
     error = glGetError();
     if (error != GL_NO_ERROR) {
         std::cerr << "[SunRenderer] OpenGL error after setting VAO: " << error << std::endl;
     }
 
-    // program.setVec3("sunLocation", sunLocation);
     _program.setMat4("model", getModelMatrix());
     _program.setMat4("projection", getProjectionMatrix(window));
     _program.setMat4("view", _camera.getViewMatrix());
@@ -78,7 +58,7 @@ void SunRenderer::render(float currentTime, t_window_definition window, Renderin
     } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
-    glDrawArrays(GL_TRIANGLES, 0, sunVertices.size());
+    glDrawArrays(GL_TRIANGLES, 0, _meshBuffer.getMesh().size());
 
     error = glGetError();
     if (error != GL_NO_ERROR) {
@@ -104,7 +84,3 @@ glm::mat4 SunRenderer::getModelMatrix() const {
     return modelMatrix;
 }
 
-void SunRenderer::destroy() {
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-}

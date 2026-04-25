@@ -206,14 +206,6 @@ RenderingOptions GuiFrameRenderer::getRenderingOptions() const {
     return _renderingOptions;
 }
 
-bool GuiFrameRenderer::initialize() {
-    return true;
-}
-
-void GuiFrameRenderer::destroy() {
-
-}
-
 void GuiFrameRenderer::notify(RenderingStatistics statistics) {
     renderingStatistics = statistics;
 }

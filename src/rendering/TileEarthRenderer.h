@@ -4,11 +4,10 @@
 #include "Renderer.h"
 #include "cameras/Camera.h"
 #include "ellipsoid.h"
+#include "resources/AsyncTextureLoader.h"
 #include "tiling/TileContainer.h"
 #include "program.h"
-#include "vertex.h"
 #include "RendererSubscriber.h"
-#include "resources/ResourceFetcher.h"
 #include "resources/ResourceManager.h"
 #include "simulation/LightSource.h"
 
@@ -23,23 +22,16 @@ public:
                                Ellipsoid &ellipsoid,
                                Camera &camera,
                                LightSource &lightSource,
-                               ResourceFetcher &resourceFetcher,
+                               AsyncTextureLoader &textureLoader,
                                ResourceManager &resourceManager,
-                               Program &program)
-            : _tileContainer(tileContainer), 
-              _ellipsoid(ellipsoid),
-              _camera(camera), 
-              _lightSource(lightSource), 
-              _resourceFetcher(resourceFetcher),
-              _resourceManager(resourceManager),
-              _program(program) {
-    }
+                               Program program);
+
+    ~TileEarthRenderer() override;
+
+    TileEarthRenderer(const TileEarthRenderer&) = delete;
+    TileEarthRenderer& operator=(const TileEarthRenderer&) = delete;
 
     void render(float currentTime, t_window_definition window, RenderingOptions options) override;
-
-    bool initialize() override;
-
-    void destroy() override;
 
     /**
      * Adds a subscriber which wants to be notified
@@ -52,17 +44,14 @@ private:
     Ellipsoid &_ellipsoid;
     Camera &_camera;
     const LightSource &_lightSource;
-    ResourceFetcher &_resourceFetcher;
+    AsyncTextureLoader &_textureLoader;
     ResourceManager &_resourceManager;
-    Program &_program;
+    Program _program;
     std::vector<std::shared_ptr<RendererSubscriber>> _subscribers;
     std::unordered_map<std::string, std::shared_ptr<Texture>> _requestMap;
 
 
     void initVertexArraysForAllLevels(int numLevels);
-
-    void setupVertexArray(std::vector<t_vertex> vertices,
-                          unsigned int &VAO, unsigned int &VBO);
 
     bool prepareTexture(const std::shared_ptr<Texture>& texture);
 

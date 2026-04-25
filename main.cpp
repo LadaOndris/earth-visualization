@@ -2,34 +2,16 @@
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
 
-#include "program.h"
-#include "src/ellipsoid.h"
-#include "src/tesselation/SubdivisionSphereTesselator.h"
+#include "src/EarthVisualizer.h"
 #include "src/window_definition.h"
-#include "src/rendering/SunRenderer.h"
-#include "src/rendering/GuiFrameRenderer.h"
-#include "src/cameras/EarthCenteredCamera.h"
-#include "src/tiling/TileContainer.h"
-#include "src/rendering/TileEarthRenderer.h"
-#include "src/simulation/SolarSimulator.h"
-#include "src/rendering/CityNamesRenderer.h"
-
-#include <glm/vec3.hpp> // glm::vec3
-#include <glm/vec4.hpp> // glm::vec4
-#include <glm/mat4x4.hpp> // glm::mat4
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 #include <imgui.h>
-#include <imgui_stdlib.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
 #include <unistd.h>
 #include <thread>
 #include <iostream>
-#include <cmath>
-#include <memory>
 
 t_window_definition gWindowDefinition{800, 600};
 float gLastX = 400, gLastY = 300;
@@ -37,19 +19,6 @@ bool gFirstMouseMove = true;
 bool gLbuttonDown = false;
 GLFWwindow *gWindow = nullptr;
 
-
-Ellipsoid ellipsoid = Ellipsoid::unitSphereWithCorrectRatio();
-auto radii = ellipsoid.getRadii();
-// From the side of the Earth
-//Camera camera(5.0f, glm::vec3(-radii.x * 5, 0, 0),
-//              0, 55);
-// From above the Earth
-//Camera camera(5.0f, glm::vec3(0, radii.y * 5, 0), -90.f);
-
-EarthCenteredCamera camera(ellipsoid,
-                           glm::vec3(-radii.x * 5, 0, 0),
-                           glm::vec3(0, 0, 0),
-                           glm::vec3(0, -1, 0));
 
 void error_callback(int error, const char *description) {
     fprintf(stderr, "Error: %s\n", description);
@@ -74,10 +43,6 @@ static void mouse_button_callback(GLFWwindow *window, int button, int action, in
         else if (GLFW_RELEASE == action)
             gLbuttonDown = false;
     }
-
-    if (gLbuttonDown) {
-
-    }
 }
 
 void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos) {
@@ -86,22 +51,21 @@ void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos) {
         return;
     }
 
-    if (gFirstMouseMove) // initially set to true
-    {
+    if (gFirstMouseMove) {
         gLastX = xpos;
         gLastY = ypos;
         gFirstMouseMove = false;
     }
 
     float xoffset = static_cast<float>(xpos) - gLastX;
-    float yoffset = gLastY - static_cast<float>(ypos); // reversed since y-coordinates range from bottom to top
+    float yoffset = gLastY - static_cast<float>(ypos);
     gLastX = static_cast<float>(xpos);
     gLastY = static_cast<float>(ypos);
 
+    auto& camera = static_cast<EarthVisualizer*>(glfwGetWindowUserPointer(window))->getCamera();
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
         camera.onMouseDrag(xoffset, yoffset);
     }
-
     camera.onMouseMove(xoffset, yoffset);
 }
 
@@ -111,7 +75,8 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
         return;
     }
 
-    camera.onMouseScroll(xoffset, yoffset);
+    static_cast<EarthVisualizer*>(glfwGetWindowUserPointer(window))->getCamera()
+        .onMouseScroll(xoffset, yoffset);
 }
 
 template<typename T, std::size_t N>
@@ -135,6 +100,7 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
     int rotateSpeed = 20;
 
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+        auto& camera = static_cast<EarthVisualizer*>(glfwGetWindowUserPointer(window))->getCamera();
         if (contains(zoomInKeys, key)) {
             camera.onMouseScroll(0, zoomSpped);
         }
@@ -156,26 +122,21 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action, 
     }
 }
 
-/**
- * Creates the window, callbacks, etc.
- */
-bool initializeGlfw() {
+void initializeGlfw() {
     glfwSetErrorCallback(error_callback);
 
-    if (!glfwInit()) {
-        std::cerr << "[ERROR] Couldn't initialize GLFW" << std::endl;
-        return false;
-    } else {
-        std::cout << "[INFO] GLFW initialized" << std::endl;
+    if (!glfwInit())
+        throw std::runtime_error("[ERROR] Couldn't initialize GLFW");
+
+    if (!getenv("DISPLAY") && !getenv("WAYLAND_DISPLAY")) {
+        glfwTerminate();
+        throw std::runtime_error(
+            "[ERROR] No display server detected (DISPLAY or WAYLAND_DISPLAY not set). "
+            "This application requires a GUI environment to run."
+        );
     }
 
-    // Check for display availability to prevent hanging
-    if (!getenv("DISPLAY") && !getenv("WAYLAND_DISPLAY")) {
-        std::cerr << "[ERROR] No display server detected (DISPLAY or WAYLAND_DISPLAY not set). "
-                  << "This application requires a GUI environment to run." << std::endl;
-        glfwTerminate();
-        return false;
-    }
+    std::cout << "[INFO] GLFW initialized" << std::endl;
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -188,9 +149,8 @@ bool initializeGlfw() {
 
     gWindow = glfwCreateWindow(gWindowDefinition.width, gWindowDefinition.height, "Earth Viewer", NULL, NULL);
     if (!gWindow) {
-        std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
-        exit(EXIT_FAILURE);
+        throw std::runtime_error("Failed to create GLFW window");
     }
 
     glfwSetFramebufferSizeCallback(gWindow, framebuffer_size_callback);
@@ -198,125 +158,36 @@ bool initializeGlfw() {
     glfwSetMouseButtonCallback(gWindow, mouse_button_callback);
     glfwSetScrollCallback(gWindow, scroll_callback);
     glfwSetKeyCallback(gWindow, key_callback);
-    return true;
 }
 
-bool initializeGlad() {
-    if (!gWindow) {
-        std::cerr << "[ERROR] window is null, cannot initialize GLAD" << std::endl;
-        return false;
-    }
+void initializeGlad() {
+    if (!gWindow)
+        throw std::runtime_error("[ERROR] window is null, cannot initialize GLAD");
+
     glfwMakeContextCurrent(gWindow);
-    if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
-        std::cout << "[ERROR] Failed to initialize GLAD" << std::endl;
-        return false;
-    } else {
-        std::cout << "[INFO] GLAD initialized" << std::endl;
-    }
-    return true;
+    if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
+        throw std::runtime_error("[ERROR] Failed to initialize GLAD");
+
+    std::cout << "[INFO] GLAD initialized" << std::endl;
 }
 
-bool initializeImgui() {
-    std::string fontName = "JetBrainsMono-ExtraLight.ttf";
-
+void initializeImgui() {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
 
-    // float highDPIscaleFactor = 1.0;
-//    io.Fonts->AddFontFromFileTTF(
-//            fontName.c_str(),
-//            24.0f * highDPIscaleFactor,
-//            NULL,
-//            NULL
-//    );
-    // setImGuiStyle(highDPIscaleFactor);
+    if (!ImGui_ImplGlfw_InitForOpenGL(gWindow, true))
+        throw std::runtime_error("[ERROR] Failed to initialize ImGui (ImGui_ImplGlfw_InitForOpenGL)");
 
-    if (!ImGui_ImplGlfw_InitForOpenGL(gWindow, true)) {
-        std::cout << "[ERROR] Failed to initialize ImGui (ImGui_ImplGlfw_InitForOpenGL)" << std::endl;
-        return false;
-    }
-    if (!ImGui_ImplOpenGL3_Init()) {
-        std::cout << "[ERROR] Failed to initialize ImGui (ImGui_ImplOpenGL3_Init)" << std::endl;
-        return false;
-    }
+    if (!ImGui_ImplOpenGL3_Init())
+        throw std::runtime_error("[ERROR] Failed to initialize ImGui (ImGui_ImplOpenGL3_Init)");
 
     std::cout << "[INFO] IMGUI initialized" << std::endl;
-    return true;
 }
 
-std::string formatTime(const std::chrono::system_clock::time_point &timePoint) {
-    // Convert time point to a time_t
-    std::time_t time = std::chrono::system_clock::to_time_t(timePoint);
-
-    // Convert time_t to a struct tm
-    std::tm tmStruct = *std::localtime(&time);
-
-    // Format the struct tm into a string
-    char buffer[80];
-    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &tmStruct);
-
-    return buffer;
-}
-
-bool initializeRenderers(std::vector<std::shared_ptr<Renderer>> renderers) {
-    for (const auto &renderer: renderers) {
-        bool initializationResult = renderer->initialize();
-        if (!initializationResult) {
-            return false;
-        }
-    }
-    return true;
-}
-
-void startRendering(const std::vector<std::shared_ptr<Renderer>> &renderers,
-                    const std::shared_ptr<GuiFrameRenderer> &guiRenderer,
-                    SolarSimulator &solarSimulator) {
-    glViewport(0, 0, gWindowDefinition.width, gWindowDefinition.height);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_MULTISAMPLE);
-
-    float lastFrameTime = static_cast<float>(glfwGetTime());
-    bool simulationRunningLastFrame = false;
-    // Initialize the Sun position
-    solarSimulator.updateSunPosition(0, static_cast<float>(guiRenderer->getRenderingOptions().simulationSpeed));
-
-    while (!glfwWindowShouldClose(gWindow)) {
-        RenderingOptions options = guiRenderer->getRenderingOptions();
-        auto currentFrameTime = static_cast<float>(glfwGetTime());
-
-        if (options.isSimulationRunning) {
-            if (simulationRunningLastFrame) {
-                float additionalFrameTime = currentFrameTime - lastFrameTime;
-                solarSimulator.updateSunPosition(additionalFrameTime, static_cast<float>(options.simulationSpeed));
-            } else {
-                simulationRunningLastFrame = true;
-            }
-
-            lastFrameTime = currentFrameTime;
-        } else {
-            simulationRunningLastFrame = false;
-        }
-
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        for (const auto &renderer: renderers) {
-            renderer->render(currentFrameTime, gWindowDefinition, options);
-        }
-
-        glfwSwapBuffers(gWindow);
-        glfwPollEvents();
-    }
-}
-
-void cleanup(const std::vector<std::shared_ptr<Renderer>> &renderers) {
-    for (const auto &renderer: renderers) {
-        renderer->destroy();
-    }
-
+void cleanup() {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
@@ -324,12 +195,6 @@ void cleanup(const std::vector<std::shared_ptr<Renderer>> &renderers) {
     glfwDestroyWindow(gWindow);
     glfwTerminate();
 }
-
-void resourceLoaderThreadStart() {
-    ResourceLoader loader;
-    loader.start();
-}
-
 
 /**
  * From:
@@ -409,103 +274,31 @@ void APIENTRY processErrorMessageCallback(
 
 
 int mainAppThread() {
-    if (!initializeGlfw() || !initializeGlad() || !initializeImgui()) {
+    try {
+        initializeGlfw();
+        initializeGlad();
+        initializeImgui();
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
+
     if (glDebugMessageCallback) {
         glDebugMessageCallback(processErrorMessageCallback, nullptr);
         glEnable(GL_DEBUG_OUTPUT);
     }
 
-    auto sunVsEarthRadiusFactor = 109.168105f; // Sun_radius / Earth_radius
-    auto sunRadius = sunVsEarthRadiusFactor * radii.x;
-    auto sunDistanceMeters = 149597870700.f;
-    auto earthRadiusMeters = 6378000.f;
-    auto sunDistance = sunDistanceMeters / earthRadiusMeters * radii.x;
-    //auto lightPosition = glm::vec3(0.0f, -sunDistance, sunDistance);
-    SolarSimulator solarSimulator(sunDistance);
-
-    std::vector<std::shared_ptr<Renderer>> renderers;
-
-    SubdivisionSphereTesselator subdivisionSurfaces;
-
-    TileMeshTesselator tileMeshTesselator;
-    TextureAtlas dayMapAtlas;
-    TextureAtlas nightMapAtlas;
-    TextureAtlas heightMapAtlas;
-    TileContainer tileContainer(tileMeshTesselator, dayMapAtlas,
-                                nightMapAtlas, heightMapAtlas, ellipsoid);
-
-    ResourceFetcher resourceFetcher;
-    ResourceManager resourceManager(1000);
-
-    dayMapAtlas.registerAvailableTextures("textures/generated/daymaps");
-    nightMapAtlas.registerAvailableTextures("textures/generated/nightmaps");
-    heightMapAtlas.registerAvailableTextures("textures/generated/heightmaps");
-    tileContainer.setupTiles();
-
-    RenderingOptions options = {
-            .isSimulationRunning = false
-    };
-    auto guiRenderer =
-            std::make_shared<GuiFrameRenderer>(options, solarSimulator);
-
-    Program tileEarthRendererProgram;
-    tileEarthRendererProgram.addShader(
-            std::make_unique<Shader>("shaders/tiling/shader.vert", ShaderType::Vertex)
-    );
-    tileEarthRendererProgram.addShader(
-            std::make_unique<Shader>("shaders/tiling/shader.tesc", ShaderType::TesselationControl)
-    );
-    tileEarthRendererProgram.addShader(
-            std::make_unique<Shader>("shaders/tiling/shader.tese", ShaderType::TessellationEvaluation)
-    );
-    tileEarthRendererProgram.addShader(
-            std::make_unique<Shader>("shaders/tiling/shader.frag", ShaderType::Fragment)
-    );
-    auto tileEarthRenderer =
-            std::make_shared<TileEarthRenderer>(
-                    tileContainer, ellipsoid, camera, solarSimulator,
-                    resourceFetcher, resourceManager, tileEarthRendererProgram
-            );
-    tileEarthRenderer->addSubscriber(guiRenderer);
-    renderers.push_back(tileEarthRenderer);
-
-    Program cityNamesRendererProgram;
-    cityNamesRendererProgram.addShader(
-            std::make_unique<Shader>("shaders/text/shader.vert", ShaderType::Vertex)
-    );
-    cityNamesRendererProgram.addShader(
-            std::make_unique<Shader>("shaders/text/shader.frag", ShaderType::Fragment)
-    );
-    auto cityNamesRenderer =
-            std::make_shared<CityNamesRenderer>(cityNamesRendererProgram, camera, ellipsoid);
-    tileEarthRenderer->addSubscriber(cityNamesRenderer);
-    renderers.push_back(cityNamesRenderer);
-
-
-    Program sunRendererProgram;
-    sunRendererProgram.addShader(
-            std::make_unique<Shader>("shaders/sun/shader.vert", ShaderType::Vertex)
-    );
-    sunRendererProgram.addShader(
-            std::make_unique<Shader>("shaders/sun/shader.frag", ShaderType::Fragment)
-    );
-    auto sunRenderer =
-            std::make_shared<SunRenderer>(camera, solarSimulator, sunRadius, sunRendererProgram);
-
-    renderers.push_back(sunRenderer);
-    renderers.push_back(guiRenderer);
-
-    bool result = initializeRenderers(renderers);
-    if (!result) {
-        cleanup(renderers);
+    try {
+        EarthVisualizer visualizer(gWindow, gWindowDefinition);
+        glfwSetWindowUserPointer(gWindow, &visualizer);
+        visualizer.run();
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        cleanup();
         return EXIT_FAILURE;
     }
 
-    startRendering(renderers, guiRenderer, solarSimulator);
-    cleanup(renderers);
-
+    cleanup();
     return EXIT_SUCCESS;
 }
 
@@ -513,15 +306,5 @@ int main() {
     std::cout << "Starting the application..." << std::endl;
     std::cout << "Starting application thread: " << std::this_thread::get_id() << std::endl;
 
-    std::thread loaderThread(resourceLoaderThreadStart);
-
-    int returnCode = mainAppThread();
-
-    stopThread = true;
-    cv.notify_all();
-    loaderThread.join();
-
-    return returnCode;
+    return mainAppThread();
 }
-
-

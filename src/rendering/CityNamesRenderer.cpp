@@ -3,6 +3,7 @@
 #include "utils.h"
 
 #include <algorithm>
+#include <stdexcept>
 #include <cstring>
 #include <cstdio>
 #include <ft2build.h>
@@ -119,23 +120,6 @@ bool CityNamesRenderer::prepareBuffers() {
     return true;
 }
 
-bool CityNamesRenderer::initialize() {
-    WorldCitiesReader reader("data/world_cities/worldcities.csv");
-    _worldCities = reader.readData();
-    for (auto &city: _worldCities) {
-        // The coordinate system in this application is reversed.
-        city.latitude *= -1;
-    }
-
-    return _program.build() && prepareBuffers() && prepareTextureAtlas();
-}
-
-void CityNamesRenderer::destroy() {
-    glDeleteBuffers(1, &_VBO);
-    glDeleteBuffers(1, &_instanceVBO);
-    glDeleteVertexArrays(1, &_VAO);
-    glDeleteTextures(1, &_textureId);
-}
 
 
 glm::mat4 CityNamesRenderer::constructPerspectiveProjectionMatrix(
@@ -326,9 +310,26 @@ void CityNamesRenderer::renderText(const City &text, float sx, float sy, glm::ve
 }
 
 
-CityNamesRenderer::CityNamesRenderer(Program &program, Camera &camera, Ellipsoid &ellipsoid)
-        : _program(program), _camera(camera), _ellipsoid(ellipsoid) {
+CityNamesRenderer::CityNamesRenderer(Program program, Camera &camera, Ellipsoid &ellipsoid)
+        : _program(std::move(program)), _camera(camera), _ellipsoid(ellipsoid) {
+    WorldCitiesReader reader("data/world_cities/worldcities.csv");
+    _worldCities = reader.readData();
+    for (auto &city: _worldCities) {
+        // The coordinate system in this application is reversed.
+        city.latitude *= -1;
+    }
 
+    if (!prepareBuffers())
+        throw std::runtime_error("CityNamesRenderer: failed to prepare buffers");
+    if (!prepareTextureAtlas())
+        throw std::runtime_error("CityNamesRenderer: failed to prepare texture atlas");
+}
+
+CityNamesRenderer::~CityNamesRenderer() {
+    glDeleteBuffers(1, &_VBO);
+    glDeleteBuffers(1, &_instanceVBO);
+    glDeleteVertexArrays(1, &_VAO);
+    glDeleteTextures(1, &_textureId);
 }
 
 void CityNamesRenderer::notify(RenderingStatistics renderingStatistics) {

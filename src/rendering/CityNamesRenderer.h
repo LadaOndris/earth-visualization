@@ -39,11 +39,12 @@ struct TextInstanceData {
 
 class CityNamesRenderer : public Renderer, public RendererSubscriber {
 public:
-    explicit CityNamesRenderer(Program &program, Camera &camera, Ellipsoid &ellipsoid);
+    explicit CityNamesRenderer(Program program, Camera &camera, Ellipsoid &ellipsoid);
 
-    bool initialize() override;
+    ~CityNamesRenderer() override;
 
-    void destroy() override;
+    CityNamesRenderer(const CityNamesRenderer&) = delete;
+    CityNamesRenderer& operator=(const CityNamesRenderer&) = delete;
 
     void render(float currentTime, t_window_definition window, RenderingOptions options) override;
 
@@ -54,7 +55,7 @@ private:
     GLuint _textureId;
     float _atlasWidth;
     float _atlasHeight;
-    Program &_program;
+    Program _program;
     unsigned int _VAO, _VBO, _instanceVBO;
     Camera &_camera;
     Ellipsoid &_ellipsoid;

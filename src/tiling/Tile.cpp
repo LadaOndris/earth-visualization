@@ -4,6 +4,8 @@
 #include "TileResources.h"
 #include "utils.h"
 
+#include <bitset>
+
 std::shared_ptr<TileResources> Tile::getResources(
         double screenSpaceWidth, double distanceToCamera, const Camera &camera) {
     // static double maxAngle = 0;
@@ -102,21 +104,20 @@ void Tile::addResources(const std::shared_ptr<TileResources> &resources, int lev
     }
 }
 
-
 [[nodiscard]] bool Tile::isInViewFrustum(const Frustum &frustum) const {
 
-    unsigned int cornersOutsideFrustum = 0;
+    std::bitset<4> cornersOutsideFrustum(0x0);
     auto tileCorners = getGeocentricTileCorners();
 
     for (size_t cornerIndex = 0; cornerIndex < tileCorners.size(); cornerIndex++) {
         auto tileCorner = tileCorners[cornerIndex];
 
         if (frustum.isPointOutside(tileCorner)) {
-            cornersOutsideFrustum |= (1 << cornerIndex);
+            cornersOutsideFrustum.set(cornerIndex);
         }
     }
 
-    if (sumOfBits(cornersOutsideFrustum) < 4) {
+    if (cornersOutsideFrustum.count() < 4) {
         return true;
     }
 
@@ -130,15 +131,6 @@ void Tile::addResources(const std::shared_ptr<TileResources> &resources, int lev
     // No corner is inside frustum and
     // no edge of the tile intersets the frustum.
     return false;
-}
-
-[[nodiscard]] unsigned char Tile::sumOfBits(unsigned char var) const {
-    unsigned int sum = 0;
-    while (var > 0) {
-        sum += (var & 0x1);
-        var >>= 1;
-    }
-    return sum;
 }
 
 [[nodiscard]] bool Tile::isFacingCamera(const glm::vec3 &cameraPosition) const {

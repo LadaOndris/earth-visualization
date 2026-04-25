@@ -7,84 +7,56 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 
 class Program {
-private:
-    unsigned int id = 0;
-    std::vector<std::unique_ptr<Shader>> shaders;
+public:
+    explicit Program(std::vector<std::unique_ptr<Shader>> shaders) {
+        if (shaders.empty())
+            throw std::runtime_error("Program requires at least one shader");
 
-    [[nodiscard]] bool printErrorsIfAny() const {
-        int success;
-        char infoLog[512];
-        // print linking errors if any
-        glGetProgramiv(id, GL_LINK_STATUS, &success);
-        if (!success) {
-            glGetProgramInfoLog(id, 512, nullptr, infoLog);
-            std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-            return true;
-        }
-        return false;
-    }
-
-    bool createProgram() {
-        linkShaderProgram();
-
-        bool errorsOccurred = printErrorsIfAny();
-        if (errorsOccurred) {
-            return false;
-        }
-
-        deleteShaders();
-        return true;
-    }
-
-    void linkShaderProgram() {
-        // program Program
         id = glCreateProgram();
-        for (auto &shader : shaders) {
+
+        for (auto& shader : shaders) {
             glAttachShader(id, shader->getId());
         }
+
         glLinkProgram(id);
+        
+        checkLinkErrors(id);
     }
 
-    void deleteShaders() {
-        // delete the shaders as they're linked into our program now and no longer necessary
-        for (auto &shader : shaders) {
-            shader->destroy();
+    ~Program() {
+        if (id != 0)
+            glDeleteProgram(id);
+    }
+
+    Program(const Program&) = delete;
+    Program& operator=(const Program&) = delete;
+
+    Program(Program&& other) noexcept : id(other.id) {
+        other.id = 0;
+    }
+
+    Program& operator=(Program&& other) noexcept {
+        if (this != &other) {
+            if (id != 0)
+                glDeleteProgram(id);
+
+            id = other.id;
+            other.id = 0;
         }
-        shaders.clear();
+        return *this;
     }
-
-public:
-    void addShader(std::unique_ptr<Shader> shader) {
-        shaders.push_back(std::move(shader));
-    }
-
-    bool build() {
-        for (auto &shader : shaders) {
-            bool builtSucessfully = shader->build();
-
-            if (!builtSucessfully) {
-                return false;
-            }
-        }
-        bool programCreated = createProgram();
-        return programCreated;
-    }
-
-    // use/activate the program
+    
     void use() const {
-        assert(id != 0); // Assert the program has been built.
+        assert(id != 0);
         glUseProgram(id);
     }
 
-    // utility uniform functions
     void setBool(const std::string &name, bool value) const {
         glUniform1i(glGetUniformLocation(id, name.c_str()), static_cast<int>(value));
     }
@@ -112,7 +84,18 @@ public:
         glUniformMatrix4fv(matrixLocation, 1, GL_FALSE, glm::value_ptr(matrix));
     }
 
-    ~Program() {
-        deleteShaders();
+private:
+    unsigned int id = 0;
+    std::vector<std::unique_ptr<Shader>> _shaders;
+
+    static void checkLinkErrors(unsigned int programId) {
+        int success;
+        glGetProgramiv(programId, GL_LINK_STATUS, &success);
+
+        if (!success) {
+            char infoLog[512];
+            glGetProgramInfoLog(programId, 512, nullptr, infoLog);
+            throw std::runtime_error(std::string("Program linking failed:\n") + infoLog);
+        }
     }
 };

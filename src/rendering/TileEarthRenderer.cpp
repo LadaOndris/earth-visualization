@@ -6,67 +6,27 @@
 #include <unistd.h>
 #include <algorithm>
 
-bool TileEarthRenderer::initialize() {
-    // Configure tiles to use the current ellipsoid
+TileEarthRenderer::TileEarthRenderer(TileContainer &tileContainer,
+                                     Ellipsoid &ellipsoid,
+                                     Camera &camera,
+                                     LightSource &lightSource,
+                                     AsyncTextureLoader &textureLoader,
+                                     ResourceManager &resourceManager,
+                                     Program program)
+        : _tileContainer(tileContainer),
+          _ellipsoid(ellipsoid),
+          _camera(camera),
+          _lightSource(lightSource),
+          _textureLoader(textureLoader),
+          _resourceManager(resourceManager),
+          _program(std::move(program)) {
     for (Tile &tile: _tileContainer.getTiles()) {
         tile.updateGeocentricPosition(_ellipsoid);
     }
-
-    bool isShaderProgramBuilt = _program.build();
-    if (!isShaderProgramBuilt) {
-        return false;
-    }
-    int numLevels = _tileContainer.getNumLevels();
-    initVertexArraysForAllLevels(numLevels);
-
-    return true;
 }
 
-/**
- * Creates a vertex buffer for each level of detail (LOD).
- *
- * These vertex buffers contain the full geometry of each level.
- *
- * @param numLevels The number of level of details.
- */
-void TileEarthRenderer::initVertexArraysForAllLevels(int numLevels) {
-    for (int level = 0; level < numLevels; level++) {
-        Mesh_t fullMeshForThisLevel;
-        // Merge all tile meshes of this level together.
-        for (Tile &tile: _tileContainer.getTiles()) {
-            auto resources = tile.getResourcesByLevel(level);
-
-            Mesh_t mesh = resources->getMesh();
-            fullMeshForThisLevel.insert(fullMeshForThisLevel.end(), mesh.begin(), mesh.end());
-            break; // TODO: remove cycle. All tiles share the same mesh.
-        }
-
-        std::vector<t_vertex> verticesForThisLevel = convertToVertices(fullMeshForThisLevel);
-
-        unsigned int VAO, VBO;
-        setupVertexArray(verticesForThisLevel, VAO, VBO);
-
-        for (Tile &tile: _tileContainer.getTiles()) {
-            auto resources = tile.getResourcesByLevel(level);
-            resources->meshVAO = VAO;
-            resources->meshVBO = VBO;
-        }
-    }
-}
-
-void TileEarthRenderer::setupVertexArray(std::vector<t_vertex> vertices,
-                                         unsigned int &VAO, unsigned int &VBO) {
-    glCreateBuffers(1, &VBO);
-
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glNamedBufferData(VBO, vertices.size() * sizeof(t_vertex), &vertices.front(), GL_STATIC_DRAW);
-
-    // Position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-    glEnableVertexAttribArray(0);
+TileEarthRenderer::~TileEarthRenderer() {
+    _resourceManager.releaseAll();
 }
 
 bool TileEarthRenderer::prepareTexture(const std::shared_ptr<Texture> &texture) {
@@ -83,7 +43,7 @@ bool TileEarthRenderer::prepareTexture(const std::shared_ptr<Texture> &texture) 
             TextureLoadRequest request = {
                     .path = texture->getPath()
             };
-            _resourceFetcher.request(request);
+            _textureLoader.request(request);
             // Register a request into a data structure
             // so that it can be connected to a TextureLoadResult by the path
             _requestMap[texture->getPath()] = texture;
@@ -140,7 +100,7 @@ bool TileEarthRenderer::getOrPrepareTexture(
 }
 
 void TileEarthRenderer::render(float currentTime, t_window_definition window, RenderingOptions options) {
-    auto newlyLoadedTexturesData = _resourceFetcher.retrieveLoadedResources();
+    auto newlyLoadedTexturesData = _textureLoader.getResults();
     updateTexturesWithData(newlyLoadedTexturesData);
 
     _program.use();
@@ -215,8 +175,6 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         double distanceToCamera = glm::length(_camera.getPosition() - tile.getGeocentricPosition());
         std::shared_ptr<TileResources> resources = tile.getResources(
                 screenSpaceWidth, distanceToCamera, _camera);
-        Mesh_t mesh = resources->getMesh();
-
         std::shared_ptr<Texture> dayTexture;
         std::shared_ptr<Texture> nightTexture;
         std::shared_ptr<Texture> heightMap;
@@ -241,15 +199,14 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
             _program.setVec2("heightMapGridSize", heightMap->getTextureGridSize());
             glBindTextureUnit(2, heightMap->getTextureId());
 
-            // Set VAO: we need the correct buffer? Is there one or more?
-            glBindVertexArray(resources->meshVAO);
+            glBindVertexArray(resources->getMeshVao());
 
             if (options.isWireframeEnabled) {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             } else {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
-            glDrawArrays(GL_PATCHES, 0, mesh.size());
+            glDrawArrays(GL_PATCHES, 0, resources->getMesh().size());
         }
     }
 
@@ -307,19 +264,6 @@ Frustum TileEarthRenderer::setupMatrices(float currentTime, t_window_definition 
     return Frustum(viewMatrix, projectionMatrix);
 }
 
-void TileEarthRenderer::destroy() {
-    // Release textures
-    _resourceManager.releaseAll();
-
-    // Release buffers
-    int numLevels = _tileContainer.getNumLevels();
-    for (int level = 0; level < numLevels; level++) {
-        Tile &tile = _tileContainer.getTiles()[0];
-        auto resources = tile.getResourcesByLevel(level);
-        glDeleteVertexArrays(1, &resources->meshVAO);
-        glDeleteBuffers(1, &resources->meshVBO);
-    }
-}
 
 void TileEarthRenderer::addSubscriber(const std::shared_ptr<RendererSubscriber> &subscriber) {
     _subscribers.push_back(subscriber);

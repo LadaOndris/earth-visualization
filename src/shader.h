@@ -7,6 +7,25 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
+namespace {
+
+std::string loadFile(const fs::path& path)
+{
+    std::ifstream file(path, std::ios::binary);
+
+    if (!file)
+        throw std::runtime_error("Failed to open file: " + path.string());
+
+    return std::string(
+        std::istreambuf_iterator<char>(file),
+        std::istreambuf_iterator<char>()
+    );
+}
+}
 
 enum ShaderType {
     Vertex,
@@ -18,63 +37,60 @@ enum ShaderType {
 const char *shaderTypeToString(ShaderType e);
 
 class Shader {
-private:
-    const char *_sourcePath;
-    const ShaderType _type;
-    unsigned int id = 0;
-
-
-    [[nodiscard]] bool printErrorsIfAny() const {
-        int success;
-        char infoLog[512];
-
-        glGetShaderiv(id, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            glGetShaderInfoLog(id, 512, nullptr, infoLog);
-            std::cout << "ERROR::SHADER::" << shaderTypeToString(_type) << "::COMPILATION_FAILED\n" << infoLog
-                      << std::endl;
-            return true;
-        }
-        return false;
-    }
-
 public:
-    explicit Shader(const char *sourcePath, ShaderType type)
+    explicit Shader(const std::string& sourcePath, ShaderType type)
             : _sourcePath(sourcePath), _type(type) {
-
+        build();
     }
 
-    bool build() {
-        std::string shaderCode;
-        std::ifstream shaderFile;
-        shaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-        try {
-            // open files
-            shaderFile.open(_sourcePath);
-            std::stringstream vShaderStream, fShaderStream;
-            // read file's buffer contents into streams
-            vShaderStream << shaderFile.rdbuf();
-            // close file handlers
-            shaderFile.close();
-            // convert stream into string
-            shaderCode = vShaderStream.str();
+    ~Shader() {
+        if (_id != 0) {
+            glDeleteShader(_id);
+            _id = 0;
         }
-        catch (std::ifstream::failure &e) {
-            std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
-            return false;
+    }
+
+    Shader(const Shader&) = delete;
+    Shader& operator=(const Shader&) = delete;
+
+    Shader(Shader&& other) noexcept 
+    : _sourcePath(std::move(other._sourcePath)), 
+      _type(other._type),
+      _id(other._id) {
+        other._id = 0;
+    }
+    Shader& operator=(Shader&& other) noexcept {
+        if (this != &other) {
+            if (_id != 0)
+                glDeleteShader(_id);
+
+            _sourcePath = std::move(other._sourcePath);
+            _type = other._type;
+            _id = other._id;
+            other._id = 0;
         }
-        const char *shaderSource = shaderCode.c_str();
+        return *this;
+    }
+
+    [[nodiscard]] unsigned int getId() const {
+        return _id;
+    }
+
+private:
+    std::string _sourcePath;
+    ShaderType _type;
+    unsigned int _id = 0;
+
+    void build() {
+        std::string shaderSourceCode = loadFile(_sourcePath);
+        const char* shaderSourceCodeCStr = shaderSourceCode.c_str();
 
         auto shaderTypeNumber = convertShaderTypeToGlNumber();
-        id = glCreateShader(shaderTypeNumber);
-        glShaderSource(id, 1, &shaderSource, nullptr);
-        glCompileShader(id);
+        _id = glCreateShader(shaderTypeNumber);
+        glShaderSource(_id, 1, &shaderSourceCodeCStr, nullptr);
+        glCompileShader(_id);
 
-        bool errorsOccurred = printErrorsIfAny();
-        if (errorsOccurred) {
-            return false;
-        }
-        return true;
+        checkErrors();
     }
 
     int convertShaderTypeToGlNumber() {
@@ -88,19 +104,18 @@ public:
             case Fragment:
                 return GL_FRAGMENT_SHADER;
         }
-        throw std::runtime_error("Unssuported shader type");
+        throw std::runtime_error("Unsupported shader type");
     }
 
-    [[nodiscard]] unsigned int getId() const {
-        return id;
-    }
+    void checkErrors() const {
+        int success;
+        char infoLog[512];
 
-    void destroy() {
-        // No need to delete if uninitialized
-        if (id == 0) {
-            return;
+        glGetShaderiv(_id, GL_COMPILE_STATUS, &success);
+        if (!success) {
+            glGetShaderInfoLog(_id, 512, nullptr, infoLog);
+            throw std::runtime_error("Failed to compile shader: " + _sourcePath);
         }
-        glDeleteShader(id);
-        id = 0;
     }
+
 };
