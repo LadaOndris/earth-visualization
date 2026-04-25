@@ -12,42 +12,10 @@
 #include "../ellipsoid.h"
 
 class EarthCenteredCamera : public Camera {
-
-private:
-    Ellipsoid &ellipsoid;
-    glm::vec3 up;
-    float sensitivityFactor = 0.09f;
-
-    [[nodiscard]] float getDistanceToSurface() {
-        glm::vec3 pointOnSurface = ellipsoid.projectGeocentricPointOntoSurface(position);
-        float distance = glm::length(pointOnSurface - position);
-        return distance;
-    }
-
-    float calcZoomSpeedFromDistance() {
-        // Project camera onto surface to find out how far the camera from the surface is.
-        auto distance = getDistanceToSurface();
-        auto speed = distance / 10.f;
-        //if (distance > 0.2f) {
-        //auto speed = distance * distance / (distance + 30);
-        //speed = std::min(speed, maxSpeed);
-        //}
-        //std::cout << "Distance: " << distance << " Speed: " << speed << std::endl;
-        return speed;
-    }
-
-    float calcDragSensitivityBasedOnDistance() {
-        auto distance = getDistanceToSurface();
-        auto radiiLength = glm::length(ellipsoid.getRadii());
-        // Normalize the distance by the radii of the Earth.
-        float sensitivity = distance / radiiLength;
-        return sensitivity * sensitivityFactor;
-    }
-
 public:
     EarthCenteredCamera(Ellipsoid &ellipsoid, glm::vec3 position, glm::vec3 target, glm::vec3 up,
                         float fov = 45.0f, float zoomSpeedFactor = 1.0f) :
-            ellipsoid(ellipsoid), Camera(position, target, fov) {
+            Camera(position, target, fov), ellipsoid(ellipsoid) {
         this->up = up;
     }
 
@@ -88,6 +56,36 @@ public:
         // No behaviour
     }
 
+private:
+    Ellipsoid &ellipsoid;
+    glm::vec3 up;
+    float sensitivityFactor = 0.09f;
+
+    [[nodiscard]] float getDistanceToSurface() {
+        glm::vec3 pointOnSurface = ellipsoid.projectGeocentricPointOntoSurface(position);
+        float distance = glm::length(pointOnSurface - position);
+        return distance;
+    }
+
+    float calcZoomSpeedFromDistance() {
+        // Project camera onto surface to find out how far the camera from the surface is.
+        auto distance = getDistanceToSurface();
+        auto speed = distance / 10.f;
+        //if (distance > 0.2f) {
+        //auto speed = distance * distance / (distance + 30);
+        //speed = std::min(speed, maxSpeed);
+        //}
+        //std::cout << "Distance: " << distance << " Speed: " << speed << std::endl;
+        return speed;
+    }
+
+    float calcDragSensitivityBasedOnDistance() {
+        auto distance = getDistanceToSurface();
+        auto radiiLength = glm::length(ellipsoid.getRadii());
+        // Normalize the distance by the radii of the Earth.
+        float sensitivity = distance / radiiLength;
+        return sensitivity * sensitivityFactor;
+    }
 };
 
 

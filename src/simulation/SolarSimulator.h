@@ -91,7 +91,7 @@ private:
         glm::mat4 inclinationMatrix = glm::rotate(glm::mat4(1.0f), currentInclinationAngle,
                                                   glm::vec3(1.0f, 0.0f, 0.0f));
         glm::mat4 earthRotationMatrix = glm::rotate(glm::mat4(1.0f), earthRotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
-        glm::mat4 orbitMatrix = glm::rotate(glm::mat4(1.0f), earthOrbitAngle, glm::vec3(0.0f, 1.0f, 0.0f));
+        // glm::mat4 orbitMatrix = glm::rotate(glm::mat4(1.0f), earthOrbitAngle, glm::vec3(0.0f, 1.0f, 0.0f));
 
         return earthRotationMatrix * /*orbitMatrix **/ inclinationMatrix;
     }

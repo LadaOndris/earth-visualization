@@ -15,11 +15,12 @@
 
 class SunRenderer : public Renderer {
 private:
-    int numSegments = 36;
+    Program &program;
     Camera &camera;
     const LightSource &lightSource;
-    Program &program;
     float sunRadius;
+    
+    int numSegments = 36;
     unsigned int VAO;
     unsigned int VBO;
 
@@ -36,7 +37,9 @@ public:
     explicit SunRenderer(Camera &camera, const LightSource &lightSource, float sunRadius,
                          Program &program)
             : program(program),
-              camera(camera), lightSource(lightSource), sunRadius(sunRadius) {
+              camera(camera), 
+              lightSource(lightSource), 
+              sunRadius(sunRadius) {
     }
 
     bool initialize() override;

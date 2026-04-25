@@ -218,14 +218,14 @@ bool initializeGlad() {
 
 bool initializeImgui() {
     std::string fontName = "JetBrainsMono-ExtraLight.ttf";
-    float highDPIscaleFactor = 1.0;
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
-
+    
+    // float highDPIscaleFactor = 1.0;
 //    io.Fonts->AddFontFromFileTTF(
 //            fontName.c_str(),
 //            24.0f * highDPIscaleFactor,

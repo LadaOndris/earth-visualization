@@ -20,13 +20,42 @@
 #include "../simulation/LightSource.h"
 
 class TileEarthRenderer : public Renderer {
+public:
+    explicit TileEarthRenderer(TileContainer &tileContainer,
+                               Ellipsoid &ellipsoid,
+                               Camera &camera,
+                               LightSource &lightSource,
+                               ResourceFetcher &resourceFetcher,
+                               ResourceManager &resourceManager,
+                               Program &program)
+            : tileContainer(tileContainer), 
+              ellipsoid(ellipsoid),
+              camera(camera), 
+              lightSource(lightSource), 
+              resourceFetcher(resourceFetcher),
+              resourceManager(resourceManager),
+              program(program) {
+    }
+
+    void render(float currentTime, t_window_definition window, RenderingOptions options) override;
+
+    bool initialize() override;
+
+    void destroy() override;
+
+    /**
+     * Adds a subscriber which wants to be notified
+     * of the rendering results.
+     */
+    void addSubscriber(const std::shared_ptr<RendererSubscriber>& subscriber);
+
 private:
     TileContainer &tileContainer;
-    Camera &camera;
     Ellipsoid &ellipsoid;
+    Camera &camera;
+    const LightSource &lightSource;
     ResourceFetcher &resourceFetcher;
     ResourceManager &resourceManager;
-    const LightSource &lightSource;
     Program &program;
     std::vector<std::shared_ptr<RendererSubscriber>> subscribers;
     std::unordered_map<std::string, std::shared_ptr<Texture>> requestMap;
@@ -51,32 +80,6 @@ private:
             const Tile &tile,
             TextureType textureType,
             std::shared_ptr<Texture> &texture);
-public:
-    explicit TileEarthRenderer(TileContainer &tileContainer,
-                               Ellipsoid &ellipsoid,
-                               Camera &camera,
-                               LightSource &lightSource,
-                               ResourceFetcher &resourceFetcher,
-                               ResourceManager &resourceManager,
-                               Program &program)
-            : tileContainer(tileContainer), camera(camera), ellipsoid(ellipsoid),
-              lightSource(lightSource), resourceFetcher(resourceFetcher),
-              resourceManager(resourceManager),
-              program(program) {
-    }
-
-    void render(float currentTime, t_window_definition window, RenderingOptions options) override;
-
-    bool initialize() override;
-
-    void destroy() override;
-
-    /**
-     * Adds a subscriber which wants to be notified
-     * of the rendering results.
-     */
-    void addSubscriber(const std::shared_ptr<RendererSubscriber>& subscriber);
-
 };
 
 

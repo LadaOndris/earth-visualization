@@ -42,7 +42,7 @@ private:
             auto nightMap = nightMapAtlas.getTexture(level, tile);
             auto dayMap = dayMapAtlas.getTexture(level, tile);
 
-            if (level >= cachedMeshes.size()) {
+            if (level >= static_cast<int>(cachedMeshes.size())) {
                 // The heightMap determines the resolution of the mesh.
                 // Altough, the resolution of each heightmap image is the same,
                 // the area it covers differs. Thus, the resolution of the

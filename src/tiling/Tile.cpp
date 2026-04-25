@@ -9,8 +9,7 @@
 
 std::shared_ptr<TileResources> Tile::getResources(
         double screenSpaceWidth, double distanceToCamera, const Camera &camera) {
-    static double maxAngle = 0;
-
+    // static double maxAngle = 0;
 //    double viewingAngle = getViewingAngle(camera);
 //    double viewingAngleNormalized = std::fabs(viewingAngle / 3.14159265 * 2);
 //    viewingAngleNormalized = std::min(viewingAngleNormalized / 0.4, 1.);
@@ -55,7 +54,7 @@ double Tile::getViewingAngle(const Camera &camera) const {
 }
 
 std::shared_ptr<TileResources> Tile::getResourcesByLevel(int level) {
-    assert(level < lodResources.size());
+    assert(level < static_cast<int>(lodResources.size()));
     return lodResources[level];
 }
 
@@ -103,7 +102,7 @@ void Tile::addResources(const std::shared_ptr<TileResources> &resources, int lev
     unsigned int cornersOutsideFrustum = 0;
     auto tileCorners = getGeocentricTileCorners();
 
-    for (int cornerIndex = 0; cornerIndex < tileCorners.size(); cornerIndex++) {
+    for (size_t cornerIndex = 0; cornerIndex < tileCorners.size(); cornerIndex++) {
         auto tileCorner = tileCorners[cornerIndex];
 
         if (frustum.isPointOutside(tileCorner)) {
