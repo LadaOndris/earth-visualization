@@ -6,20 +6,36 @@
 #include <unistd.h>
 #include <algorithm>
 
-bool TileEarthRenderer::initialize() {
-    // Configure tiles to use the current ellipsoid
+TileEarthRenderer::TileEarthRenderer(TileContainer &tileContainer,
+                                     Ellipsoid &ellipsoid,
+                                     Camera &camera,
+                                     LightSource &lightSource,
+                                     AsyncTextureLoader &textureLoader,
+                                     ResourceManager &resourceManager,
+                                     Program &program)
+        : _tileContainer(tileContainer),
+          _ellipsoid(ellipsoid),
+          _camera(camera),
+          _lightSource(lightSource),
+          _textureLoader(textureLoader),
+          _resourceManager(resourceManager),
+          _program(program) {
     for (Tile &tile: _tileContainer.getTiles()) {
         tile.updateGeocentricPosition(_ellipsoid);
     }
+    _program.build();
+    initVertexArraysForAllLevels(_tileContainer.getNumLevels());
+}
 
-    bool isShaderProgramBuilt = _program.build();
-    if (!isShaderProgramBuilt) {
-        return false;
-    }
+TileEarthRenderer::~TileEarthRenderer() {
+    _resourceManager.releaseAll();
     int numLevels = _tileContainer.getNumLevels();
-    initVertexArraysForAllLevels(numLevels);
-
-    return true;
+    for (int level = 0; level < numLevels; level++) {
+        Tile &tile = _tileContainer.getTiles()[0];
+        auto resources = tile.getResourcesByLevel(level);
+        glDeleteVertexArrays(1, &resources->meshVAO);
+        glDeleteBuffers(1, &resources->meshVBO);
+    }
 }
 
 /**
@@ -307,19 +323,6 @@ Frustum TileEarthRenderer::setupMatrices(float currentTime, t_window_definition 
     return Frustum(viewMatrix, projectionMatrix);
 }
 
-void TileEarthRenderer::destroy() {
-    // Release textures
-    _resourceManager.releaseAll();
-
-    // Release buffers
-    int numLevels = _tileContainer.getNumLevels();
-    for (int level = 0; level < numLevels; level++) {
-        Tile &tile = _tileContainer.getTiles()[0];
-        auto resources = tile.getResourcesByLevel(level);
-        glDeleteVertexArrays(1, &resources->meshVAO);
-        glDeleteBuffers(1, &resources->meshVBO);
-    }
-}
 
 void TileEarthRenderer::addSubscriber(const std::shared_ptr<RendererSubscriber> &subscriber) {
     _subscribers.push_back(subscriber);

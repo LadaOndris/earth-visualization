@@ -20,9 +20,7 @@ struct GLFWwindow;
 
 class EarthVisualizer {
 public:
-    // Throws std::runtime_error if any renderer fails to initialize.
     EarthVisualizer(GLFWwindow* window, t_window_definition& windowDefinition);
-    ~EarthVisualizer();
 
     EarthVisualizer(const EarthVisualizer&) = delete;
     EarthVisualizer& operator=(const EarthVisualizer&) = delete;
@@ -31,8 +29,6 @@ public:
     [[nodiscard]] EarthCenteredCamera& getCamera();
 
 private:
-    void initializeRenderers();
-
     // Initialization order is critical: members are constructed in declaration order.
     Ellipsoid _ellipsoid;
     EarthCenteredCamera _camera;     // holds ref to _ellipsoid

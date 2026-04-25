@@ -11,18 +11,14 @@
 class SunRenderer : public Renderer {
 public:
     explicit SunRenderer(Camera &camera, const LightSource &lightSource, float sunRadius,
-                         Program &program)
-            : _program(program),
-              _camera(camera), 
-              _lightSource(lightSource), 
-              _sunRadius(sunRadius) {
-    }
+                         Program &program);
 
-    bool initialize() override;
+    ~SunRenderer() override;
+
+    SunRenderer(const SunRenderer&) = delete;
+    SunRenderer& operator=(const SunRenderer&) = delete;
 
     void render(float currentTime, t_window_definition window, RenderingOptions options) override;
-
-    void destroy() override;
 
     [[nodiscard]] glm::mat4 getProjectionMatrix(t_window_definition window) const;
 

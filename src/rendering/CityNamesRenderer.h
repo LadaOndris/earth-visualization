@@ -41,9 +41,10 @@ class CityNamesRenderer : public Renderer, public RendererSubscriber {
 public:
     explicit CityNamesRenderer(Program &program, Camera &camera, Ellipsoid &ellipsoid);
 
-    bool initialize() override;
+    ~CityNamesRenderer() override;
 
-    void destroy() override;
+    CityNamesRenderer(const CityNamesRenderer&) = delete;
+    CityNamesRenderer& operator=(const CityNamesRenderer&) = delete;
 
     void render(float currentTime, t_window_definition window, RenderingOptions options) override;
 

@@ -11,6 +11,7 @@
 #include <sstream>
 #include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 
@@ -66,16 +67,13 @@ public:
         shaders.push_back(std::move(shader));
     }
 
-    bool build() {
+    void build() {
         for (auto &shader : shaders) {
-            bool builtSucessfully = shader->build();
-
-            if (!builtSucessfully) {
-                return false;
-            }
+            if (!shader->build())
+                throw std::runtime_error("Failed to compile shader");
         }
-        bool programCreated = createProgram();
-        return programCreated;
+        if (!createProgram())
+            throw std::runtime_error("Failed to link shader program");
     }
 
     // use/activate the program
@@ -113,6 +111,8 @@ public:
     }
 
     ~Program() {
+        if (id != 0)
+            glDeleteProgram(id);
         deleteShaders();
     }
 };

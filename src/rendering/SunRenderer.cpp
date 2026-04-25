@@ -5,16 +5,20 @@
 
 #include <cmath>
 
-bool SunRenderer::initialize() {
-    bool isShaderProgramBuilt = _program.build();
-    if (!isShaderProgramBuilt) {
-        return false;
-    }
-
+SunRenderer::SunRenderer(Camera &camera, const LightSource &lightSource, float sunRadius,
+                         Program &program)
+        : _program(program),
+          _camera(camera),
+          _lightSource(lightSource),
+          _sunRadius(sunRadius) {
     constructVertices();
     setupVertexArrays();
+    _program.build();
+}
 
-    return true;
+SunRenderer::~SunRenderer() {
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
 }
 
 
@@ -104,7 +108,3 @@ glm::mat4 SunRenderer::getModelMatrix() const {
     return modelMatrix;
 }
 
-void SunRenderer::destroy() {
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-}

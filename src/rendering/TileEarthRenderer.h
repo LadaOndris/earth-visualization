@@ -25,21 +25,14 @@ public:
                                LightSource &lightSource,
                                AsyncTextureLoader &textureLoader,
                                ResourceManager &resourceManager,
-                               Program &program)
-            : _tileContainer(tileContainer), 
-              _ellipsoid(ellipsoid),
-              _camera(camera), 
-              _lightSource(lightSource), 
-              _textureLoader(textureLoader),
-              _resourceManager(resourceManager),
-              _program(program) {
-    }
+                               Program &program);
+
+    ~TileEarthRenderer() override;
+
+    TileEarthRenderer(const TileEarthRenderer&) = delete;
+    TileEarthRenderer& operator=(const TileEarthRenderer&) = delete;
 
     void render(float currentTime, t_window_definition window, RenderingOptions options) override;
-
-    bool initialize() override;
-
-    void destroy() override;
 
     /**
      * Adds a subscriber which wants to be notified

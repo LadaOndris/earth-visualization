@@ -7,7 +7,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include <stdexcept>
 
 EarthVisualizer::EarthVisualizer(GLFWwindow* window, t_window_definition& windowDefinition)
     : _ellipsoid(Ellipsoid::unitSphereWithCorrectRatio())
@@ -77,23 +76,10 @@ EarthVisualizer::EarthVisualizer(GLFWwindow* window, t_window_definition& window
     _renderers.push_back(sunRenderer);
     _renderers.push_back(_guiRenderer);
 
-    initializeRenderers();
-}
-
-EarthVisualizer::~EarthVisualizer() {
-    for (const auto& renderer : _renderers)
-        renderer->destroy();
 }
 
 EarthCenteredCamera& EarthVisualizer::getCamera() {
     return _camera;
-}
-
-void EarthVisualizer::initializeRenderers() {
-    for (const auto& renderer : _renderers) {
-        if (!renderer->initialize())
-            throw std::runtime_error("Failed to initialize a renderer");
-    }
 }
 
 void EarthVisualizer::run() {

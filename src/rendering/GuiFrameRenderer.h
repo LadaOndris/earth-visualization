@@ -35,10 +35,6 @@ private:
 public:
     explicit GuiFrameRenderer(RenderingOptions options, const SolarSimulator &simulator);
 
-    bool initialize() override;
-
-    void destroy() override;
-
     void render(float currentTime, t_window_definition window, RenderingOptions options) override;
 
     RenderingOptions getRenderingOptions() const;
