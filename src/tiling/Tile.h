@@ -91,8 +91,6 @@ public:
      */
     [[nodiscard]] bool isInViewFrustum(const Frustum &frustum) const;
 
-    [[nodiscard]] unsigned char sumOfBits(unsigned char var) const;
-
     [[nodiscard]] bool isFacingCamera(const glm::vec3 &cameraPosition) const;
 
     /**
