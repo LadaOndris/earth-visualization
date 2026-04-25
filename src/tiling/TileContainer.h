@@ -20,7 +20,7 @@ private:
     TextureAtlas &_nightMapAtlas;
     TextureAtlas &_heightMapAtlas;
     Ellipsoid &_ellipsoid;
-    std::vector<Mesh_t> _cachedMeshes;
+    std::vector<std::shared_ptr<const Mesh_t>> _cachedMeshes;
 
     /**
     * Assigns the corresponding resources from texture atlases to
@@ -48,11 +48,10 @@ private:
                 Mesh_t mesh = _tileMeshTesselator.generate(meshResolution, tile);
 
                 std::cout << "Mesh size (triangles): " << mesh.size() / 3 << std::endl;
-                _cachedMeshes.push_back(mesh);
+                _cachedMeshes.push_back(std::make_shared<Mesh_t>(std::move(mesh)));
             }
 
-            Mesh_t mesh = _cachedMeshes[level];
-            auto tileResource = std::make_shared<TileResources>(mesh, dayMap, nightMap, heightMap);
+            auto tileResource = std::make_shared<TileResources>(_cachedMeshes[level], dayMap, nightMap, heightMap);
 
             tile.addResources(tileResource, level);
         }

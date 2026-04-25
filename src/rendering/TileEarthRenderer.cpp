@@ -41,8 +41,7 @@ TileEarthRenderer::~TileEarthRenderer() {
  */
 void TileEarthRenderer::initVertexArraysForAllLevels(int numLevels) {
     for (int level = 0; level < numLevels; level++) {
-        // TODO: All tiles share the same mesh; use the first tile's mesh for this level.
-        Mesh_t mesh = _tileContainer.getTiles()[0].getResourcesByLevel(level)->getMesh();
+        const Mesh_t& mesh = _tileContainer.getTiles()[0].getResourcesByLevel(level)->getMesh();
         auto buffer = std::make_shared<MeshBuffer>(convertToVertices(mesh));
 
         for (Tile &tile: _tileContainer.getTiles())
@@ -196,8 +195,6 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
         double distanceToCamera = glm::length(_camera.getPosition() - tile.getGeocentricPosition());
         std::shared_ptr<TileResources> resources = tile.getResources(
                 screenSpaceWidth, distanceToCamera, _camera);
-        Mesh_t mesh = resources->getMesh();
-
         std::shared_ptr<Texture> dayTexture;
         std::shared_ptr<Texture> nightTexture;
         std::shared_ptr<Texture> heightMap;
@@ -229,7 +226,7 @@ void TileEarthRenderer::render(float currentTime, t_window_definition window, Re
             } else {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
-            glDrawArrays(GL_PATCHES, 0, mesh.size());
+            glDrawArrays(GL_PATCHES, 0, resources->getMesh().size());
         }
     }
 

@@ -20,7 +20,7 @@ class MeshBuffer;
 class TileResources {
 private:
     // Mesh covers always the tile only
-    Mesh_t _mesh;
+    std::shared_ptr<const Mesh_t> _mesh;
     // Textures may cover many tiles
     std::shared_ptr<Texture> _dayTexture;
     std::shared_ptr<Texture> _nightTexture;
@@ -31,7 +31,7 @@ public:
     std::weak_ptr<TileResources> coarserResources;
     std::vector<std::shared_ptr<TileResources>> finerResources;
 
-    explicit TileResources(Mesh_t mesh, std::shared_ptr<Texture> dayTexture,
+    explicit TileResources(std::shared_ptr<const Mesh_t> mesh, std::shared_ptr<Texture> dayTexture,
                            std::shared_ptr<Texture> nightTexture,
                            std::shared_ptr<Texture> heightMap) :
             _mesh(std::move(mesh)), _dayTexture(std::move(dayTexture)),
@@ -44,8 +44,8 @@ public:
 
     [[nodiscard]] unsigned int vao() const;
 
-    [[nodiscard]] Mesh_t getMesh() const {
-        return _mesh;
+    [[nodiscard]] const Mesh_t& getMesh() const {
+        return *_mesh;
     }
 
     [[nodiscard]] std::shared_ptr<Texture> getTexture(TextureType textureType) const {
