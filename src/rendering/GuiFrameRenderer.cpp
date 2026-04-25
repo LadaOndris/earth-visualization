@@ -1,15 +1,13 @@
 
 #include "GuiFrameRenderer.h"
-
 #include <imgui.h>
 #include <imgui_stdlib.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
-#include <iostream>
 #include <iomanip>
 
 GuiFrameRenderer::GuiFrameRenderer(RenderingOptions options, const SolarSimulator &simulator)
-        : renderingOptions(options), simulator(simulator) {
+        : _renderingOptions(options), _simulator(simulator) {
 }
 
 
@@ -57,24 +55,24 @@ void GuiFrameRenderer::createFeaturesWindow(t_window_definition window) {
     ImGui::Begin("Turn on/off features", nullptr, windowFlags);
 
     ImGui::Spacing();
-    ImGui::Checkbox("Wireframe", &renderingOptions.isWireframeEnabled);
+    ImGui::Checkbox("Wireframe", &_renderingOptions.isWireframeEnabled);
     ImGui::Spacing();
-    ImGui::Checkbox("Color texture", &renderingOptions.isTextureEnabled);
+    ImGui::Checkbox("Color texture", &_renderingOptions.isTextureEnabled);
     ImGui::Spacing();
-    ImGui::Checkbox("Night", &renderingOptions.isNightEnabled);
+    ImGui::Checkbox("Night", &_renderingOptions.isNightEnabled);
     ImGui::Spacing();
-    ImGui::Checkbox("Terrain", &renderingOptions.isTerrainEnabled);
+    ImGui::Checkbox("Terrain", &_renderingOptions.isTerrainEnabled);
     ImGui::Spacing();
-    ImGui::Checkbox("Terrain shading", &renderingOptions.isTerrainShadingEnabled);
+    ImGui::Checkbox("Terrain shading", &_renderingOptions.isTerrainShadingEnabled);
     ImGui::Spacing();
-    ImGui::Checkbox("Grid", &renderingOptions.isGridEnabled);
+    ImGui::Checkbox("Grid", &_renderingOptions.isGridEnabled);
     ImGui::Spacing();
-    ImGui::Checkbox("Cities", &renderingOptions.isRenderingCitiesEnabled);
+    ImGui::Checkbox("Cities", &_renderingOptions.isRenderingCitiesEnabled);
     ImGui::Spacing();
-    ImGui::Checkbox("Culling", &renderingOptions.isCullingEnabled);
+    ImGui::Checkbox("Culling", &_renderingOptions.isCullingEnabled);
     ImGui::Spacing();
     auto sliderFlags = ImGuiSliderFlags_None;
-    ImGui::SliderInt("Height factor", &renderingOptions.heightFactor, 1, 10000, "%d", sliderFlags);
+    ImGui::SliderInt("Height factor", &_renderingOptions.heightFactor, 1, 10000, "%d", sliderFlags);
     ImGui::Spacing();
 
     ImGui::End();
@@ -112,13 +110,13 @@ void GuiFrameRenderer::createSimulationWindow(t_window_definition window) {
     ImGui::Separator();
     ImGui::Spacing();
 
-    auto simulationButtonText = renderingOptions.isSimulationRunning ? "Stop" : "Start";
+    auto simulationButtonText = _renderingOptions.isSimulationRunning ? "Stop" : "Start";
     if (ImGui::Button(simulationButtonText)) {
         startOrStopSimulation();
     }
 
     auto sliderFlags = ImGuiSliderFlags_None;
-    ImGui::SliderInt("Speed", &renderingOptions.simulationSpeed, 1, 86400, "%d", sliderFlags);
+    ImGui::SliderInt("Speed", &_renderingOptions.simulationSpeed, 1, 86400, "%d", sliderFlags);
 
     ImGui::End();
     float windowHeight = 130;
@@ -167,11 +165,11 @@ void GuiFrameRenderer::createStatisticsWindow(t_window_definition window) {
     ImGui::Spacing();
     ImGui::Text("\tCamera");
     ImGui::Spacing();
-    ImGui::Text("Longitude: %.3f°", renderingStatistics.cameraPosition[0] * TO_DEGS_COEFF);
+    ImGui::Text("Longitude: %.3f°", static_cast<double>(renderingStatistics.cameraPosition[0] * TO_DEGS_COEFF));
     ImGui::Spacing();
-    ImGui::Text("Latitude: %.3f°", renderingStatistics.cameraPosition[1] * TO_DEGS_COEFF);
+    ImGui::Text("Latitude: %.3f°", static_cast<double>(renderingStatistics.cameraPosition[1] * TO_DEGS_COEFF));
     ImGui::Spacing();
-    ImGui::Text("Altitude: %.2f km", renderingStatistics.cameraPosition[2] / 1000);
+    ImGui::Text("Altitude: %.2f km", static_cast<double>(renderingStatistics.cameraPosition[2]) / 1000.0);
     ImGui::Spacing();
 
     ImGui::End();
@@ -192,11 +190,11 @@ void GuiFrameRenderer::createCameraWindow(t_window_definition window) {
 
 
 void GuiFrameRenderer::startOrStopSimulation() {
-    renderingOptions.isSimulationRunning = !renderingOptions.isSimulationRunning;
+    _renderingOptions.isSimulationRunning = !_renderingOptions.isSimulationRunning;
 }
 
 std::string GuiFrameRenderer::getCurrentSimulationTime() const {
-    std::tm datetime = simulator.getCurrentSimulationTime();
+    std::tm datetime = _simulator.getCurrentSimulationTime();
 
     // Conver to the following format: "10 June, 12:45:10"
     std::stringstream ss;
@@ -205,7 +203,7 @@ std::string GuiFrameRenderer::getCurrentSimulationTime() const {
 }
 
 RenderingOptions GuiFrameRenderer::getRenderingOptions() const {
-    return renderingOptions;
+    return _renderingOptions;
 }
 
 bool GuiFrameRenderer::initialize() {

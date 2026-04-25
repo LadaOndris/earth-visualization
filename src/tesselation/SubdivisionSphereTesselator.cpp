@@ -1,9 +1,8 @@
-//
-// Created by lada on 9/24/23.
-//
+
+
+#include "SubdivisionSphereTesselator.h"
 
 #include <glm/geometric.hpp>
-#include "SubdivisionSphereTesselator.h"
 
 SubdivisionSphereTesselator::SubdivisionSphereTesselator() {
     auto p0 = glm::vec3(0.f, 0.f, 1.f);
@@ -20,7 +19,7 @@ std::vector<glm::vec3> SubdivisionSphereTesselator::tessellate(int repetitions) 
         newVertices.clear();
 
         // Always get three subsequent vertices which define a single triangle
-        for (int vertexIndex = 0; vertexIndex < vertices.size(); vertexIndex += 3) {
+        for (size_t vertexIndex = 0; vertexIndex < vertices.size(); vertexIndex += 3) {
             auto p0 = vertices[vertexIndex];
             auto p1 = vertices[vertexIndex + 1];
             auto p2 = vertices[vertexIndex + 2];

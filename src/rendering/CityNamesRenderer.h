@@ -1,22 +1,20 @@
-//
-// Created by lada on 12/10/23.
-//
 
-#ifndef EARTH_VISUALIZATION_CITYNAMESRENDERER_H
-#define EARTH_VISUALIZATION_CITYNAMESRENDERER_H
+#pragma once
 
-#include <map>
 #include "Renderer.h"
 #include "RenderingOptions.h"
-#include "../include/glad/glad.h"
+#include "glad/glad.h"
 #include "program.h"
-#include "../cameras/Camera.h"
-#include "../ellipsoid.h"
-#include "../WorldCitiesReader.h"
+#include "cameras/Camera.h"
+#include "ellipsoid.h"
+#include "WorldCitiesReader.h"
 #include "RendererSubscriber.h"
-#include "../Frustum.h"
+#include "Frustum.h"
+
 #include <glm/vec3.hpp>
 #include <glm/detail/type_vec2.hpp>
+
+#include <map>
 
 struct Character {
     glm::vec2 size;       // Size of glyph
@@ -40,16 +38,28 @@ struct TextInstanceData {
 
 
 class CityNamesRenderer : public Renderer, public RendererSubscriber {
+public:
+    explicit CityNamesRenderer(Program &program, Camera &camera, Ellipsoid &ellipsoid);
+
+    bool initialize() override;
+
+    void destroy() override;
+
+    void render(float currentTime, t_window_definition window, RenderingOptions options) override;
+
+    void notify(RenderingStatistics renderingStatistics) override;
+
 private:
-    std::map<char, Character> characters;
-    GLuint textureId;
-    float atlasWidth, atlasHeight;
-    Program &program;
-    unsigned int VAO, VBO, instanceVBO;
-    Camera &camera;
-    Ellipsoid &ellipsoid;
-    std::vector<City> worldCities;
-    RenderingStatistics rendereringStats;
+    std::map<char, Character> _characters;
+    GLuint _textureId;
+    float _atlasWidth;
+    float _atlasHeight;
+    Program &_program;
+    unsigned int _VAO, _VBO, _instanceVBO;
+    Camera &_camera;
+    Ellipsoid &_ellipsoid;
+    std::vector<City> _worldCities;
+    RenderingStatistics _renderingStats;
 
     bool prepareTextureAtlas();
 
@@ -70,17 +80,4 @@ private:
 
     void retrieveDataToBeRendered(const Frustum &frustum, std::vector<City> &out) const;
 
-public:
-    explicit CityNamesRenderer(Program &program, Camera &camera, Ellipsoid &ellipsoid);
-
-    bool initialize() override;
-
-    void destroy() override;
-
-    void render(float currentTime, t_window_definition window, RenderingOptions options) override;
-
-    void notify(RenderingStatistics renderingStatistics) override;
 };
-
-
-#endif //EARTH_VISUALIZATION_CITYNAMESRENDERER_H

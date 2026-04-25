@@ -1,14 +1,10 @@
-//
-// Created by lada on 10/17/23.
-//
+#pragma once
 
-#ifndef EARTH_VISUALIZATION_TILEMESHTESSELATOR_H
-#define EARTH_VISUALIZATION_TILEMESHTESSELATOR_H
+#include "textures/Texture.h"
+#include "ellipsoid.h"
+#include "tiling/Tile.h"
 
 #include <vector>
-#include "../textures/Texture.h"
-#include "../ellipsoid.h"
-#include "../tiling/Tile.h"
 
 class TileMeshTesselator {
 private:
@@ -78,6 +74,3 @@ public:
         return meshVertices;
     }
 };
-
-
-#endif //EARTH_VISUALIZATION_TILEMESHTESSELATOR_H

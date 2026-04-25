@@ -1,9 +1,6 @@
-//
-// Created by lada on 10/31/23.
-//
+#pragma once
 
-#ifndef EARTH_VISUALIZATION_RESOURCEFETCHER_H
-#define EARTH_VISUALIZATION_RESOURCEFETCHER_H
+#include "textures/Texture.h"
 
 #include <iostream>
 #include <queue>
@@ -12,7 +9,6 @@
 #include <atomic>
 #include <condition_variable>
 #include <memory>
-#include "../textures/Texture.h"
 
 struct TextureLoadRequest {
     std::string path;
@@ -118,6 +114,3 @@ public:
         return results;
     }
 };
-
-
-#endif //EARTH_VISUALIZATION_RESOURCEFETCHER_H

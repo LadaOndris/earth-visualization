@@ -1,9 +1,5 @@
-//
-// Created by lada on 10/25/23.
-//
 
-#ifndef EARTH_VISUALIZATION_RENDERINGOPTIONS_H
-#define EARTH_VISUALIZATION_RENDERINGOPTIONS_H
+#pragma once
 
 
 struct RenderingOptions {
@@ -19,6 +15,3 @@ struct RenderingOptions {
     int simulationSpeed = 1;
     int heightFactor = 1000;
 };
-
-
-#endif //EARTH_VISUALIZATION_RENDERINGOPTIONS_H

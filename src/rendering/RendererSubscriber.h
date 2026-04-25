@@ -1,9 +1,4 @@
-//
-// Created by lada on 10/26/23.
-//
-
-#ifndef EARTH_VISUALIZATION_RENDERERSUBSCRIBER_H
-#define EARTH_VISUALIZATION_RENDERERSUBSCRIBER_H
+#pragma once
 
 #include <glm/vec3.hpp>
 #include <glm/vec2.hpp>
@@ -20,8 +15,7 @@ struct RenderingStatistics {
 
 class RendererSubscriber {
 public:
+    virtual ~RendererSubscriber() = default;
+
     virtual void notify(RenderingStatistics renderingStatistics) = 0;
 };
-
-
-#endif //EARTH_VISUALIZATION_RENDERERSUBSCRIBER_H

@@ -1,11 +1,8 @@
-//
-// Created by lada on 11/10/23.
-//
 
-#ifndef EARTH_VISUALIZATION_SHADER_H
-#define EARTH_VISUALIZATION_SHADER_H
+#pragma once
 
 #include <glad/glad.h> // include glad to get all the required OpenGL headers
+
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -22,8 +19,8 @@ const char *shaderTypeToString(ShaderType e);
 
 class Shader {
 private:
-    const char *sourcePath;
-    const ShaderType type;
+    const char *_sourcePath;
+    const ShaderType _type;
     unsigned int id = 0;
 
 
@@ -34,7 +31,7 @@ private:
         glGetShaderiv(id, GL_COMPILE_STATUS, &success);
         if (!success) {
             glGetShaderInfoLog(id, 512, nullptr, infoLog);
-            std::cout << "ERROR::SHADER::" << shaderTypeToString(type) << "::COMPILATION_FAILED\n" << infoLog
+            std::cout << "ERROR::SHADER::" << shaderTypeToString(_type) << "::COMPILATION_FAILED\n" << infoLog
                       << std::endl;
             return true;
         }
@@ -43,7 +40,7 @@ private:
 
 public:
     explicit Shader(const char *sourcePath, ShaderType type)
-            : sourcePath(sourcePath), type(type) {
+            : _sourcePath(sourcePath), _type(type) {
 
     }
 
@@ -53,7 +50,7 @@ public:
         shaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         try {
             // open files
-            shaderFile.open(sourcePath);
+            shaderFile.open(_sourcePath);
             std::stringstream vShaderStream, fShaderStream;
             // read file's buffer contents into streams
             vShaderStream << shaderFile.rdbuf();
@@ -81,7 +78,7 @@ public:
     }
 
     int convertShaderTypeToGlNumber() {
-        switch (type) {
+        switch (_type) {
             case Vertex:
                 return GL_VERTEX_SHADER;
             case TesselationControl:
@@ -107,5 +104,3 @@ public:
         id = 0;
     }
 };
-
-#endif //EARTH_VISUALIZATION_SHADER_H

@@ -1,9 +1,9 @@
 
-#ifndef EARTH_VISUALIZATION_ELLIPSOID_H
-#define EARTH_VISUALIZATION_ELLIPSOID_H
+#pragma once
 
 #include <glm/vec3.hpp>
 #include <glm/geometric.hpp>
+
 #include <vector>
 
 extern glm::vec3 REAL_RADII_METERS;
@@ -72,10 +72,7 @@ public:
     [[nodiscard]] bool isPointFacingCamera(glm::vec3 cameraPosition, glm::vec3 geocentricPosition) const;
 
 private:
-    glm::vec3 radii;
-    glm::vec3 radiiSquared;
-    glm::vec3 oneOverRadiiSquared;
+    glm::vec3 _radii;
+    glm::vec3 _radiiSquared;
+    glm::vec3 _oneOverRadiiSquared;
 };
-
-
-#endif //EARTH_VISUALIZATION_ELLIPSOID_H

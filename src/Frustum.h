@@ -1,16 +1,11 @@
 
-#ifndef EARTH_VISUALIZATION_FRUSTUM_H
-#define EARTH_VISUALIZATION_FRUSTUM_H
+#pragma once
 
-#include <memory>
-#include <vector>
-#include <cmath>
-#include <stdexcept>
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/geometric.hpp>
-#include <array>
-#include "../include/printing.h"
+
+#include <cmath>
 
 class Frustum {
 public:
@@ -24,5 +19,3 @@ private:
     static const int numPlanes = 6;
     glm::vec4 planes[numPlanes];
 };
-
-#endif //EARTH_VISUALIZATION_FRUSTUM_H

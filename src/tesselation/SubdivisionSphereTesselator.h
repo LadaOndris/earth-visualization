@@ -1,16 +1,13 @@
-//
-// Created by lada on 9/24/23.
-//
+#pragma once
 
-#ifndef EARTH_VISUALIZATION_SUBDIVISIONSPHERETESSELATOR_H
-#define EARTH_VISUALIZATION_SUBDIVISIONSPHERETESSELATOR_H
-
+#include <glm/fwd.hpp>
 
 #include <vector>
-#include "../ellipsoid.h"
 
 class SphereTesselator {
 public:
+    virtual ~SphereTesselator() = default;
+
     virtual std::vector<glm::vec3> tessellate(int repetitions) = 0;
 };
 
@@ -23,6 +20,3 @@ public:
 private:
     std::vector<glm::vec3> vertices;
 };
-
-
-#endif //EARTH_VISUALIZATION_SUBDIVISIONSPHERETESSELATOR_H

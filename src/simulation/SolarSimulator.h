@@ -1,17 +1,17 @@
 
-#ifndef EARTH_VISUALIZATION_SOLARSIMULATOR_H
-#define EARTH_VISUALIZATION_SOLARSIMULATOR_H
+#pragma once
 
+#include "LightSource.h"
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <cmath>
 #include <ctime>
 #include <cmath>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
-#include "LightSource.h"
 
-const float DAYS_IN_YEAR = 365.25f;
+const double DAYS_IN_YEAR = 365.25;
 
 class SolarSimulator : public LightSource {
 public:
@@ -20,80 +20,78 @@ public:
      * with respect to the other stars. When combined the with the orbit rotation, this becomes 24 hours.
      */
     explicit SolarSimulator(float sunDistance) :
-            inclinationAngle(glm::radians(23.44f)),
-            earthRotationSpeed(360.0f / 86164.1f), sunSpeed(360.0f / DAYS_IN_YEAR) {
-        basePosition = glm::vec3(sunDistance, 0.f, 0.f);
+            _inclinationAngle(glm::radians(23.44)),
+            _earthRotationSpeed(360.0 / 86164.1), _sunSpeed(360.0 / DAYS_IN_YEAR) {
+        _basePosition = glm::vec3(sunDistance, 0.f, 0.f);
 
-        simulationTime.tm_year = 2023 - 1900; // Years since 1900
-        simulationTime.tm_mon = 0;             // January (0-based)
-        simulationTime.tm_mday = 1;            // 1st day of the month
+        _simulationTime.tm_year = 2023 - 1900; // Years since 1900
+        _simulationTime.tm_mon = 0;             // January (0-based)
+        _simulationTime.tm_mday = 1;            // 1st day of the month
 
     }
 
     [[nodiscard]] glm::vec3 getLightPosition() const override {
-        return sunPosition;
+        return _sunPosition;
     }
 
     [[nodiscard]] glm::mat4 getTransformationMatrix() const override {
-        return transformationMatrix;
+        return _transformationMatrix;
     }
 
     [[nodiscard]] std::tm getCurrentSimulationTime() const {
-        return simulationTime;
+        return _simulationTime;
     }
 
     // Function to calculate the Sun's position
     void updateSunPosition(float deltaTime, float simulationSpeed) {
         assert(deltaTime >= 0);
         updateSimulationTime(deltaTime, simulationSpeed);
-        float earthRotationAngle = calculateEarthRotationAngle(simulationTime);
-        float earthOrbitAngle = calculateEarthOrbitAngle(simulationTime);
+        double earthRotationAngle = calculateEarthRotationAngle(_simulationTime);
 
         glm::mat4 rotationMatrixForFirstOfJanuary = calcRotationMatrixToPlaceAtTheStart();
-        glm::mat4 rotationMatrix = calcRotationMatrix(earthOrbitAngle, earthRotationAngle);
-        glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), basePosition);
+        glm::mat4 rotationMatrix = calcRotationMatrix(earthRotationAngle);
+        glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), _basePosition);
 
-        transformationMatrix = rotationMatrix * rotationMatrixForFirstOfJanuary * translationMatrix;
-        sunPosition = rotationMatrix * rotationMatrixForFirstOfJanuary * glm::vec4(basePosition, 1.f);
+        _transformationMatrix = rotationMatrix * rotationMatrixForFirstOfJanuary * translationMatrix;
+        _sunPosition = rotationMatrix * rotationMatrixForFirstOfJanuary * glm::vec4(_basePosition, 1.f);
     }
 
 
 private:
-    const float inclinationAngle;
-    const float earthRotationSpeed;
-    const float sunSpeed;
-    glm::vec3 basePosition;
-    glm::vec3 sunPosition = glm::vec3(0.f);
-    glm::mat4 transformationMatrix = glm::mat4(1.f);
-    std::tm simulationTime = {};
-    float simulationTimeMillis = 0.f; // The std::tm structure doesn't support milliseconds. Store it separately.
+    const double _inclinationAngle;
+    const double _earthRotationSpeed;
+    const double _sunSpeed;
+    glm::vec3 _basePosition;
+    glm::vec3 _sunPosition = glm::vec3(0.f);
+    glm::mat4 _transformationMatrix = glm::mat4(1.f);
+    std::tm _simulationTime = {};
+    double _simulationTimeMillis = 0.0; // The std::tm structure doesn't support milliseconds. Store it separately.
 
-    [[nodiscard]] float calculateEarthRotationAngle(const std::tm &datetime) const {
-        float seconds = datetime.tm_hour * 3600 + datetime.tm_min * 60 + datetime.tm_sec;
-        float rotationDegs = seconds * earthRotationSpeed + 250;
-        float rotationYears = std::floor(rotationDegs / 360);
-        float rotationRads = glm::radians(rotationDegs - rotationYears * 360);
+    [[nodiscard]] double calculateEarthRotationAngle(const std::tm &datetime) const {
+        double seconds = datetime.tm_hour * 3600 + datetime.tm_min * 60 + datetime.tm_sec;
+        double rotationDegs = seconds * _earthRotationSpeed + 250;
+        double rotationYears = std::floor(rotationDegs / 360);
+        double rotationRads = glm::radians(rotationDegs - rotationYears * 360);
         return rotationRads;
     }
 
-    [[nodiscard]] float calculateEarthOrbitAngle(const std::tm &datetime) const {
-        float daysInYear = (datetime.tm_yday + 1) + (datetime.tm_year - 70) * DAYS_IN_YEAR;
-        float rotationDegs = daysInYear * sunSpeed;
-        float rotationYears = std::floor(rotationDegs / 360);
-        float rotationRads = glm::radians(rotationDegs - rotationYears * 360);
+    [[nodiscard]] double calculateEarthOrbitAngle(const std::tm &datetime) const {
+        double daysInYear = (datetime.tm_yday + 1) + (datetime.tm_year - 70) * DAYS_IN_YEAR;
+        double rotationDegs = daysInYear * _sunSpeed;
+        double rotationYears = std::floor(rotationDegs / 360);
+        double rotationRads = glm::radians(rotationDegs - rotationYears * 360);
         return rotationRads;
     }
 
-    [[nodiscard]] glm::mat4 calcRotationMatrix(float earthOrbitAngle, float earthRotationAngle) const {
-        auto currentInclinationAngle = static_cast<float>(calcCurrentInlination());
+    [[nodiscard]] glm::mat4 calcRotationMatrix(double earthRotationAngle) const {
+        double currentInclinationAngle = calcCurrentInlination();
 
         // Apply an additional rotation to account for the Earth's axial tilt (inclination).
-        glm::mat4 inclinationMatrix = glm::rotate(glm::mat4(1.0f), currentInclinationAngle,
+        glm::mat4 inclinationMatrix = glm::rotate(glm::mat4(1.0f), static_cast<float>(currentInclinationAngle),
                                                   glm::vec3(1.0f, 0.0f, 0.0f));
-        glm::mat4 earthRotationMatrix = glm::rotate(glm::mat4(1.0f), earthRotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
-        glm::mat4 orbitMatrix = glm::rotate(glm::mat4(1.0f), earthOrbitAngle, glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 earthRotationMatrix = glm::rotate(glm::mat4(1.0f), static_cast<float>(earthRotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 
-        return earthRotationMatrix * /*orbitMatrix **/ inclinationMatrix;
+        return earthRotationMatrix * inclinationMatrix;
     }
 
     [[nodiscard]] double calcCurrentInlination() const {
@@ -103,60 +101,58 @@ private:
         const double summmerSolsticeDay = 171.5;
         // Calculate the difference in days from the vernal equinox to the current date and time.
         double daysFromVernalEquinox = elapsedDays - summmerSolsticeDay;
-        double currentInclination = inclinationAngle * cos(glm::radians(daysFromVernalEquinox * 360.0f / DAYS_IN_YEAR));
+        double currentInclination = _inclinationAngle * cos(glm::radians(daysFromVernalEquinox * 360.0 / DAYS_IN_YEAR));
         return currentInclination;
     }
 
     [[nodiscard]] double getElapsedDaysInCurrentYear() const {
         // Obtain the day of the year from the provided date and time
-        int dayOfYear = simulationTime.tm_yday;
+        int dayOfYear = _simulationTime.tm_yday;
 
         // Calculate the time in hours (fractional part of the day)
-        auto hours = static_cast<double>(simulationTime.tm_hour);
-        auto minutes = static_cast<double>(simulationTime.tm_min);
-        auto seconds = static_cast<double>(simulationTime.tm_sec);
+        auto hours = static_cast<double>(_simulationTime.tm_hour);
+        auto minutes = static_cast<double>(_simulationTime.tm_min);
+        auto seconds = static_cast<double>(_simulationTime.tm_sec);
 
         double fractionalDay = hours + (minutes / 60.0) + (seconds / 3600.0);
 
-        return dayOfYear + fractionalDay / 24.f;
+        return dayOfYear + fractionalDay / 24.0;
     }
 
     [[nodiscard]] glm::mat4 calcRotationMatrixToPlaceAtTheStart() {
         // Constants for the approximation
-        const float daysFromVernalEquinoxToJanuary1 = 286.0f;
-        const float earthOrbitDegrees = 360.0f; // Full orbit in degrees
+        const double daysFromVernalEquinoxToJanuary1 = 286.0;
+        const double earthOrbitDegrees = 360.0; // Full orbit in degrees
 
         // Calculate the Earth's angular position in its orbit on the 1st of January 2023
-        float earthAngularPosition = (earthOrbitDegrees / DAYS_IN_YEAR) * daysFromVernalEquinoxToJanuary1;
+        double earthAngularPosition = (earthOrbitDegrees / DAYS_IN_YEAR) * daysFromVernalEquinoxToJanuary1;
 
         // Create a rotation matrix based on the Earth's angular position
-        glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(earthAngularPosition),
+        glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), static_cast<float>(glm::radians(earthAngularPosition)),
                                                glm::vec3(0.0f, 1.0f, 0.0f));
 
         return rotationMatrix;
     }
 
-    void updateSimulationTime(float simPassedTimeSecs, float simulationSpeed) {
+    void updateSimulationTime(double simPassedTimeSecs, double simulationSpeed) {
         // Define the time scale
-        float secsInRealDay = 24 * 60 * 60;
-        float secsInSimDay = secsInRealDay / simulationSpeed;
+        double secsInRealDay = 24 * 60 * 60;
+        double secsInSimDay = secsInRealDay / simulationSpeed;
 
-        float simulationSecs = secsInRealDay * simPassedTimeSecs / secsInSimDay;
-        float simulatiomMs = simulationSecs * 1000;
+        double simulationSecs = secsInRealDay * simPassedTimeSecs / secsInSimDay;
+        double simulationMs = simulationSecs * 1000;
 
         // Add seconds and milliseconds to the starting time
-        simulationTimeMillis += simulatiomMs;
+        _simulationTimeMillis += simulationMs;
 
-        if (simulationTimeMillis >= 1000) {
-            int secondsToAdd = static_cast<int>(simulationTimeMillis / 1000);
-            simulationTime.tm_sec += secondsToAdd;
-            simulationTimeMillis -= static_cast<float>(secondsToAdd) * 1000;
+        if (_simulationTimeMillis >= 1000) {
+            int secondsToAdd = static_cast<int>(_simulationTimeMillis / 1000);
+            _simulationTime.tm_sec += secondsToAdd;
+            _simulationTimeMillis -= static_cast<double>(secondsToAdd) * 1000;
         }
 
         // Normalize the time struct, taking care of overflow
-        mktime(&simulationTime);
+        mktime(&_simulationTime);
     }
 
 };
-
-#endif //EARTH_VISUALIZATION_SOLARSIMULATOR_H

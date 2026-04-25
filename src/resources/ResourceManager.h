@@ -1,44 +1,14 @@
-//
-// Created by lada on 11/1/23.
-//
+#pragma once
 
-#ifndef EARTH_VISUALIZATION_RESOURCEMANAGER_H
-#define EARTH_VISUALIZATION_RESOURCEMANAGER_H
-
+#include "textures/Texture.h"
 
 #include <memory>
 #include <list>
 #include <algorithm>
-#include "../textures/Texture.h"
 
 class ResourceManager {
-private:
-    int maxTextures;
-    int loadedTextures = 0;
-    std::list<std::shared_ptr<Texture>> replacementQueue;
-
-    /**
-     * Decides whether a texture should be removed before a new one
-     * is added.
-     */
-    [[nodiscard]] bool shouldReplaceTexture() const {
-        return loadedTextures >= maxTextures;
-    }
-
-    /**
-     * Removes a texture from the replacement queue.
-     */
-    void popTexture() {
-        if (!replacementQueue.empty()) {
-            // Use LRU to remove the least recently used texture from the replacement queue.
-            std::shared_ptr<Texture> textureToRemove = replacementQueue.back();
-            textureToRemove->unloadFromGL();
-            replacementQueue.pop_back();
-            loadedTextures--;
-        }
-    }
 public:
-    explicit ResourceManager(int maxTextures) : maxTextures(maxTextures) {
+    explicit ResourceManager(int maxTextures) : _maxTextures(maxTextures) {
     }
 
     /**
@@ -51,8 +21,8 @@ public:
             popTexture();
         }
         texture->loadIntoGL();
-        loadedTextures++;
-        replacementQueue.push_front(texture);
+        _loadedTextures++;
+        _replacementQueue.push_front(texture);
     }
 
     /**
@@ -60,11 +30,11 @@ public:
      */
     void noteUsage(const std::shared_ptr<Texture> &texture) {
         // Search for the texture in the replacement queue
-        auto it = std::find(replacementQueue.begin(), replacementQueue.end(), texture);
+        auto it = std::find(_replacementQueue.begin(), _replacementQueue.end(), texture);
 
-        if (it != replacementQueue.end()) {
+        if (it != _replacementQueue.end()) {
             // If found, move it to the beginning of the queue (most recently used).
-            replacementQueue.splice(replacementQueue.begin(), replacementQueue, it);
+            _replacementQueue.splice(_replacementQueue.begin(), _replacementQueue, it);
         }
     }
 
@@ -72,19 +42,41 @@ public:
      * Releases all loaded textures from the OpenGL context.
      */
     void releaseAll() {
-        for (const auto &texture : replacementQueue) {
+        for (const auto &texture : _replacementQueue) {
             texture->unloadFromGL();
         }
 
-        replacementQueue.clear();
-        loadedTextures = 0;
+        _replacementQueue.clear();
+        _loadedTextures = 0;
     }
 
     [[nodiscard]] unsigned int getNumLoadedTextures() const {
-        return loadedTextures;
+        return _loadedTextures;
     }
 
+private:
+    int _maxTextures;
+    int _loadedTextures = 0;
+    std::list<std::shared_ptr<Texture>> _replacementQueue;
+
+    /**
+     * Decides whether a texture should be removed before a new one
+     * is added.
+     */
+    [[nodiscard]] bool shouldReplaceTexture() const {
+        return _loadedTextures >= _maxTextures;
+    }
+
+    /**
+     * Removes a texture from the replacement queue.
+     */
+    void popTexture() {
+        if (!_replacementQueue.empty()) {
+            // Use LRU to remove the least recently used texture from the replacement queue.
+            std::shared_ptr<Texture> textureToRemove = _replacementQueue.back();
+            textureToRemove->unloadFromGL();
+            _replacementQueue.pop_back();
+            _loadedTextures--;
+        }
+    }
 };
-
-
-#endif //EARTH_VISUALIZATION_RESOURCEMANAGER_H

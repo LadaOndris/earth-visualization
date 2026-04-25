@@ -1,48 +1,42 @@
-//
-// Created by lada on 10/17/23.
-//
 
-#ifndef EARTH_VISUALIZATION_TILECONTAINER_H
-#define EARTH_VISUALIZATION_TILECONTAINER_H
+#pragma once
+
+#include "tiling/TileResources.h"
+#include "textures/Texture.h"
+#include "textures/TextureAtlas.h"
+#include "tesselation/TileMeshTesselator.h"
+#include "vertex.h"
 
 #include <memory>
 #include <vector>
 #include <string>
 #include <cassert>
-#include "../tiling/TileResources.h"
-#include "../textures/Texture.h"
-#include "../textures/TextureAtlas.h"
-#include "../tesselation/TileMeshTesselator.h"
-#include "../vertex.h"
-
-
-// Define the TileContainer class.
 
 class TileContainer {
 private:
-    std::vector<Tile> tiles;
-    TileMeshTesselator &tileMeshTesselator;
-    TextureAtlas &dayMapAtlas;
-    TextureAtlas &nightMapAtlas;
-    TextureAtlas &heightMapAtlas;
-    Ellipsoid &ellipsoid;
-    std::vector<Mesh_t> cachedMeshes;
+    std::vector<Tile> _tiles;
+    TileMeshTesselator &_tileMeshTesselator;
+    TextureAtlas &_dayMapAtlas;
+    TextureAtlas &_nightMapAtlas;
+    TextureAtlas &_heightMapAtlas;
+    Ellipsoid &_ellipsoid;
+    std::vector<Mesh_t> _cachedMeshes;
 
     /**
     * Assigns the corresponding resources from texture atlases to
     * the given tile. Generates meshes for all supported levels of detail.
     */
     void setupTile(Tile &tile) {
-        int numLevels = heightMapAtlas.getNumLevelsOfDetail();
+        int numLevels = _heightMapAtlas.getNumLevelsOfDetail();
 
         for (int level = 0; level < numLevels; ++level) {
             // Based on the information of the tile and the current level,
             // the texture atlas returns the correct texture
-            auto heightMap = heightMapAtlas.getTexture(level, tile);
-            auto nightMap = nightMapAtlas.getTexture(level, tile);
-            auto dayMap = dayMapAtlas.getTexture(level, tile);
+            auto heightMap = _heightMapAtlas.getTexture(level, tile);
+            auto nightMap = _nightMapAtlas.getTexture(level, tile);
+            auto dayMap = _dayMapAtlas.getTexture(level, tile);
 
-            if (level >= cachedMeshes.size()) {
+            if (level >= static_cast<int>(_cachedMeshes.size())) {
                 // The heightMap determines the resolution of the mesh.
                 // Altough, the resolution of each heightmap image is the same,
                 // the area it covers differs. Thus, the resolution of the
@@ -51,13 +45,13 @@ private:
                 std::cout << meshResolution.getWidth() << ", " << meshResolution.getHeight() << std::endl;
                 // The ellipsoid is used to project the mesh onto it.
                 // The tile determines the position of the mesh on the ellipsoid.
-                Mesh_t mesh = tileMeshTesselator.generate(meshResolution, tile);
+                Mesh_t mesh = _tileMeshTesselator.generate(meshResolution, tile);
 
                 std::cout << "Mesh size (triangles): " << mesh.size() / 3 << std::endl;
-                cachedMeshes.push_back(mesh);
+                _cachedMeshes.push_back(mesh);
             }
 
-            Mesh_t mesh = cachedMeshes[level];
+            Mesh_t mesh = _cachedMeshes[level];
             auto tileResource = std::make_shared<TileResources>(mesh, dayMap, nightMap, heightMap);
 
             tile.addResources(tileResource, level);
@@ -116,7 +110,7 @@ private:
                 double longitude = lonIndex * tileWidth - 180.0;
 
                 Tile tile(latitude, longitude, tileHeight, tileWidth);
-                tiles.push_back(tile);
+                _tiles.push_back(tile);
             }
         }
     }
@@ -127,11 +121,11 @@ public:
                            TextureAtlas &nightMapAtlas,
                            TextureAtlas &heightMapAtlas,
                            Ellipsoid &ellipsoid)
-            : tileMeshTesselator(tileMeshTesselator),
-              dayMapAtlas(dayMapAtlas),
-              nightMapAtlas(nightMapAtlas),
-              heightMapAtlas(heightMapAtlas),
-              ellipsoid(ellipsoid) {
+            : _tileMeshTesselator(tileMeshTesselator),
+              _dayMapAtlas(dayMapAtlas),
+              _nightMapAtlas(nightMapAtlas),
+              _heightMapAtlas(heightMapAtlas),
+              _ellipsoid(ellipsoid) {
 
     }
 
@@ -141,26 +135,25 @@ public:
     * and divides the globe into tiles based on the most detailed level of detail.
     */
     void setupTiles() {
-        assert(dayMapAtlas.getNumLevelsOfDetail() > 0);
-        assert(heightMapAtlas.getNumLevelsOfDetail() > 0);
-        assert(dayMapAtlas.getNumLevelsOfDetail() == heightMapAtlas.getNumLevelsOfDetail());
+        assert(_dayMapAtlas.getNumLevelsOfDetail() > 0);
+        assert(_heightMapAtlas.getNumLevelsOfDetail() > 0);
+        assert(_dayMapAtlas.getNumLevelsOfDetail() == _heightMapAtlas.getNumLevelsOfDetail());
 
         // Needs to know the finest heightMap resolution
-        Resolution dimensions = heightMapAtlas.getMostDetailedLevelDimensions();
+        Resolution dimensions = _heightMapAtlas.getMostDetailedLevelDimensions();
         this->divideGlobeIntoTiles(dimensions.getWidth(), dimensions.getHeight());
 
-        for (Tile &tile: tiles) {
+        for (Tile &tile: _tiles) {
+            tile.updateGeocentricPosition(_ellipsoid);
             setupTile(tile);
         }
     }
 
     std::vector<Tile> &getTiles() {
-        return tiles;
+        return _tiles;
     }
 
     int getNumLevels() const {
-        return dayMapAtlas.getNumLevelsOfDetail();
+        return _dayMapAtlas.getNumLevelsOfDetail();
     }
 };
-
-#endif //EARTH_VISUALIZATION_TILECONTAINER_H

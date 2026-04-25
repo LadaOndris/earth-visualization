@@ -1,16 +1,14 @@
-//
-// Created by lada on 10/17/23.
-//
 
-#ifndef EARTH_VISUALIZATION_TILERESOURCES_H
-#define EARTH_VISUALIZATION_TILERESOURCES_H
+#pragma once
 
-#include "../textures/Texture.h"
-#include "../vertex.h"
+#include "textures/Texture.h"
+#include "vertex.h"
 #include "Tile.h"
+
+#include <glm/vec3.hpp>
+
 #include <utility>
 #include <vector>
-#include <glm/vec3.hpp>
 #include <memory>
 
 enum TextureType {
@@ -20,38 +18,38 @@ enum TextureType {
 class TileResources {
 private:
     // Mesh covers always the tile only
-    Mesh_t mesh;
+    Mesh_t _mesh;
     // Textures may cover many tiles
-    std::shared_ptr<Texture> dayTexture;
-    std::shared_ptr<Texture> nightTexture;
-    std::shared_ptr<Texture> heightMap;
+    std::shared_ptr<Texture> _dayTexture;
+    std::shared_ptr<Texture> _nightTexture;
+    std::shared_ptr<Texture> _heightMap;
 public:
     unsigned int meshVAO = 0, meshVBO = 0;
     // Coarser and finer resources form a hierarchical structure of the resources.
-    std::shared_ptr<TileResources> coarserResources;
+    std::weak_ptr<TileResources> coarserResources;
     std::vector<std::shared_ptr<TileResources>> finerResources;
 
     explicit TileResources(Mesh_t mesh, std::shared_ptr<Texture> dayTexture,
                            std::shared_ptr<Texture> nightTexture,
                            std::shared_ptr<Texture> heightMap) :
-            mesh(std::move(mesh)), dayTexture(std::move(dayTexture)),
-            nightTexture(std::move(nightTexture)), heightMap(std::move(heightMap)) {
+            _mesh(std::move(mesh)), _dayTexture(std::move(dayTexture)),
+            _nightTexture(std::move(nightTexture)), _heightMap(std::move(heightMap)) {
     }
 
     [[nodiscard]] Mesh_t getMesh() const {
-        return mesh;
+        return _mesh;
     }
 
     [[nodiscard]] std::shared_ptr<Texture> getTexture(TextureType textureType) const {
         switch (textureType) {
             case TextureType::Day: {
-                return dayTexture;
+                return _dayTexture;
             }
             case TextureType::Night: {
-                return nightTexture;
+                return _nightTexture;
             }
             case TextureType::HeightMap: {
-                return heightMap;
+                return _heightMap;
             }
             default:
                 throw std::runtime_error("Invalid texture type");
@@ -62,15 +60,16 @@ public:
      * @return True if a texture ready in OpenGL context was found.
      */
     [[nodiscard]] bool getCoarserTexture(std::shared_ptr<Texture> &texture, TextureType textureType) const {
-        if (coarserResources == nullptr) {
+        auto coarser = coarserResources.lock();
+        if (!coarser) {
             return false;
         }
-        auto coarserTexture = coarserResources->getTexture(textureType);
+        auto coarserTexture = coarser->getTexture(textureType);
         if (coarserTexture->isPreparedInGlContext()) {
             texture = coarserTexture;
             return true;
         } else {
-            return coarserResources->getCoarserTexture(texture, textureType);
+            return coarser->getCoarserTexture(texture, textureType);
         }
     }
 
@@ -97,6 +96,3 @@ public:
     }
 
 };
-
-
-#endif //EARTH_VISUALIZATION_TILERESOURCES_H

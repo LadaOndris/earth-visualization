@@ -1,17 +1,14 @@
-//
-// Created by lada on 9/24/23.
-//
 
-#include <glm/geometric.hpp>
 #include "ellipsoid.h"
+#include <glm/geometric.hpp>
 
 glm::vec3 REAL_RADII_METERS = glm::vec3(6378137.0, 6356752.314245, 6378137.0);
 
-Ellipsoid::Ellipsoid(glm::vec3 radii) : radii(radii) {
-    radiiSquared = glm::vec3(radii.x * radii.x,
-                             radii.y * radii.y,
-                             radii.z * radii.z);
-    oneOverRadiiSquared = 1.0f / radiiSquared;
+Ellipsoid::Ellipsoid(glm::vec3 radii) : _radii(radii) {
+    _radiiSquared = glm::vec3(radii.x * radii.x,
+                              radii.y * radii.y,
+                              radii.z * radii.z);
+    _oneOverRadiiSquared = 1.0f / _radiiSquared;
 }
 
 Ellipsoid::Ellipsoid(double x, double y, double z) : Ellipsoid(glm::vec3(x, y, z)) {
@@ -19,11 +16,11 @@ Ellipsoid::Ellipsoid(double x, double y, double z) : Ellipsoid(glm::vec3(x, y, z
 }
 
 glm::vec3 Ellipsoid::getRadii() const {
-    return radii;
+    return _radii;
 }
 
 glm::vec3 Ellipsoid::getOneOverRadiiSquared() const {
-    return oneOverRadiiSquared;
+    return _oneOverRadiiSquared;
 }
 
 std::vector<glm::vec3> Ellipsoid::projectGeodeticCoordsOntoSurface(const std::vector<glm::vec3> &geodeticCoords) const {
@@ -55,7 +52,7 @@ glm::vec3 Ellipsoid::convertGeodeticToGeocentric(glm::vec3 geodetic) const {
     float height = geodetic.z;
 
     glm::vec3 n = convertGeographicToGeodeticSurfaceNormal(geodetic);
-    glm::vec3 k = radiiSquared * n;
+    glm::vec3 k = _radiiSquared * n;
     float gamma = std::sqrt(k.x * n.x + k.y * n.y + k.z * n.z);
     // Point on the surface determined as determined by the normal.
     glm::vec3 rSurface = k / gamma;
@@ -82,20 +79,20 @@ glm::vec3 Ellipsoid::convertGeocentricToGeodetic(glm::vec3 point) const {
 }
 
 glm::vec3 Ellipsoid::convertGeocentricToGeocentricSurfaceNormal(glm::vec3 point) const {
-    auto normal = point * oneOverRadiiSquared;
+    auto normal = point * _oneOverRadiiSquared;
     return glm::normalize(normal);
 }
 
 
 bool Ellipsoid::isPointOnTheOutside(glm::vec3 point) {
     auto pointSquared = point * point;
-    auto components = pointSquared * oneOverRadiiSquared;
+    auto components = pointSquared * _oneOverRadiiSquared;
     float result = components.x + components.y + components.z;
     return result > 1;
 }
 
 glm::vec3 Ellipsoid::getRadiiSquared() const {
-    return radiiSquared;
+    return _radiiSquared;
 }
 
 [[nodiscard]] glm::vec3 Ellipsoid::getGeocentricPosition() const {
@@ -103,14 +100,14 @@ glm::vec3 Ellipsoid::getRadiiSquared() const {
 }
 
 float Ellipsoid::getRealityScaleFactor() const {
-    return REAL_RADII_METERS[0] / radii[0];
+    return REAL_RADII_METERS[0] / _radii[0];
 }
 
 bool Ellipsoid::isPointFacingCamera(glm::vec3 cameraPosition, glm::vec3 geocentricPosition) const {
     auto normal = convertGeocentricToGeocentricSurfaceNormal(geocentricPosition);
     glm::vec3 toCamera = glm::normalize(cameraPosition - geocentricPosition);
     float dotProduct = glm::dot(normal, toCamera);
-    bool facesCamera = dotProduct > 0.0;
+    bool facesCamera = dotProduct > 0.f;
     return facesCamera;
 }
 

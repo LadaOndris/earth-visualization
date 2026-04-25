@@ -1,42 +1,21 @@
-//
-// Created by lada on 9/27/23.
-//
+#pragma once
 
-#ifndef EARTH_VISUALIZATION_SUNRENDERER_H
-#define EARTH_VISUALIZATION_SUNRENDERER_H
-
-
-#include <vector>
 #include "Renderer.h"
 #include "program.h"
-#include "../cameras/FreeCamera.h"
-#include "../vertex.h"
-#include "../simulation/LightSource.h"
+#include "cameras/FreeCamera.h"
+#include "vertex.h"
+#include "simulation/LightSource.h"
+
+#include <vector>
 
 class SunRenderer : public Renderer {
-private:
-    int numSegments = 36;
-    Camera &camera;
-    const LightSource &lightSource;
-    Program &program;
-    float sunRadius;
-    unsigned int VAO;
-    unsigned int VBO;
-
-    std::vector<t_vertex> sunVertices;
-
-    glm::vec3 sunLocation;
-
-    void constructVertices();
-
-    void setupVertexArrays();
-
-
 public:
     explicit SunRenderer(Camera &camera, const LightSource &lightSource, float sunRadius,
                          Program &program)
-            : program(program),
-              camera(camera), lightSource(lightSource), sunRadius(sunRadius) {
+            : _program(program),
+              _camera(camera), 
+              _lightSource(lightSource), 
+              _sunRadius(sunRadius) {
     }
 
     bool initialize() override;
@@ -48,7 +27,22 @@ public:
     [[nodiscard]] glm::mat4 getProjectionMatrix(t_window_definition window) const;
 
     [[nodiscard]] glm::mat4 getModelMatrix() const;
+
+private:
+    Program &_program;
+    Camera &_camera;
+    const LightSource &_lightSource;
+    float _sunRadius;
+
+    int numSegments = 36;
+    unsigned int VAO;
+    unsigned int VBO;
+
+    std::vector<t_vertex> sunVertices;
+
+    glm::vec3 sunLocation;
+
+    void constructVertices();
+
+    void setupVertexArrays();
 };
-
-
-#endif //EARTH_VISUALIZATION_SUNRENDERER_H

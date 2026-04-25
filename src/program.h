@@ -1,17 +1,17 @@
 
-#ifndef SHADER_H
-#define SHADER_H
+#pragma once
+
+#include "shader.h"
 
 #include <glad/glad.h> // include glad to get all the required OpenGL headers
+#include <glm/gtc/type_ptr.hpp>
 
 #include <string>
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include <glm/gtc/type_ptr.hpp>
 #include <memory>
 #include <vector>
-#include "shader.h"
 
 
 class Program {
@@ -86,7 +86,7 @@ public:
 
     // utility uniform functions
     void setBool(const std::string &name, bool value) const {
-        glUniform1i(glGetUniformLocation(id, name.c_str()), (int) value);
+        glUniform1i(glGetUniformLocation(id, name.c_str()), static_cast<int>(value));
     }
 
     void setInt(const std::string &name, int value) const {
@@ -116,5 +116,3 @@ public:
         deleteShaders();
     }
 };
-
-#endif

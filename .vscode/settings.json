@@ -1,0 +1,19 @@
+{
+    "clangd.arguments": [
+        "--compile-commands-dir=build",
+        "--background-index",
+        "--clang-tidy"
+    ],
+    "clangd.checkUpdates": true,
+    "clangd.onFailureRecovery": "restart",
+    "clangd.restartAfterCrash": true,
+    "clangd.inlayHints.enabled": true,
+    "clangd.inlayHints.parameterName": true,
+    "clangd.inlayHints.deducedTypes": true,
+    "clangd.semanticTokens": true,
+    "[cpp]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "clangd"
+    },
+    "C_Cpp.intelliSenseEngine": "disabled"
+}
