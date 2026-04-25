@@ -12,18 +12,17 @@ TileEarthRenderer::TileEarthRenderer(TileContainer &tileContainer,
                                      LightSource &lightSource,
                                      AsyncTextureLoader &textureLoader,
                                      ResourceManager &resourceManager,
-                                     Program &program)
+                                     Program program)
         : _tileContainer(tileContainer),
           _ellipsoid(ellipsoid),
           _camera(camera),
           _lightSource(lightSource),
           _textureLoader(textureLoader),
           _resourceManager(resourceManager),
-          _program(program) {
+          _program(std::move(program)) {
     for (Tile &tile: _tileContainer.getTiles()) {
         tile.updateGeocentricPosition(_ellipsoid);
     }
-    _program.build(); // TODO: This design is problematic. Could be forgotten to be called. 
 }
 
 TileEarthRenderer::~TileEarthRenderer() {

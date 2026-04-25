@@ -1,5 +1,6 @@
 #include "EarthVisualizer.h"
 
+#include "ProgramBuilder.h"
 #include "rendering/CityNamesRenderer.h"
 #include "rendering/SunRenderer.h"
 #include "rendering/TileEarthRenderer.h"
@@ -33,49 +34,39 @@ EarthVisualizer::EarthVisualizer(GLFWwindow* window, t_window_definition& window
     };
     _guiRenderer = std::make_shared<GuiFrameRenderer>(options, _solarSimulator);
 
-    _tileEarthProgram.addShader(
-        std::make_unique<Shader>("shaders/tiling/shader.vert", ShaderType::Vertex)
-    );
-    _tileEarthProgram.addShader(
-        std::make_unique<Shader>("shaders/tiling/shader.tesc", ShaderType::TesselationControl)
-    );
-    _tileEarthProgram.addShader(
-        std::make_unique<Shader>("shaders/tiling/shader.tese", ShaderType::TessellationEvaluation)
-    );
-    _tileEarthProgram.addShader(
-        std::make_unique<Shader>("shaders/tiling/shader.frag", ShaderType::Fragment)
-    );
+    Program tileEarthProgram = ProgramBuilder()
+        .addShader("shaders/tiling/shader.vert", ShaderType::Vertex)
+        .addShader("shaders/tiling/shader.tesc", ShaderType::TesselationControl)
+        .addShader("shaders/tiling/shader.tese", ShaderType::TessellationEvaluation)
+        .addShader("shaders/tiling/shader.frag", ShaderType::Fragment)
+        .build();
     auto tileEarthRenderer = std::make_shared<TileEarthRenderer>(
         _tileContainer, _ellipsoid, _camera, _solarSimulator,
-        _asyncTextureLoader, _resourceManager, _tileEarthProgram
+        _asyncTextureLoader, _resourceManager, std::move(tileEarthProgram)
     );
     tileEarthRenderer->addSubscriber(_guiRenderer);
-    _renderers.push_back(tileEarthRenderer);
 
-    _cityNamesProgram.addShader(
-        std::make_unique<Shader>("shaders/text/shader.vert", ShaderType::Vertex)
-    );
-    _cityNamesProgram.addShader(
-        std::make_unique<Shader>("shaders/text/shader.frag", ShaderType::Fragment)
-    );
+    Program cityNamesProgram = ProgramBuilder()
+        .addShader("shaders/text/shader.vert", ShaderType::Vertex)
+        .addShader("shaders/text/shader.frag", ShaderType::Fragment)
+        .build();
     auto cityNamesRenderer = std::make_shared<CityNamesRenderer>(
-        _cityNamesProgram, _camera, _ellipsoid
+        std::move(cityNamesProgram), _camera, _ellipsoid
     );
     tileEarthRenderer->addSubscriber(cityNamesRenderer);
-    _renderers.push_back(cityNamesRenderer);
 
-    _sunProgram.addShader(
-        std::make_unique<Shader>("shaders/sun/shader.vert", ShaderType::Vertex)
-    );
-    _sunProgram.addShader(
-        std::make_unique<Shader>("shaders/sun/shader.frag", ShaderType::Fragment)
-    );
+    Program sunProgram = ProgramBuilder()
+        .addShader("shaders/sun/shader.vert", ShaderType::Vertex)
+        .addShader("shaders/sun/shader.frag", ShaderType::Fragment)
+        .build();
     auto sunRenderer = std::make_shared<SunRenderer>(
-        _camera, _solarSimulator, sunRadius, _sunProgram
+        _camera, _solarSimulator, sunRadius, std::move(sunProgram)
     );
+
+    _renderers.push_back(tileEarthRenderer);
+    _renderers.push_back(cityNamesRenderer);
     _renderers.push_back(sunRenderer);
     _renderers.push_back(_guiRenderer);
-
 }
 
 EarthCenteredCamera& EarthVisualizer::getCamera() {

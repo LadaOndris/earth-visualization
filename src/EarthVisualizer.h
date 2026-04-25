@@ -43,10 +43,6 @@ private:
     AsyncTextureLoader _asyncTextureLoader;
     ResourceManager _resourceManager;
 
-    Program _tileEarthProgram;
-    Program _cityNamesProgram;
-    Program _sunProgram;
-
     std::shared_ptr<GuiFrameRenderer> _guiRenderer;
     std::vector<std::shared_ptr<Renderer>> _renderers;
 

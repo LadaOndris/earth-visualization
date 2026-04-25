@@ -21,13 +21,12 @@ Mesh_t createMesh(float sunRadius) {
 }
 
 SunRenderer::SunRenderer(Camera &camera, const LightSource &lightSource, float sunRadius,
-                         Program &program)
-        : _program(program),
+                         Program program)
+        : _program(std::move(program)),
           _camera(camera),
           _lightSource(lightSource),
           _sunRadius(sunRadius),
           _meshBuffer(createMesh(sunRadius)) {
-    _program.build();
 }
 
 

@@ -24,7 +24,7 @@ public:
                                LightSource &lightSource,
                                AsyncTextureLoader &textureLoader,
                                ResourceManager &resourceManager,
-                               Program &program);
+                               Program program);
 
     ~TileEarthRenderer() override;
 
@@ -46,7 +46,7 @@ private:
     const LightSource &_lightSource;
     AsyncTextureLoader &_textureLoader;
     ResourceManager &_resourceManager;
-    Program &_program;
+    Program _program;
     std::vector<std::shared_ptr<RendererSubscriber>> _subscribers;
     std::unordered_map<std::string, std::shared_ptr<Texture>> _requestMap;
 

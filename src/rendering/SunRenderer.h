@@ -9,7 +9,7 @@
 class SunRenderer : public Renderer {
 public:
     explicit SunRenderer(Camera &camera, const LightSource &lightSource, float sunRadius,
-                         Program &program);
+                         Program program);
 
     SunRenderer(const SunRenderer&) = delete;
     SunRenderer& operator=(const SunRenderer&) = delete;
@@ -21,7 +21,7 @@ public:
     [[nodiscard]] glm::mat4 getModelMatrix() const;
 
 private:
-    Program &_program;
+    Program _program;
     Camera &_camera;
     const LightSource &_lightSource;
     float _sunRadius;

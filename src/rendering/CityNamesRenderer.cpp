@@ -310,8 +310,8 @@ void CityNamesRenderer::renderText(const City &text, float sx, float sy, glm::ve
 }
 
 
-CityNamesRenderer::CityNamesRenderer(Program &program, Camera &camera, Ellipsoid &ellipsoid)
-        : _program(program), _camera(camera), _ellipsoid(ellipsoid) {
+CityNamesRenderer::CityNamesRenderer(Program program, Camera &camera, Ellipsoid &ellipsoid)
+        : _program(std::move(program)), _camera(camera), _ellipsoid(ellipsoid) {
     WorldCitiesReader reader("data/world_cities/worldcities.csv");
     _worldCities = reader.readData();
     for (auto &city: _worldCities) {
@@ -319,7 +319,6 @@ CityNamesRenderer::CityNamesRenderer(Program &program, Camera &camera, Ellipsoid
         city.latitude *= -1;
     }
 
-    _program.build();
     if (!prepareBuffers())
         throw std::runtime_error("CityNamesRenderer: failed to prepare buffers");
     if (!prepareTextureAtlas())

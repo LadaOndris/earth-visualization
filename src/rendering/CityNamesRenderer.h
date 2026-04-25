@@ -39,7 +39,7 @@ struct TextInstanceData {
 
 class CityNamesRenderer : public Renderer, public RendererSubscriber {
 public:
-    explicit CityNamesRenderer(Program &program, Camera &camera, Ellipsoid &ellipsoid);
+    explicit CityNamesRenderer(Program program, Camera &camera, Ellipsoid &ellipsoid);
 
     ~CityNamesRenderer() override;
 
@@ -55,7 +55,7 @@ private:
     GLuint _textureId;
     float _atlasWidth;
     float _atlasHeight;
-    Program &_program;
+    Program _program;
     unsigned int _VAO, _VBO, _instanceVBO;
     Camera &_camera;
     Ellipsoid &_ellipsoid;
