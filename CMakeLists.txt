@@ -22,13 +22,16 @@ file(GLOB_RECURSE SOURCES_C "src/*.c")
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 file(GLOB_RECURSE HEADERS "src/*.h")
 
-add_executable(${TARGET_NAME} main.cpp ${SOURCES} ${SOURCES_C} ${HEADERS})
+add_executable(${TARGET_NAME} main.cpp ${SOURCES} ${SOURCES_C} ${HEADERS} third_party/glad.c)
 
 target_include_directories(${TARGET_NAME} PRIVATE
     ${GLFW_INCLUDE_DIRS}
     ${OPENGL_INCLUDE_DIR}
     ${FREETYPE_INCLUDE_DIRS}
     include/
+)
+target_include_directories(${TARGET_NAME} SYSTEM PRIVATE
+    third_party/
 )
 
 target_link_libraries(${TARGET_NAME}
@@ -42,13 +45,16 @@ target_link_libraries(${TARGET_NAME}
     project_sanitizers
 )
 
-add_library(${LIB_TARGET_NAME} ${SOURCES} ${SOURCES_C} ${HEADERS})
+add_library(${LIB_TARGET_NAME} ${SOURCES} ${SOURCES_C} ${HEADERS} third_party/glad.c)
 
 target_include_directories(${LIB_TARGET_NAME} PRIVATE
     ${GLFW_INCLUDE_DIRS}
     ${OPENGL_INCLUDE_DIR}
     ${FREETYPE_INCLUDE_DIRS}
     include/
+)
+target_include_directories(${LIB_TARGET_NAME} SYSTEM PRIVATE
+    third_party/
 )
 
 target_link_libraries(${LIB_TARGET_NAME}

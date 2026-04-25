@@ -11,7 +11,7 @@
 #include <glm/vec2.hpp>
 #include <vector>
 #include "../tiling/Resolution.h"
-#include "../include/glad/glad.h"
+#include "glad/glad.h"
 
 class Texture {
 private:

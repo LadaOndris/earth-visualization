@@ -8,11 +8,18 @@ target_compile_options(project_warnings INTERFACE
     -Wshadow
     -Wnon-virtual-dtor
     -Wcast-align
-    -Wunused
+    # -Wold-style-cast
     -Woverloaded-virtual
     -Wnull-dereference
     -Wformat=2
     -Wimplicit-fallthrough
+    -Wdouble-promotion
+    -Wmisleading-indentation
+    -Wduplicated-cond
+    -Wduplicated-branches
+    -Wlogical-op
+    -Wuseless-cast
+    -Wno-unused-parameter
 )
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")

@@ -1,8 +1,8 @@
 
-#include "include/glad/glad.h"
+#include "glad/glad.h"
 #include <GLFW/glfw3.h>
 
-#include "include/program.h"
+#include "program.h"
 #include "src/ellipsoid.h"
 #include "src/tesselation/SubdivisionSphereTesselator.h"
 #include "src/window_definition.h"
