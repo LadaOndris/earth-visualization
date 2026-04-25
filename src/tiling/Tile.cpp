@@ -76,24 +76,29 @@ bool Tile::isTileWithinTexture(const std::shared_ptr<Texture> &texture) const {
 }
 
 void Tile::addResources(const std::shared_ptr<TileResources> &resources, int level) {
-    // Assumes resources are added from coarse to fine for simplicity.
-    // Check it is true.
-    assert(level > _lastLevel);
     if (!isTileWithinTexture(resources->getTexture(TextureType::Day))) {
         throw std::runtime_error("The tile is located outside of the resources definition.");
     }
 
-    _lastLevel = level;
-
-    // Cross-reference resources of neighboring LODs
-    if (!_lodResources.empty()) {
-        auto lastResources = _lodResources.back();
-        assert(lastResources->getMesh().size() < resources->getMesh().size());
-        resources->finerResources.push_back(lastResources);
-        lastResources->coarserResources = resources;
+    if (level >= static_cast<int>(_lodResources.size())) {
+        _lodResources.resize(level + 1, nullptr);
     }
-    // Add resources to the current tile
-    _lodResources.push_back(resources);
+    _lodResources[level] = resources;
+
+    // Link to coarser neighbor (level - 1)
+    if (level > 0 && _lodResources[level - 1] != nullptr) {
+        auto coarser = _lodResources[level - 1];
+        assert(coarser->getMesh().size() < resources->getMesh().size());
+        coarser->finerResources.push_back(resources);
+        resources->coarserResources = coarser;
+    }
+
+    // Link to finer neighbor (level + 1)
+    if (level + 1 < static_cast<int>(_lodResources.size()) && _lodResources[level + 1] != nullptr) {
+        auto finer = _lodResources[level + 1];
+        resources->finerResources.push_back(finer);
+        finer->coarserResources = resources;
+    }
 }
 
 

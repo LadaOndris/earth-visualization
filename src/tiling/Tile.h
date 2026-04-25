@@ -30,8 +30,6 @@ private:
     glm::vec3 _normal;
     double _tileWidth;
 
-    int _lastLevel = -1;
-
     /**
      * Compute the screen-space error based on the given parameters.
      *
